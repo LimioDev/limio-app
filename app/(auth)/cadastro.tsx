@@ -1,9 +1,7 @@
-import { Text, View } from "react-native";
+import { useCadastroDadosViewModel } from "../../src/modulos/auth/viewmodel/useCadastroDadosViewModel";
+import { CadastroDadosView } from "../../src/modulos/auth/view/CadastroDadosView";
 
 export default function Cadastro() {
-  return (
-    <View>
-      <Text>cadastro</Text>
-    </View>
-  );
+  const vm = useCadastroDadosViewModel();
+  return <CadastroDadosView {...vm} />;
 }
