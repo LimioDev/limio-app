@@ -1,5 +1,4 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
-import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 
 import type { TokensAutenticacao } from "../tipos/api";
@@ -7,10 +6,9 @@ import type { TokensAutenticacao } from "../tipos/api";
 const CHAVE_TOKEN_ACESSO = "limio.tokenAcesso";
 const CHAVE_TOKEN_RENOVACAO = "limio.tokenRenovacao";
 
-// Emulador Android enxerga o localhost da máquina host como 10.0.2.2.
-const baseURL =
-  (Constants.expoConfig?.extra?.apiUrl as string | undefined) ??
-  "http://10.0.2.2:8080";
+// Vem do .env (staging) ou do .env.local. Fallback: emulador Android enxerga o
+// localhost da máquina host como 10.0.2.2.
+const baseURL = process.env.EXPO_PUBLIC_API_URL ?? "http://10.0.2.2:8080";
 
 // eslint-disable-next-line import/no-named-as-default-member -- axios expõe `create` tanto como default quanto named export
 export const api = axios.create({ baseURL });
