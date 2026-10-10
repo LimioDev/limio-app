@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import type { PapelUsuario } from "../tipos/auth.enums";
+import type { PapelUsuario } from "../../../comum/tipos/papel";
 
 /**
  * Dados do cadastro em andamento, compartilhados entre os passos 1→3

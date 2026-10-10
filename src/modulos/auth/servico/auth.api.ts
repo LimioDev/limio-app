@@ -1,8 +1,21 @@
-import { api } from "../../../comum/lib/api";
+import * as Device from "expo-device";
+
+import {
+  api,
+  garantirTokenAcessoValido,
+  obterRefreshToken,
+  renovarSessao,
+} from "../../../comum/lib/api";
+import { TokensSessaoSchema, type TokensSessao } from "../../../comum/tipos/sessao";
 import {
   CadastroRequestSchema,
+  LoginRequestSchema,
+  PapelAtivoResponseSchema,
+  PapelAlternavelSchema,
   UsuarioResponseSchema,
   type CadastroRequest,
+  type PapelAlternavel,
+  type PapelAtivoResponse,
   type UsuarioResponse,
 } from "../tipos/auth.types";
 
@@ -12,4 +25,39 @@ export async function cadastrarUsuario(
   const corpo = CadastroRequestSchema.parse(request);
   const { data } = await api.post("/auth/cadastro", corpo);
   return UsuarioResponseSchema.parse(data);
+}
+
+export async function autenticar(
+  email: string,
+  senha: string,
+): Promise<TokensSessao> {
+  // Nome do aparelho (ex.: "iPhone da Maria") identifica a sessão; sem ele a API usa o User-Agent.
+  const dispositivo = (Device.deviceName ?? Device.modelName ?? undefined)?.slice(0, 255);
+  const corpo = LoginRequestSchema.parse({ email, senha, dispositivo });
+  const { data } = await api.post("/auth/login", corpo);
+  return TokensSessaoSchema.parse(data);
+}
+
+/** Revoga só a sessão deste aparelho. Idempotente no backend (204 sempre). */
+export async function encerrarSessao(): Promise<void> {
+  await garantirTokenAcessoValido();
+  const refreshToken = await obterRefreshToken();
+  if (!refreshToken) {
+    return;
+  }
+  await api.post("/auth/logout", { refreshToken });
+}
+
+export async function trocarPapelAtivo(
+  papel: PapelAlternavel,
+): Promise<PapelAtivoResponse> {
+  const { data } = await api.patch("/auth/papel-ativo", {
+    papel: PapelAlternavelSchema.parse(papel),
+  });
+  const resposta = PapelAtivoResponseSchema.parse(data);
+  // O token de acesso em uso ainda carrega o papel antigo, e é ele que os
+  // outros módulos do backend leem — renova pra sair com o papel novo. A troca
+  // já foi gravada: sem rede agora, o interceptor renova no próximo 401.
+  await renovarSessao().catch(() => null);
+  return resposta;
 }
