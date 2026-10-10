@@ -1,30 +1,77 @@
 import { create } from "zustand";
 
-import { limparTokens, salvarTokens } from "../lib/api";
-import type { Papel, TokensAutenticacao, Usuario } from "../tipos/api";
+import {
+  lerPapelSalvo,
+  limparSessaoSalva,
+  registrarEventosSessao,
+  salvarPapelAtivo,
+  salvarSessao,
+} from "../lib/api";
+import { queryClient } from "../lib/query";
+import { PapelUsuario } from "../tipos/papel";
+import type { TokensSessao } from "../tipos/sessao";
 
+export const MENSAGEM_SESSAO_EXPIRADA = "Sua sessão expirou. Entre novamente.";
+
+type StatusSessao = "carregando" | "autenticado" | "anonimo";
+
+/**
+ * Sessão do aparelho. Os tokens ficam no SecureStore (via `lib/api.ts`), não
+ * aqui: o store só expõe o que a interface precisa decidir.
+ */
 interface EstadoSessao {
-  usuario: Usuario | null;
-  papelAtivo: Papel | null;
-  entrar: (
-    usuario: Usuario,
-    tokens: TokensAutenticacao,
-    papelAtivo: Papel,
-  ) => Promise<void>;
+  status: StatusSessao;
+  papelAtivo: PapelUsuario | null;
+  /** Motivo de uma saída que o usuário não pediu (ex.: sessão encerrada em outro aparelho). */
+  avisoSaida: string | null;
+  restaurar: () => Promise<void>;
+  entrar: (tokens: TokensSessao) => Promise<void>;
   sair: () => Promise<void>;
-  alternarPapel: (papel: Papel) => void;
+  definirPapelAtivo: (papel: PapelUsuario) => Promise<void>;
+  limparAvisoSaida: () => void;
+}
+
+function papelValido(valor: string | null): PapelUsuario | null {
+  return Object.values(PapelUsuario).find((papel) => papel === valor) ?? null;
 }
 
 export const useSessao = create<EstadoSessao>((set) => ({
-  usuario: null,
+  status: "carregando",
   papelAtivo: null,
-  entrar: async (usuario, tokens, papelAtivo) => {
-    await salvarTokens(tokens);
-    set({ usuario, papelAtivo });
+  avisoSaida: null,
+  restaurar: async () => {
+    const papel = papelValido(await lerPapelSalvo());
+    set(
+      papel
+        ? { status: "autenticado", papelAtivo: papel }
+        : { status: "anonimo", papelAtivo: null },
+    );
+  },
+  entrar: async (tokens) => {
+    await salvarSessao(tokens);
+    set({ status: "autenticado", papelAtivo: tokens.papel, avisoSaida: null });
   },
   sair: async () => {
-    await limparTokens();
-    set({ usuario: null, papelAtivo: null });
+    await limparSessaoSalva();
+    queryClient.clear();
+    set({ status: "anonimo", papelAtivo: null });
   },
-  alternarPapel: (papel) => set({ papelAtivo: papel }),
+  definirPapelAtivo: async (papel) => {
+    await salvarPapelAtivo(papel);
+    set({ papelAtivo: papel });
+  },
+  limparAvisoSaida: () => set({ avisoSaida: null }),
 }));
+
+registrarEventosSessao({
+  // A renovação traz o papel atual da conta — pode ter mudado em outro aparelho.
+  aoRenovar: (tokens) => useSessao.setState({ papelAtivo: tokens.papel }),
+  aoExpirar: () => {
+    queryClient.clear();
+    useSessao.setState({
+      status: "anonimo",
+      papelAtivo: null,
+      avisoSaida: MENSAGEM_SESSAO_EXPIRADA,
+    });
+  },
+});

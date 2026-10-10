@@ -1,5 +1,3 @@
-export type Papel = "contratante" | "prestador";
-
 export type Estado =
   | "aguardando"
   | "combinado"
@@ -9,18 +7,6 @@ export type Estado =
   | "concluido"
   | "cancelado"
   | "expirado";
-
-export interface Usuario {
-  id: string;
-  nome: string;
-  email: string;
-  papeis: Papel[];
-}
-
-export interface TokensAutenticacao {
-  tokenAcesso: string;
-  tokenRenovacao: string;
-}
 
 export interface RespostaPaginada<T> {
   conteudo: T[];
