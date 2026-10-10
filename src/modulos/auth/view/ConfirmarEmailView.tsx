@@ -1,6 +1,8 @@
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { CircleCheck, Mail, ShieldCheck } from "lucide-react-native";
 
+import { Icone } from "../../../comum/componentes/ui/Icone";
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { AvisoInfo } from "./componentes/AvisoInfo";
 import { PassoCadastro } from "./componentes/PassoCadastro";
@@ -26,11 +28,11 @@ export function ConfirmarEmailView({
 }: ConfirmarEmailViewProps) {
   return (
     <SafeAreaView className="flex-1 bg-fundo" edges={["top", "bottom"]}>
-      <View className="flex-1 gap-5 px-6 pt-2">
+      <View className="flex-1 gap-5 px-margem pt-2">
         <PassoCadastro passoAtual={3} aoVoltar={aoVoltar} />
 
         <View className="h-12 w-12 items-center justify-center rounded-card bg-marca-50">
-          <Text className="text-titulo">✉️</Text>
+          <Icone icone={Mail} tamanho={24} cor="marca" />
         </View>
 
         <View className="gap-1">
@@ -42,13 +44,13 @@ export function ConfirmarEmailView({
           </Text>
         </View>
 
-        <AvisoInfo glifo="🛡️">
+        <AvisoInfo icone={ShieldCheck}>
           Sua conta já existe{"\n"}Você pode entrar agora. Publicar um anúncio
           ou se candidatar a um serviço só libera depois que o e-mail estiver
           confirmado.
         </AvisoInfo>
 
-        <AvisoInfo glifo="✓">
+        <AvisoInfo icone={CircleCheck}>
           O telefone já está verificado. Seu papel inicial é{" "}
           {rotuloPapelAtivo} — dá pra trocar a qualquer momento.
         </AvisoInfo>
@@ -60,10 +62,10 @@ export function ConfirmarEmailView({
         ) : null}
       </View>
 
-      <View className="gap-3 border-t border-borda px-6 py-4">
+      <View className="gap-3 border-t border-borda px-margem py-4">
         <Botao
           rotulo="Reenviar link"
-          variante="secundario"
+          variante="contorno"
           onPress={aoReenviarLink}
         />
         <Botao rotulo="Ir para o app" onPress={aoIrParaApp} />

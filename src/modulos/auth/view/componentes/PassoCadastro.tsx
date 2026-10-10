@@ -1,5 +1,7 @@
 import { Pressable, Text, View } from "react-native";
+import { ChevronLeft } from "lucide-react-native";
 
+import { Icone } from "../../../../comum/componentes/ui/Icone";
 interface PassoCadastroProps {
   titulo?: string;
   passoAtual: 1 | 2 | 3;
@@ -22,10 +24,10 @@ export function PassoCadastro({
             hitSlop={12}
             className="h-toque w-8 items-center justify-center"
           >
-            <Text className="text-titulo text-tinta">‹</Text>
+            <Icone icone={ChevronLeft} tamanho={24} cor="tinta" />
           </Pressable>
           {titulo ? (
-            <Text className="text-titulo font-bold text-tinta">{titulo}</Text>
+            <Text className="text-secao font-semibold text-tinta">{titulo}</Text>
           ) : null}
         </View>
         <Text className="text-rotulo text-tinta-fraco">

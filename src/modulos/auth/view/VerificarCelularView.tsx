@@ -1,5 +1,6 @@
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ShieldCheck } from "lucide-react-native";
 
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { AvisoInfo } from "./componentes/AvisoInfo";
@@ -33,7 +34,7 @@ export function VerificarCelularView({
 }: VerificarCelularViewProps) {
   return (
     <SafeAreaView className="flex-1 bg-fundo" edges={["top", "bottom"]}>
-      <View className="flex-1 gap-5 px-6 pt-2">
+      <View className="flex-1 gap-5 px-margem pt-2">
         <PassoCadastro passoAtual={2} aoVoltar={aoVoltar} />
 
         <View className="gap-1">
@@ -68,13 +69,13 @@ export function VerificarCelularView({
           </Text>
         </View>
 
-        <AvisoInfo glifo="🛡️">
+        <AvisoInfo icone={ShieldCheck}>
           Sem o telefone confirmado você não consegue publicar um anúncio nem
           se candidatar.
         </AvisoInfo>
       </View>
 
-      <View className="border-t border-borda px-6 py-4">
+      <View className="border-t border-borda px-margem py-4">
         <Botao
           rotulo="Confirmar"
           onPress={aoConfirmar}

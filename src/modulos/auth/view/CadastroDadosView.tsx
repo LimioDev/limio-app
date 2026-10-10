@@ -4,6 +4,7 @@ import type { Control, FieldErrors } from "react-hook-form";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Masks } from "react-native-mask-input";
+import { Lock, Mail, MapPin, Smartphone } from "lucide-react-native";
 
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Campo } from "../../../comum/componentes/ui/Campo";
@@ -19,10 +20,6 @@ interface CadastroDadosViewProps {
   aoVoltar: () => void;
 }
 
-function IconeCampo({ glifo }: { glifo: string }) {
-  return <Text className="text-corpo text-tinta-fraco">{glifo}</Text>;
-}
-
 export function CadastroDadosView({
   control,
   erros,
@@ -35,12 +32,12 @@ export function CadastroDadosView({
 
   return (
     <SafeAreaView className="flex-1 bg-fundo" edges={["top", "bottom"]}>
-      <View className="px-6 pt-2">
+      <View className="px-margem pt-2">
         <PassoCadastro titulo="Criar conta" passoAtual={1} aoVoltar={aoVoltar} />
       </View>
 
       <ScrollView
-        className="flex-1 px-6"
+        className="flex-1 px-margem"
         contentContainerClassName="gap-4 pb-6 pt-5"
         keyboardShouldPersistTaps="handled"
       >
@@ -110,7 +107,7 @@ export function CadastroDadosView({
               value={field.value}
               onChangeText={field.onChange}
               erro={erros.cidadeUf?.message}
-              icone={<IconeCampo glifo="📍" />}
+              icone={MapPin}
               placeholder="São Paulo · SP"
             />
           )}
@@ -125,7 +122,7 @@ export function CadastroDadosView({
               value={field.value}
               onChangeText={field.onChange}
               erro={erros.email?.message}
-              icone={<IconeCampo glifo="✉️" />}
+              icone={Mail}
               keyboardType="email-address"
               autoCapitalize="none"
             />
@@ -141,7 +138,7 @@ export function CadastroDadosView({
               value={field.value}
               onChangeText={field.onChange}
               erro={erros.celular?.message}
-              icone={<IconeCampo glifo="📱" />}
+              icone={Smartphone}
               mask={Masks.BRL_PHONE}
               keyboardType="number-pad"
             />
@@ -157,7 +154,7 @@ export function CadastroDadosView({
               value={field.value}
               onChangeText={field.onChange}
               erro={erros.senha?.message}
-              icone={<IconeCampo glifo="🔒" />}
+              icone={Lock}
               secureTextEntry={!mostrarSenha}
               acaoDireita={
                 <Text
@@ -180,7 +177,7 @@ export function CadastroDadosView({
         ) : null}
       </ScrollView>
 
-      <View className="border-t border-borda px-6 py-4">
+      <View className="border-t border-borda px-margem py-4">
         <Botao
           rotulo={carregando ? "Enviando..." : "Continuar"}
           onPress={aoContinuar}

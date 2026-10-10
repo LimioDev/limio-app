@@ -1,11 +1,14 @@
-import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react-native";
+import { useState, type ReactNode } from "react";
 import { Text, TextInput, View, type TextInputProps } from "react-native";
 import { useMaskedInputProps, type Mask } from "react-native-mask-input";
+
+import { Icone } from "./Icone";
 
 interface CampoProps extends TextInputProps {
   rotulo: string;
   erro?: string;
-  icone?: ReactNode;
+  icone?: LucideIcon;
   acaoDireita?: ReactNode;
   mask?: Mask;
 }
@@ -18,30 +21,53 @@ export function Campo({
   mask,
   value,
   onChangeText,
+  onFocus,
+  onBlur,
+  placeholder,
   ...props
 }: CampoProps) {
+  const [emFoco, setEmFoco] = useState(false);
   const mascarado = useMaskedInputProps({
     value: typeof value === "string" ? value : "",
     onChangeText,
     mask,
   });
 
+  const corBorda = erro
+    ? "border-perigo"
+    : emFoco
+      ? "border-marca-500"
+      : "border-borda-campo";
+
   return (
-    <View className="gap-1">
-      <Text className="text-rotulo text-tinta-suave">{rotulo}</Text>
+    <View className="gap-1.5">
+      <Text className="text-rotulo font-semibold text-tinta-suave">{rotulo}</Text>
       <View
-        className={`flex-row items-center rounded-campo border px-3 ${erro ? "border-perigo" : "border-borda"}`}
+        className={`h-campo flex-row items-center gap-2.5 rounded-campo bg-superficie px-4 ${corBorda} ${emFoco ? "border-[1.5px]" : "border"}`}
       >
-        {icone ? <View className="mr-2">{icone}</View> : null}
+        {icone ? (
+          <Icone icone={icone} tamanho={16} cor={emFoco ? "marca" : "fraco"} />
+        ) : null}
         <TextInput
-          className="h-toque flex-1 text-corpo text-tinta"
-          placeholderTextColor="#A1A1AA"
+          className="h-full flex-1 text-corpo text-tinta"
+          placeholderTextColor="#7B87A4"
+          selectionColor="#2159CC"
+          onFocus={(e) => {
+            setEmFoco(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setEmFoco(false);
+            onBlur?.(e);
+          }}
           {...props}
           {...mascarado}
+          // Sem máscara, o hook devolve `placeholder: undefined` e apagaria o informado.
+          placeholder={placeholder ?? mascarado.placeholder}
         />
-        {acaoDireita ? <View className="ml-2">{acaoDireita}</View> : null}
+        {acaoDireita}
       </View>
-      {erro ? <Text className="text-micro text-perigo">{erro}</Text> : null}
+      {erro ? <Text className="text-rotulo text-perigo">{erro}</Text> : null}
     </View>
   );
 }
