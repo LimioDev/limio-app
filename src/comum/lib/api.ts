@@ -91,6 +91,11 @@ export async function limparSessaoSalva(): Promise<void> {
 }
 
 api.interceptors.request.use(async (config) => {
+  // Quem já mandou o próprio `Authorization` (ex.: revogar uma sessão que não
+  // foi salva) não tem o header trocado pelo da sessão do aparelho.
+  if (config.headers.has("Authorization")) {
+    return config;
+  }
   const tokenAcesso = await obterTokenAcesso();
   if (tokenAcesso) {
     config.headers.set("Authorization", `Bearer ${tokenAcesso}`);

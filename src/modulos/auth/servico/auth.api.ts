@@ -49,6 +49,21 @@ export async function encerrarSessao(): Promise<void> {
 }
 
 /**
+ * Revoga uma sessão que o app recebeu mas não vai usar (ex.: login de `ADMIN`).
+ * Usa os tokens recebidos, não os do aparelho. Melhor esforço: se falhar, o
+ * refresh token expira sozinho no backend.
+ */
+export async function revogarSessaoNaoSalva(tokens: TokensSessao): Promise<void> {
+  await api
+    .post(
+      "/auth/logout",
+      { refreshToken: tokens.refreshToken },
+      { headers: { Authorization: `Bearer ${tokens.token}` } },
+    )
+    .catch(() => {});
+}
+
+/**
  * Troca o papel ativo. Devolve `null` se a sessão caiu no caminho (a renovação
  * foi recusada) — o store já foi zerado por `aoExpirar` e não há papel a aplicar.
  */

@@ -44,9 +44,12 @@ export const PapelAlternavelSchema = z.enum([
 
 export type PapelAlternavel = z.infer<typeof PapelAlternavelSchema>;
 
-/** Espelha `PapelAtivoResponse` do backend — resposta de `PATCH /auth/papel-ativo`. */
+/**
+ * Espelha `PapelAtivoResponse` do backend — resposta de `PATCH /auth/papel-ativo`.
+ * O endpoint só aceita papéis alternáveis, então a resposta também é um deles.
+ */
 export const PapelAtivoResponseSchema = z.object({
-  papelAtivo: z.enum(PapelUsuario),
+  papelAtivo: PapelAlternavelSchema,
 });
 
 export type PapelAtivoResponse = z.infer<typeof PapelAtivoResponseSchema>;

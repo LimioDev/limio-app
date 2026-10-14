@@ -1,10 +1,13 @@
 import type { Href } from "expo-router";
 
-import { PapelUsuario } from "../../../comum/tipos/papel";
+import { PapelUsuario, type PapelDoApp } from "../../../comum/tipos/papel";
 
 /** Dashboard de cada papel: tela 13 (Empregador) ou tela 28 Mural (Prestador). */
-export function rotaDashboard(papel: PapelUsuario): Href {
-  return papel === PapelUsuario.PRESTADOR
-    ? "/(app)/(prestador)"
-    : "/(app)/(contratante)";
+export function rotaDashboard(papel: PapelDoApp): Href {
+  switch (papel) {
+    case PapelUsuario.EMPREGADOR:
+      return "/(app)/(contratante)";
+    case PapelUsuario.PRESTADOR:
+      return "/(app)/(prestador)";
+  }
 }

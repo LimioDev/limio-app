@@ -4,6 +4,7 @@ import {
   autenticar,
   cadastrarUsuario,
   encerrarSessao,
+  revogarSessaoNaoSalva,
   trocarPapelAtivo,
 } from "./auth.api";
 
@@ -17,6 +18,12 @@ export function useLoginMutation() {
   return useMutation({
     mutationFn: ({ email, senha }: { email: string; senha: string }) =>
       autenticar(email, senha),
+  });
+}
+
+export function useRevogarSessaoNaoSalvaMutation() {
+  return useMutation({
+    mutationFn: revogarSessaoNaoSalva,
   });
 }
 

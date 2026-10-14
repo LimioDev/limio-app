@@ -21,3 +21,13 @@ export function rotuloPapel(papel: PapelUsuario): string {
       return "Administrador";
   }
 }
+
+/**
+ * Papéis atendidos pelo app mobile. `ADMIN` fica de fora: conta de
+ * administrador não tem dashboard aqui e não chega a abrir sessão no app.
+ */
+export type PapelDoApp = Exclude<PapelUsuario, typeof PapelUsuario.ADMIN>;
+
+export function ehPapelDoApp(papel: string | null): papel is PapelDoApp {
+  return papel === PapelUsuario.EMPREGADOR || papel === PapelUsuario.PRESTADOR;
+}
