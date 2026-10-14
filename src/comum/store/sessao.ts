@@ -54,7 +54,9 @@ export const useSessao = create<EstadoSessao>((set) => ({
   sair: async () => {
     await limparSessaoSalva();
     queryClient.clear();
-    set({ status: "anonimo", papelAtivo: null });
+    // Saída pedida pelo usuário: apaga um aviso de expiração que o logout
+    // possa ter disparado (ex.: sessão já revogada em outro aparelho).
+    set({ status: "anonimo", papelAtivo: null, avisoSaida: null });
   },
   definirPapelAtivo: async (papel) => {
     await salvarPapelAtivo(papel);
