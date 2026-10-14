@@ -47,5 +47,10 @@ export function useAtualizarPreferenciasNotificacaoMutation() {
     onSuccess: (salvas) => {
       queryClient.setQueryData(CHAVE_PREFERENCIAS_NOTIFICACAO, salvas);
     },
+    // Segurança extra: confirma com o servidor o estado final, deu certo ou não.
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: CHAVE_PREFERENCIAS_NOTIFICACAO,
+      }),
   });
 }
