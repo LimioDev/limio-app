@@ -5,7 +5,7 @@ import {
 } from "../tipos/conta.types";
 
 // Rota ainda "a definir" no contrato do ETI-34 — alinhar com o back antes do merge.
-const ROTA_PREFERENCIAS_NOTIFICACAO = "/usuarios/me/preferencias-notificacao";
+const ROTA_PREFERENCIAS_NOTIFICACAO = "/conta/preferencias-notificacao";
 
 export async function buscarPreferenciasNotificacao(): Promise<PreferenciasNotificacao> {
   const { data } = await api.get(ROTA_PREFERENCIAS_NOTIFICACAO);
