@@ -5,7 +5,7 @@ import "../global.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 
-import { useRestaurarSessao } from "../src/comum/hooks/useRestaurarSessao";
+import { useRestaurarSessaoViewModel } from "../src/modulos/auth/viewmodel/useRestaurarSessaoViewModel";
 import { queryClient } from "../src/comum/lib/query";
 
 if (typeof globalThis.TextEncoder === "undefined") {
@@ -17,7 +17,7 @@ if (typeof globalThis.TextDecoder === "undefined") {
 
 export default function RootLayout() {
   // A splash fica na frente enquanto a sessão salva é lida.
-  const status = useRestaurarSessao();
+  const status = useRestaurarSessaoViewModel();
   const autenticado = status === "autenticado";
 
   return (
