@@ -21,7 +21,10 @@ export const CodigoErro = {
 export type CodigoErro = (typeof CodigoErro)[keyof typeof CodigoErro];
 
 export const ErroResponseSchema = z.object({
-  codigo: z.enum(CodigoErro),
+  // `string`, não `z.enum(CodigoErro)`: um código novo no backend antes do app
+  // ser atualizado não pode invalidar a resposta inteira e esconder a `mensagem`.
+  // As telas comparam com `CodigoErro.X` e caem no `default` quando não reconhecem.
+  codigo: z.string(),
   mensagem: z.string(),
   timestamp: z.string(),
   path: z.string(),
