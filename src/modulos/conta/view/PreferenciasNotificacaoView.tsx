@@ -12,6 +12,7 @@ import {
 import type { PreferenciasNotificacao } from "../tipos/conta.types";
 
 // Texto provisório: o Figma ainda não tem o toggle de WhatsApp (pendência de design do ETI-41).
+// Validar com design e jurídico (LGPD) antes de produção: ligar o toggle registra o consentimento no backend.
 const TEXTO_CONSENTIMENTO_WHATSAPP =
   "Ao ligar, você autoriza o Limio a enviar avisos pelo WhatsApp. Você pode desligar quando quiser.";
 
