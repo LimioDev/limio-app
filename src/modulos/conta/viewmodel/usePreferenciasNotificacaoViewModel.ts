@@ -67,12 +67,14 @@ export function usePreferenciasNotificacaoViewModel() {
   return {
     preferencias,
     carregando: query.isPending,
-    erroCarregar: query.isError
-      ? mensagemErroApi(
-          query.error,
-          "Não foi possível carregar suas notificações.",
-        )
-      : null,
+    // Só sem dados: se um refetch falhar com cache, mantém os toggles na tela.
+    erroCarregar:
+      query.isError && !query.data
+        ? mensagemErroApi(
+            query.error,
+            "Não foi possível carregar suas notificações.",
+          )
+        : null,
     aoTentarDeNovo: () => void query.refetch(),
     salvando: mutation.isPending,
     erroSalvar,
