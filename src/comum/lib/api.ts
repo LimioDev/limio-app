@@ -8,10 +8,10 @@ import * as SecureStore from "expo-secure-store";
 import type { PapelUsuario } from "../tipos/papel";
 import { TokensSessaoSchema, type TokensSessao } from "../tipos/sessao";
 
-const CHAVE_TOKEN_ACESSO = "limio.tokenAcesso";
-const CHAVE_EXPIRA_EM = "limio.expiraEm";
-const CHAVE_REFRESH_TOKEN = "limio.refreshToken";
-const CHAVE_PAPEL_ATIVO = "limio.papelAtivo";
+// Sessão inteira numa chave só (JSON de `TokensSessao`): o SecureStore não tem
+// escrita em lote, e chaves separadas deixariam o app com token de acesso novo
+// e refresh token antigo se ele fechasse no meio da gravação.
+const CHAVE_SESSAO = "limio.sessao";
 
 // Margem pra não mandar um token que expira no meio do caminho.
 const MARGEM_EXPIRACAO_MS = 30_000;
@@ -48,39 +48,46 @@ export function registrarEventosSessao(eventos: EventosSessao): void {
   eventosSessao = eventos;
 }
 
+/** Sessão guardada no aparelho; `null` se não há (ou se o conteúdo não é uma sessão válida). */
+async function lerSessaoSalva(): Promise<TokensSessao | null> {
+  const bruto = await SecureStore.getItemAsync(CHAVE_SESSAO);
+  if (!bruto) {
+    return null;
+  }
+  try {
+    const resultado = TokensSessaoSchema.safeParse(JSON.parse(bruto));
+    return resultado.success ? resultado.data : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function obterTokenAcesso(): Promise<string | null> {
-  return SecureStore.getItemAsync(CHAVE_TOKEN_ACESSO);
+  return (await lerSessaoSalva())?.token ?? null;
 }
 
 export async function obterRefreshToken(): Promise<string | null> {
-  return SecureStore.getItemAsync(CHAVE_REFRESH_TOKEN);
+  return (await lerSessaoSalva())?.refreshToken ?? null;
 }
 
 export async function salvarSessao(tokens: TokensSessao): Promise<void> {
-  await SecureStore.setItemAsync(CHAVE_TOKEN_ACESSO, tokens.token);
-  await SecureStore.setItemAsync(CHAVE_EXPIRA_EM, tokens.expiraEm);
-  await SecureStore.setItemAsync(CHAVE_REFRESH_TOKEN, tokens.refreshToken);
-  await SecureStore.setItemAsync(CHAVE_PAPEL_ATIVO, tokens.papel);
+  await SecureStore.setItemAsync(CHAVE_SESSAO, JSON.stringify(tokens));
 }
 
 export async function salvarPapelAtivo(papel: PapelUsuario): Promise<void> {
-  await SecureStore.setItemAsync(CHAVE_PAPEL_ATIVO, papel);
+  const sessao = await lerSessaoSalva();
+  if (sessao) {
+    await salvarSessao({ ...sessao, papel });
+  }
 }
 
-/** Papel da sessão guardada no aparelho; `null` se não há sessão (sem refresh token). */
-export async function lerPapelSalvo(): Promise<string | null> {
-  const refreshToken = await obterRefreshToken();
-  if (!refreshToken) {
-    return null;
-  }
-  return SecureStore.getItemAsync(CHAVE_PAPEL_ATIVO);
+/** Papel da sessão guardada no aparelho; `null` se não há sessão. */
+export async function lerPapelSalvo(): Promise<PapelUsuario | null> {
+  return (await lerSessaoSalva())?.papel ?? null;
 }
 
 export async function limparSessaoSalva(): Promise<void> {
-  await SecureStore.deleteItemAsync(CHAVE_TOKEN_ACESSO);
-  await SecureStore.deleteItemAsync(CHAVE_EXPIRA_EM);
-  await SecureStore.deleteItemAsync(CHAVE_REFRESH_TOKEN);
-  await SecureStore.deleteItemAsync(CHAVE_PAPEL_ATIVO);
+  await SecureStore.deleteItemAsync(CHAVE_SESSAO);
 }
 
 api.interceptors.request.use(async (config) => {
@@ -143,7 +150,7 @@ export function renovarSessao(): Promise<string | null> {
  * retentativa iria com o antigo.
  */
 export async function garantirTokenAcessoValido(): Promise<void> {
-  const expiraEm = await SecureStore.getItemAsync(CHAVE_EXPIRA_EM);
+  const expiraEm = (await lerSessaoSalva())?.expiraEm;
   if (expiraEm && Date.parse(expiraEm) - MARGEM_EXPIRACAO_MS > Date.now()) {
     return;
   }
