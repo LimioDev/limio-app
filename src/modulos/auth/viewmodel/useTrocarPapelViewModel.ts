@@ -44,6 +44,11 @@ export function useTrocarPapelViewModel() {
     setErroServidor(null);
     try {
       const resposta = await mutation.mutateAsync(papel);
+      // Sessão derrubada na renovação: o store já está anônimo e o guard da
+      // raiz leva à Boas-vindas — não há papel a aplicar nem rota a abrir.
+      if (!resposta) {
+        return;
+      }
       await definirPapelAtivo(resposta.papelAtivo);
       if (router.canDismiss()) {
         router.dismissAll();

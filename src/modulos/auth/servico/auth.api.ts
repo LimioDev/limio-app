@@ -48,16 +48,20 @@ export async function encerrarSessao(): Promise<void> {
   await api.post("/auth/logout", { refreshToken });
 }
 
+/**
+ * Troca o papel ativo. Devolve `null` se a sessão caiu no caminho (a renovação
+ * foi recusada) — o store já foi zerado por `aoExpirar` e não há papel a aplicar.
+ */
 export async function trocarPapelAtivo(
   papel: PapelAlternavel,
-): Promise<PapelAtivoResponse> {
+): Promise<PapelAtivoResponse | null> {
   const { data } = await api.patch("/auth/papel-ativo", {
     papel: PapelAlternavelSchema.parse(papel),
   });
   const resposta = PapelAtivoResponseSchema.parse(data);
   // O token de acesso em uso ainda carrega o papel antigo, e é ele que os
   // outros módulos do backend leem — renova pra sair com o papel novo. A troca
-  // já foi gravada: sem rede agora, o interceptor renova no próximo 401.
-  await renovarSessao().catch(() => null);
-  return resposta;
+  // já foi gravada: sem rede agora (`undefined`), o interceptor renova no próximo 401.
+  const tokenNovo = await renovarSessao().catch(() => undefined);
+  return tokenNovo === null ? null : resposta;
 }
