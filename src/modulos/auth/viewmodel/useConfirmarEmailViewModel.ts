@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 
-import { rotuloPapel } from "../tipos/auth.enums";
+import { rotuloPapel } from "../../../comum/tipos/papel";
 import { useCadastroEmAndamento } from "../store/cadastroEmAndamento.store";
 
 export function useConfirmarEmailViewModel() {
@@ -20,7 +20,8 @@ export function useConfirmarEmailViewModel() {
     aoUsarOutroEmail: () => router.replace("/(auth)/cadastro"),
     aoIrParaApp: () => {
       limpar();
-      router.replace("/(app)/(contratante)");
+      // O cadastro não abre sessão: a conta já existe, mas é preciso entrar.
+      router.replace("/(auth)/login");
     },
     aoVoltar: () => router.back(),
   };

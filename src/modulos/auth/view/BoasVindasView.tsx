@@ -14,13 +14,13 @@ export function BoasVindasView({ aoCriarConta, aoEntrar }: BoasVindasViewProps) 
     <SafeAreaView className="flex-1 bg-marca-900" edges={["top", "bottom"]}>
       <AneisDecorativos />
 
-      <View className="flex-1 justify-between px-6 py-8">
-        <Text className="mt-10 text-center text-titulo font-extrabold text-white">
+      <View className="flex-1 justify-between px-margem py-8">
+        <Text className="mt-10 text-center text-titulo font-extrabold tracking-tight text-white">
           Limio
         </Text>
 
         <View className="gap-3">
-          <Text className="text-display font-extrabold leading-[34px] text-white">
+          <Text className="text-display font-extrabold text-white">
             Alguém perto de você resolve isso hoje.
           </Text>
           <Text className="text-corpo text-white/70">
@@ -33,7 +33,7 @@ export function BoasVindasView({ aoCriarConta, aoEntrar }: BoasVindasViewProps) 
           <Botao rotulo="Criar conta" onPress={aoCriarConta} />
           <Botao
             rotulo="Já tenho conta"
-            variante="secundario-claro"
+            variante="contorno-claro"
             onPress={aoEntrar}
           />
           <Text className="text-center text-micro text-white/50">
