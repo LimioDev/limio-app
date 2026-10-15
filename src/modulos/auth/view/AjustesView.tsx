@@ -8,6 +8,7 @@ import { Botao } from "../../../comum/componentes/ui/Botao";
 interface AjustesViewProps {
   rotuloPapelAtivo: string | null;
   aoAlternarPapel: () => void;
+  aoAlterarSenha: () => void;
   aoSair: () => void;
   saindo: boolean;
   aoVoltar: () => void;
@@ -16,6 +17,7 @@ interface AjustesViewProps {
 export function AjustesView({
   rotuloPapelAtivo,
   aoAlternarPapel,
+  aoAlterarSenha,
   aoSair,
   saindo,
   aoVoltar,
@@ -33,7 +35,21 @@ export function AjustesView({
         <Text className="text-secao font-semibold text-tinta">Ajustes</Text>
       </View>
 
-      <View className="flex-1 gap-3 px-margem pt-5">
+      <View className="flex-1 gap-2 px-margem pt-5">
+        <Text className="text-overline font-semibold uppercase text-tinta-fraco">
+          Conta
+        </Text>
+        <Pressable
+          onPress={aoAlterarSenha}
+          className="mb-3 flex-row items-center justify-between rounded-card border border-borda bg-superficie p-4"
+        >
+          <Text className="text-corpo text-tinta">Alterar senha</Text>
+          <Icone icone={ChevronRight} />
+        </Pressable>
+
+        <Text className="text-overline font-semibold uppercase text-tinta-fraco">
+          Papel
+        </Text>
         <Pressable
           onPress={aoAlternarPapel}
           className="flex-row items-center justify-between rounded-card border border-borda bg-superficie p-4"
