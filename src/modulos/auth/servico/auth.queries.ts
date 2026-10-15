@@ -1,10 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
 
 import {
+  alterarSenha,
   autenticar,
   cadastrarUsuario,
   encerrarSessao,
   revogarSessaoNaoSalva,
+  solicitarRecuperacaoSenha,
   trocarPapelAtivo,
 } from "./auth.api";
 
@@ -36,5 +38,23 @@ export function useLogoutMutation() {
 export function useTrocarPapelMutation() {
   return useMutation({
     mutationFn: trocarPapelAtivo,
+  });
+}
+
+export function useRecuperarSenhaMutation() {
+  return useMutation({
+    mutationFn: solicitarRecuperacaoSenha,
+  });
+}
+
+export function useAlterarSenhaMutation() {
+  return useMutation({
+    mutationFn: ({
+      senhaAtual,
+      novaSenha,
+    }: {
+      senhaAtual: string;
+      novaSenha: string;
+    }) => alterarSenha(senhaAtual, novaSenha),
   });
 }
