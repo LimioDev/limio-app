@@ -54,6 +54,71 @@ export const PapelAtivoResponseSchema = z.object({
 
 export type PapelAtivoResponse = z.infer<typeof PapelAtivoResponseSchema>;
 
+/** Espelha `SolicitarRecuperacaoSenhaRequest` — corpo de `POST /auth/recuperar-senha`. */
+export const RecuperarSenhaRequestSchema = z.object({
+  email: z.email().max(255),
+});
+
+export type RecuperarSenhaRequest = z.infer<typeof RecuperarSenhaRequestSchema>;
+
+/** Mesma regra do `@Pattern` dos records de senha no backend (72 é o limite do BCrypt). */
+export const SENHA_TAMANHO_MINIMO = 8;
+export const SENHA_TAMANHO_MAXIMO = 72;
+export const TEM_LETRA = /[A-Za-z]/;
+export const TEM_NUMERO = /\d/;
+
+const NovaSenhaSchema = z
+  .string()
+  .min(SENHA_TAMANHO_MINIMO, "A senha precisa ter pelo menos 8 caracteres")
+  .max(SENHA_TAMANHO_MAXIMO, "A senha pode ter no máximo 72 caracteres")
+  .regex(TEM_LETRA, "A senha precisa ter uma letra")
+  .regex(TEM_NUMERO, "A senha precisa ter um número");
+
+/**
+ * Espelha `AlterarSenhaRequest` — corpo de `PATCH /auth/senha`. O
+ * `refreshToken` diz qual sessão é "este aparelho": ela recebe tokens novos e
+ * as demais são encerradas.
+ */
+export const AlterarSenhaRequestSchema = z.object({
+  senhaAtual: z.string().min(1),
+  novaSenha: NovaSenhaSchema,
+  refreshToken: z.string().min(1),
+});
+
+export type AlterarSenhaRequest = z.infer<typeof AlterarSenhaRequestSchema>;
+
+/** Valores do formulário da tela 06 "Redefinir sua senha". */
+export const RecuperarSenhaFormSchema = z.object({
+  email: z.string().trim().pipe(z.email("E-mail inválido")),
+});
+
+export type RecuperarSenhaForm = z.infer<typeof RecuperarSenhaFormSchema>;
+
+/** Valores do formulário da tela 07a "Alterar senha". */
+export const AlterarSenhaFormSchema = z
+  .object({
+    senhaAtual: z.string().min(1, "Informe sua senha atual"),
+    novaSenha: NovaSenhaSchema,
+    repetirNovaSenha: z.string(),
+  })
+  .refine((dados) => dados.repetirNovaSenha === dados.novaSenha, {
+    path: ["repetirNovaSenha"],
+    message: "As senhas não conferem",
+    // Sem isto o Zod pula o refine enquanto outro campo tiver erro, e a
+    // divergência só apareceria depois de todo o resto estar certo.
+    when: ({ value }) => {
+      const dados = value as
+        | { novaSenha?: unknown; repetirNovaSenha?: unknown }
+        | undefined;
+      return (
+        typeof dados?.novaSenha === "string" &&
+        typeof dados.repetirNovaSenha === "string"
+      );
+    },
+  });
+
+export type AlterarSenhaForm = z.infer<typeof AlterarSenhaFormSchema>;
+
 /** Valores do formulário da tela 05 "Entrar". */
 export const LoginFormSchema = z.object({
   email: z.string().trim().pipe(z.email("E-mail inválido")),

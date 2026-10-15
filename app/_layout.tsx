@@ -6,6 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 
 import { useRestaurarSessaoViewModel } from "../src/modulos/auth/viewmodel/useRestaurarSessaoViewModel";
+import { Toast } from "../src/comum/componentes/ui/Toast";
 import { queryClient } from "../src/comum/lib/query";
 
 if (typeof globalThis.TextEncoder === "undefined") {
@@ -31,6 +32,7 @@ export default function RootLayout() {
           <Stack.Screen name="(app)" />
         </Stack.Protected>
       </Stack>
+      <Toast />
     </QueryClientProvider>
   );
 }

@@ -8,8 +8,10 @@ import {
 } from "../../../comum/lib/api";
 import { TokensSessaoSchema, type TokensSessao } from "../../../comum/tipos/sessao";
 import {
+  AlterarSenhaRequestSchema,
   CadastroRequestSchema,
   LoginRequestSchema,
+  RecuperarSenhaRequestSchema,
   PapelAtivoResponseSchema,
   PapelAlternavelSchema,
   UsuarioResponseSchema,
@@ -61,6 +63,36 @@ export async function revogarSessaoNaoSalva(tokens: TokensSessao): Promise<void>
       { headers: { Authorization: `Bearer ${tokens.token}` } },
     )
     .catch(() => {});
+}
+
+/**
+ * Pede o link de recuperação de senha. O backend responde 200 exista o e-mail
+ * ou não (anti-enumeração), então não há nada a devolver.
+ */
+export async function solicitarRecuperacaoSenha(email: string): Promise<void> {
+  const corpo = RecuperarSenhaRequestSchema.parse({ email });
+  await api.post("/auth/recuperar-senha", corpo);
+}
+
+/**
+ * Altera a senha do usuário logado. A sessão deste aparelho continua, com
+ * tokens novos (devolvidos aqui); as dos outros aparelhos são encerradas.
+ */
+export async function alterarSenha(
+  senhaAtual: string,
+  novaSenha: string,
+): Promise<TokensSessao> {
+  // O refresh token vai no corpo: renova antes, porque a renovação reativa do
+  // interceptor rotacionaria o token e a retentativa iria com o antigo.
+  await garantirTokenAcessoValido();
+  const refreshToken = await obterRefreshToken();
+  const corpo = AlterarSenhaRequestSchema.parse({
+    senhaAtual,
+    novaSenha,
+    refreshToken,
+  });
+  const { data } = await api.patch("/auth/senha", corpo);
+  return TokensSessaoSchema.parse(data);
 }
 
 /**
