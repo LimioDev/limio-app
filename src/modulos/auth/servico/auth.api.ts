@@ -6,6 +6,8 @@ import {
   obterRefreshToken,
   renovarSessao,
 } from "../../../comum/lib/api";
+import { erroApi } from "../../../comum/lib/erros";
+import { CodigoErro } from "../../../comum/tipos/erros";
 import { TokensSessaoSchema, type TokensSessao } from "../../../comum/tipos/sessao";
 import {
   AlterarSenhaRequestSchema,
@@ -85,6 +87,26 @@ export async function alterarSenha(
   // O refresh token vai no corpo: renova antes, porque a renovação reativa do
   // interceptor rotacionaria o token e a retentativa iria com o antigo.
   await garantirTokenAcessoValido();
+  try {
+    return await enviarAlteracaoSenha(senhaAtual, novaSenha);
+  } catch (erro) {
+    // Token recusado mesmo parecendo válido (ex.: relógio do aparelho errado):
+    // renova e tenta uma vez, já com o refresh token novo no corpo. Se a
+    // renovação for recusada, `aoExpirar` já derrubou a sessão.
+    if (erroApi(erro)?.codigo !== CodigoErro.NAO_AUTENTICADO) {
+      throw erro;
+    }
+    if (!(await renovarSessao())) {
+      throw erro;
+    }
+    return enviarAlteracaoSenha(senhaAtual, novaSenha);
+  }
+}
+
+async function enviarAlteracaoSenha(
+  senhaAtual: string,
+  novaSenha: string,
+): Promise<TokensSessao> {
   const refreshToken = await obterRefreshToken();
   const corpo = AlterarSenhaRequestSchema.parse({
     senhaAtual,

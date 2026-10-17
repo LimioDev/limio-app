@@ -19,6 +19,7 @@ import {
 export function useAlterarSenhaViewModel() {
   const router = useRouter();
   const entrar = useSessao((estado) => estado.entrar);
+  const expirar = useSessao((estado) => estado.expirar);
   const mostrarToast = useToast((estado) => estado.mostrar);
   const mutation = useAlterarSenhaMutation();
   const [erroServidor, setErroServidor] = useState<string | null>(null);
@@ -57,6 +58,12 @@ export function useAlterarSenhaViewModel() {
           form.setError("novaSenha", {
             message: "A nova senha deve ser diferente da atual",
           });
+          return;
+        // Sessão revogada em outro aparelho ou sem renovação possível: volta
+        // pro login com o aviso de sessão expirada.
+        case CodigoErro.NAO_AUTENTICADO:
+        case CodigoErro.SESSAO_INVALIDA:
+          await expirar();
           return;
         default:
           setErroServidor(
