@@ -15,6 +15,7 @@ interface RecuperarSenhaViewProps {
   erros: FieldErrors<RecuperarSenhaForm>;
   aoEnviarLink: () => void;
   carregando: boolean;
+  segundosParaReenviar: number;
   confirmacao: string | null;
   erroServidor: string | null;
   aoVoltarParaLogin: () => void;
@@ -25,6 +26,7 @@ export function RecuperarSenhaView({
   erros,
   aoEnviarLink,
   carregando,
+  segundosParaReenviar,
   confirmacao,
   erroServidor,
   aoVoltarParaLogin,
@@ -56,7 +58,7 @@ export function RecuperarSenhaView({
           </Text>
           <Text className="text-corpo text-tinta-suave">
             Informe o e-mail da conta. Enviamos um link de uso único, válido por
-            1 hora.
+            tempo limitado.
           </Text>
         </View>
 
@@ -89,8 +91,13 @@ export function RecuperarSenhaView({
         ) : null}
 
         <Botao
-          rotulo="Enviar link"
+          rotulo={
+            segundosParaReenviar > 0
+              ? `Reenviar em ${segundosParaReenviar}s`
+              : "Enviar link"
+          }
           onPress={aoEnviarLink}
+          disabled={segundosParaReenviar > 0}
           carregando={carregando}
         />
 

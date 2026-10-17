@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { useRecuperarSenhaMutation } from "../servico/auth.queries";
@@ -13,6 +13,8 @@ import {
 const MENSAGEM_LINK_ENVIADO =
   "Se houver uma conta com esse e-mail, enviamos um link para redefinir a senha. Confira sua caixa de entrada.";
 
+const ESPERA_REENVIO_S = 60;
+
 export function useRecuperarSenhaViewModel() {
   const router = useRouter();
   const mutation = useRecuperarSenhaMutation();
@@ -24,12 +26,28 @@ export function useRecuperarSenhaViewModel() {
     defaultValues: { email: "" },
   });
 
-  const aoEnviarLink = form.handleSubmit(async ({ email }) => {
+  const [segundosParaReenviar, setSegundosParaReenviar] = useState(0);
+
+  useEffect(() => {
+    if (segundosParaReenviar <= 0) {
+      return;
+    }
+    const temporizador = setTimeout(
+      () => setSegundosParaReenviar((s) => s - 1),
+      1000,
+    );
+    return () => clearTimeout(temporizador);
+  }, [segundosParaReenviar]);
+
+  const enviarLink = form.handleSubmit(async ({ email }) => {
     setErroServidor(null);
     setConfirmacao(null);
     try {
       await mutation.mutateAsync(email);
       setConfirmacao(MENSAGEM_LINK_ENVIADO);
+      // O backend aceita poucos pedidos por hora e responde sucesso mesmo
+      // acima do limite (anti-enumeração): segura o botão pra não gastá-los.
+      setSegundosParaReenviar(ESPERA_REENVIO_S);
     } catch {
       // Sem código de negócio a tratar: a API só recusa formato, que o form já barra.
       setErroServidor(
@@ -41,8 +59,14 @@ export function useRecuperarSenhaViewModel() {
   return {
     control: form.control,
     erros: form.formState.errors,
-    aoEnviarLink,
+    // O "Enviar" do teclado também chega aqui, não só o botão desabilitado.
+    aoEnviarLink: () => {
+      if (segundosParaReenviar === 0) {
+        void enviarLink();
+      }
+    },
     carregando: mutation.isPending,
+    segundosParaReenviar,
     confirmacao,
     erroServidor,
     // A tela só é aberta a partir do login, então voltar é voltar pro login.
