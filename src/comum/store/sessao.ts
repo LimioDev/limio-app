@@ -33,6 +33,8 @@ interface EstadoSessao {
   /** Recusa (lança) tokens de um papel que o app não atende — confira com `ehPapelDoApp` antes. */
   entrar: (tokens: TokensSessao) => Promise<void>;
   sair: () => Promise<void>;
+  /** Saída que o usuário não pediu: a API recusou a sessão (revogada, vencida). */
+  expirar: () => Promise<void>;
   definirPapelAtivo: (papel: PapelDoApp) => Promise<void>;
   limparAvisoSaida: () => void;
 }
@@ -69,6 +71,10 @@ export const useSessao = create<EstadoSessao>((set) => ({
     // Saída pedida pelo usuário: apaga um aviso de expiração que o logout
     // possa ter disparado (ex.: sessão já revogada em outro aparelho).
     set({ ...ANONIMO, avisoSaida: null });
+  },
+  expirar: async () => {
+    await limparSessaoSalva();
+    derrubarSessao(MENSAGEM_SESSAO_EXPIRADA);
   },
   definirPapelAtivo: async (papel) => {
     await salvarPapelAtivo(papel);
