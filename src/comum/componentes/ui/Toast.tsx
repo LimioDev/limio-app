@@ -20,9 +20,9 @@ export function Toast() {
     <Animated.View
       entering={FadeInDown}
       exiting={FadeOutDown}
-      pointerEvents="box-none"
       className="absolute inset-x-0 px-margem"
-      style={{ bottom: bottom + 24 }}
+      // Em `style`, não como prop: a prop está descontinuada no react-native-web.
+      style={{ bottom: bottom + 24, pointerEvents: "box-none" }}
     >
       <Pressable
         onPress={esconder}
