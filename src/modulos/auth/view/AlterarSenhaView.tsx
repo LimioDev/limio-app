@@ -9,6 +9,7 @@ import { Icone } from "../../../comum/componentes/ui/Icone";
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Campo } from "../../../comum/componentes/ui/Campo";
 import type { AlterarSenhaForm } from "../tipos/auth.types";
+import { BotaoMostrarSenha } from "./componentes/BotaoMostrarSenha";
 
 interface RequisitosSenha {
   tamanho: boolean;
@@ -25,23 +26,6 @@ interface AlterarSenhaViewProps {
   aoSalvar: () => void;
   erroServidor: string | null;
   aoVoltar: () => void;
-}
-
-function BotaoMostrar({
-  visivel,
-  aoAlternar,
-}: {
-  visivel: boolean;
-  aoAlternar: () => void;
-}) {
-  return (
-    <Text
-      className="text-rotulo font-semibold text-marca-500"
-      onPress={aoAlternar}
-    >
-      {visivel ? "Ocultar" : "Mostrar"}
-    </Text>
-  );
 }
 
 function Requisito({ atendido, rotulo }: { atendido: boolean; rotulo: string }) {
@@ -109,7 +93,7 @@ export function AlterarSenhaView({
               autoComplete="current-password"
               textContentType="password"
               acaoDireita={
-                <BotaoMostrar
+                <BotaoMostrarSenha
                   visivel={mostrarAtual}
                   aoAlternar={() => setMostrarAtual((v) => !v)}
                 />
@@ -133,7 +117,7 @@ export function AlterarSenhaView({
               autoComplete="new-password"
               textContentType="newPassword"
               acaoDireita={
-                <BotaoMostrar
+                <BotaoMostrarSenha
                   visivel={mostrarNova}
                   aoAlternar={() => setMostrarNova((v) => !v)}
                 />

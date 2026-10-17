@@ -10,6 +10,7 @@ import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Campo } from "../../../comum/componentes/ui/Campo";
 import type { LoginForm } from "../tipos/auth.types";
 import { AvisoInfo } from "./componentes/AvisoInfo";
+import { BotaoMostrarSenha } from "./componentes/BotaoMostrarSenha";
 
 interface LoginViewProps {
   control: Control<LoginForm>;
@@ -98,12 +99,10 @@ export function LoginView({
               textContentType="password"
               onSubmitEditing={aoEntrar}
               acaoDireita={
-                <Text
-                  className="text-rotulo font-semibold text-marca-500"
-                  onPress={() => setMostrarSenha((v) => !v)}
-                >
-                  {mostrarSenha ? "Ocultar" : "Mostrar"}
-                </Text>
+                <BotaoMostrarSenha
+                  visivel={mostrarSenha}
+                  aoAlternar={() => setMostrarSenha((v) => !v)}
+                />
               }
             />
           )}
