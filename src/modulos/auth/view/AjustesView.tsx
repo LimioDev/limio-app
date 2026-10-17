@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
 
@@ -35,38 +35,45 @@ export function AjustesView({
         <Text className="text-secao font-semibold text-tinta">Ajustes</Text>
       </View>
 
-      <View className="flex-1 gap-2 px-margem pt-5">
-        <Text className="text-overline font-semibold uppercase text-tinta-fraco">
-          Conta
-        </Text>
-        <Pressable
-          onPress={aoAlterarSenha}
-          className="mb-3 flex-row items-center justify-between rounded-card border border-borda bg-superficie p-4"
-        >
-          <Text className="text-corpo text-tinta">Alterar senha</Text>
-          <Icone icone={ChevronRight} />
-        </Pressable>
+      <ScrollView
+        className="flex-1 px-margem"
+        contentContainerClassName="gap-6 pb-6 pt-5"
+      >
+        <View className="gap-2">
+          <Text className="text-overline font-semibold uppercase text-tinta-fraco">
+            Conta
+          </Text>
+          <Pressable
+            onPress={aoAlterarSenha}
+            className="flex-row items-center justify-between rounded-card border border-borda bg-superficie p-4"
+          >
+            <Text className="text-corpo text-tinta">Alterar senha</Text>
+            <Icone icone={ChevronRight} />
+          </Pressable>
+        </View>
 
-        <Text className="text-overline font-semibold uppercase text-tinta-fraco">
-          Papel
-        </Text>
-        <Pressable
-          onPress={aoAlternarPapel}
-          className="flex-row items-center justify-between rounded-card border border-borda bg-superficie p-4"
-        >
-          <View className="gap-1">
-            <Text className="text-corpo font-semibold text-tinta">
-              Alternar papel
-            </Text>
-            {rotuloPapelAtivo ? (
-              <Text className="text-rotulo text-tinta-suave">
-                Agora: {rotuloPapelAtivo}
+        <View className="gap-2">
+          <Text className="text-overline font-semibold uppercase text-tinta-fraco">
+            Papel
+          </Text>
+          <Pressable
+            onPress={aoAlternarPapel}
+            className="flex-row items-center justify-between rounded-card border border-borda bg-superficie p-4"
+          >
+            <View className="gap-1">
+              <Text className="text-corpo font-semibold text-tinta">
+                Alternar papel
               </Text>
-            ) : null}
-          </View>
-          <Icone icone={ChevronRight} />
-        </Pressable>
-      </View>
+              {rotuloPapelAtivo ? (
+                <Text className="text-rotulo text-tinta-suave">
+                  Agora: {rotuloPapelAtivo}
+                </Text>
+              ) : null}
+            </View>
+            <Icone icone={ChevronRight} />
+          </Pressable>
+        </View>
+      </ScrollView>
 
       {/* Visual provisório: o botão "Sair" ainda não foi desenhado (pendência de design do ETI-38). */}
       <View className="border-t border-borda px-margem py-4">
