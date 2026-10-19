@@ -26,9 +26,16 @@ const baseURL = process.env.EXPO_PUBLIC_API_URL ?? "http://10.0.2.2:8080";
 // eslint-disable-next-line import/no-named-as-default-member -- axios expõe `create` tanto como default quanto named export
 export const api = axios.create({ baseURL });
 
+/**
+ * 409 da API. Guarda o erro do axios em `cause`: o corpo pode ser um
+ * `ErroResponse` de negócio (ex.: `CONTATO_NAO_PERMITIDO`) que a tela precisa ler.
+ */
 export class ConflitoDeEstado extends Error {
-  constructor(mensagem = "O estado mudou antes desta requisição terminar.") {
-    super(mensagem);
+  constructor(
+    causa?: AxiosError,
+    mensagem = "O estado mudou antes desta requisição terminar.",
+  ) {
+    super(mensagem, { cause: causa });
     this.name = "ConflitoDeEstado";
   }
 }
@@ -170,7 +177,7 @@ api.interceptors.response.use(
   (resposta) => resposta,
   async (erro: AxiosError) => {
     if (erro.response?.status === 409) {
-      return Promise.reject(new ConflitoDeEstado());
+      return Promise.reject(new ConflitoDeEstado(erro));
     }
 
     const configOriginal = erro.config as ConfigComRetentativa | undefined;
