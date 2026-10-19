@@ -1,9 +1,7 @@
-import { Text, View } from "react-native";
+import { usePerfilAtuacaoViewModel } from "../../../src/modulos/perfil/viewmodel/usePerfilAtuacaoViewModel";
+import { PerfilAtuacaoView } from "../../../src/modulos/perfil/view/PerfilAtuacaoView";
 
 export default function Atuacao() {
-  return (
-    <View>
-      <Text>conta/atuacao</Text>
-    </View>
-  );
+  const vm = usePerfilAtuacaoViewModel();
+  return <PerfilAtuacaoView {...vm} />;
 }
