@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
@@ -22,12 +22,19 @@ import {
   RAIO_MIN_KM,
 } from "../tipos/atuacao.types";
 
+/** Valor de `?origem=` quando a tela 10 abre pelo seletor de papel. */
+export const ORIGEM_TROCA_PAPEL = "troca-papel";
+
 interface Opcoes {
   /**
-   * O que fazer depois de salvar. Sem isso, volta pra tela anterior ("Meu
-   * perfil"). Vindo da troca de papel, a rota passa a troca pra Prestador.
+   * Troca pra Prestador, vinda do módulo `auth` pela rota. Chamada depois de
+   * salvar quando a tela abriu pelo seletor de papel; nos outros casos a tela
+   * volta pra anterior ("Meu perfil").
    */
-  aoConcluir?: () => void | Promise<void>;
+  aoConcluirTrocaDePapel?: () => void | Promise<void>;
+  /** Estado da troca de papel, mostrado junto com o da tela. */
+  erroTrocaDePapel?: string | null;
+  trocandoPapel?: boolean;
 }
 
 /** Erros do schema do PUT, por campo da tela. */
@@ -63,8 +70,14 @@ function errosDoRascunho(rascunho: RascunhoAtuacao): ErrosAtuacao | null {
   return erros;
 }
 
-export function usePerfilAtuacaoViewModel({ aoConcluir }: Opcoes = {}) {
+export function usePerfilAtuacaoViewModel({
+  aoConcluirTrocaDePapel,
+  erroTrocaDePapel = null,
+  trocandoPapel = false,
+}: Opcoes = {}) {
   const router = useRouter();
+  const { origem } = useLocalSearchParams<{ origem?: string }>();
+  const vindoDaTrocaDePapel = origem === ORIGEM_TROCA_PAPEL;
   const queryClient = useQueryClient();
   const query = usePerfilAtuacaoQuery();
   const categorias = useCategoriasQuery();
@@ -87,7 +100,7 @@ export function usePerfilAtuacaoViewModel({ aoConcluir }: Opcoes = {}) {
   useEffect(() => descartar, [descartar]);
 
   const aoSalvar = async () => {
-    if (!rascunho || mutation.isPending) {
+    if (!rascunho || mutation.isPending || trocandoPapel) {
       return;
     }
     setErroServidor(null);
@@ -124,8 +137,9 @@ export function usePerfilAtuacaoViewModel({ aoConcluir }: Opcoes = {}) {
       }
     }
 
-    if (aoConcluir) {
-      await aoConcluir();
+    if (vindoDaTrocaDePapel && aoConcluirTrocaDePapel) {
+      // Segue pro lado Prestador (a troca leva ao Mural).
+      await aoConcluirTrocaDePapel();
     } else {
       router.back();
     }
@@ -156,8 +170,8 @@ export function usePerfilAtuacaoViewModel({ aoConcluir }: Opcoes = {}) {
       : null,
     janelas: rascunho ? agruparJanelas(rascunho.janelas) : [],
     erros,
-    erroServidor,
-    salvando: mutation.isPending,
+    erroServidor: erroServidor ?? erroTrocaDePapel,
+    salvando: mutation.isPending || trocandoPapel,
     aoSalvar,
     aoVoltar: () => router.back(),
     aoEscolherEspecialidades: () => router.push("/(app)/conta/especialidades"),
