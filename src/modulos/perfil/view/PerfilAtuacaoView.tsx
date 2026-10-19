@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, MapPin } from "lucide-react-native";
+import { ChevronRight, MapPin } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,6 +9,7 @@ import { Icone } from "../../../comum/componentes/ui/Icone";
 import type { FaixaJanela } from "../servico/atuacao.helpers";
 import type { ErrosAtuacao } from "../store/rascunhoAtuacao.store";
 import { AreaAtendimento } from "./componentes/AreaAtendimento";
+import { CabecalhoVoltar } from "./componentes/CabecalhoVoltar";
 import { ControleDeslizante } from "./componentes/ControleDeslizante";
 
 interface PerfilAtuacaoViewProps {
@@ -76,34 +77,28 @@ export function PerfilAtuacaoView({
 
   return (
     <SafeAreaView className="flex-1 bg-fundo" edges={["top", "bottom"]}>
-      <View className="flex-row items-center gap-1 px-margem pt-2">
-        <Pressable
-          onPress={aoVoltar}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Voltar"
-          className="h-toque w-8 items-center justify-center"
-        >
-          <Icone icone={ChevronLeft} tamanho={24} cor="tinta" />
-        </Pressable>
-        <Text className="flex-1 text-secao font-bold text-tinta">Perfil de atuação</Text>
-        {pronto ? (
-          <Pressable
-            onPress={aoSalvar}
-            disabled={salvando}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: salvando, busy: salvando }}
-            className="h-toque min-w-toque items-end justify-center"
-          >
-            {salvando ? (
-              <ActivityIndicator color="#2159CC" />
-            ) : (
-              <Text className="text-[14.5px] font-bold text-marca-500">Salvar</Text>
-            )}
-          </Pressable>
-        ) : null}
-      </View>
+      <CabecalhoVoltar
+        titulo="Perfil de atuação"
+        aoVoltar={aoVoltar}
+        direita={
+          pronto ? (
+            <Pressable
+              onPress={aoSalvar}
+              disabled={salvando}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: salvando, busy: salvando }}
+              className="h-toque min-w-toque items-end justify-center"
+            >
+              {salvando ? (
+                <ActivityIndicator color="#2159CC" />
+              ) : (
+                <Text className="text-[14.5px] font-bold text-marca-500">Salvar</Text>
+              )}
+            </Pressable>
+          ) : null
+        }
+      />
 
       {carregando ? (
         <Carregando />
