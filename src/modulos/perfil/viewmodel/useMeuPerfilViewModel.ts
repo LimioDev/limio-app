@@ -3,6 +3,8 @@ import { useRouter } from "expo-router";
 import { mensagemErroApi } from "../../../comum/lib/erros";
 import { useSessao } from "../../../comum/store/sessao";
 import { PapelUsuario, rotuloPapel, type PapelDoApp } from "../../../comum/tipos/papel";
+import { resumoAtuacao } from "../servico/atuacao.helpers";
+import { usePerfilAtuacaoQuery } from "../servico/atuacao.queries";
 import { formatarTelefone, telefoneNacional } from "../servico/perfil.helpers";
 import { useMeuPerfilQuery } from "../servico/perfil.queries";
 import type { PerfilEmpregadorResponse } from "../tipos/perfil.types";
@@ -46,6 +48,8 @@ export function useMeuPerfilViewModel() {
   // `(app)` só abre com sessão de papel do app; o fallback só satisfaz o tipo.
   const papelAtivo = useSessao((estado) => estado.papelAtivo) ?? PapelUsuario.EMPREGADOR;
   const query = useMeuPerfilQuery();
+  const ehPrestador = papelAtivo === PapelUsuario.PRESTADOR;
+  const atuacao = usePerfilAtuacaoQuery({ habilitado: ehPrestador });
 
   return {
     perfil: query.data ? paraExibicao(query.data) : null,
@@ -56,12 +60,23 @@ export function useMeuPerfilViewModel() {
     atualizando: query.isRefetching,
     aoAtualizar: () => {
       void query.refetch();
+      if (ehPrestador) {
+        void atuacao.refetch();
+      }
     },
     papelAtivo: {
       rotulo: rotuloPapel(papelAtivo),
       descricao: DESCRICAO_PAPEL[papelAtivo],
     },
-    mostrarAtuacao: papelAtivo === PapelUsuario.PRESTADOR,
+    // Só no papel Prestador. Sem resposta da API ainda, não marca incompleto.
+    atuacao: ehPrestador
+      ? {
+          resumo:
+            (atuacao.data && resumoAtuacao(atuacao.data)) ??
+            "Escolha especialidades, raio e município",
+          incompleto: atuacao.data ? !atuacao.data.completo : false,
+        }
+      : null,
     aoAbrirAjustes: () => router.push("/(app)/ajustes"),
     aoTrocarPapel: () => router.push("/(app)/trocar-papel"),
     aoEditarContato: () => router.push("/(app)/conta/dados-contato"),
