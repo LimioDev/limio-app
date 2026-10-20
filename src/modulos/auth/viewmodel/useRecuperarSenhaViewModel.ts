@@ -5,6 +5,10 @@ import { useForm } from "react-hook-form";
 
 import { useRecuperarSenhaMutation } from "../servico/auth.queries";
 import {
+  ESPERA_REENVIO_S,
+  useReenvioRecuperacao,
+} from "../store/reenvioRecuperacao.store";
+import {
   RecuperarSenhaFormSchema,
   type RecuperarSenhaForm,
 } from "../tipos/auth.types";
@@ -12,8 +16,6 @@ import {
 // Sempre a mesma, exista a conta ou não: o backend também não diz (anti-enumeração).
 const MENSAGEM_LINK_ENVIADO =
   "Se houver uma conta com esse e-mail, enviamos um link para redefinir a senha. Confira sua caixa de entrada.";
-
-const ESPERA_REENVIO_S = 60;
 
 export function useRecuperarSenhaViewModel() {
   const router = useRouter();
@@ -26,18 +28,31 @@ export function useRecuperarSenhaViewModel() {
     defaultValues: { email: "" },
   });
 
-  const [segundosParaReenviar, setSegundosParaReenviar] = useState(0);
+  const proximoEnvioPermitidoEm = useReenvioRecuperacao(
+    (estado) => estado.proximoEnvioPermitidoEm,
+  );
+  const registrarEnvio = useReenvioRecuperacao(
+    (estado) => estado.registrarEnvio,
+  );
+  const [agora, setAgora] = useState(() => Date.now());
+  // `agora` só anda no efeito abaixo; logo depois de um envio ele está
+  // atrasado, por isso o teto de 60 s até o próximo tique.
+  const segundosParaReenviar =
+    proximoEnvioPermitidoEm === null
+      ? 0
+      : Math.min(
+          ESPERA_REENVIO_S,
+          Math.max(0, Math.ceil((proximoEnvioPermitidoEm - agora) / 1000)),
+        );
 
+  // Relógio da contagem: só anda enquanto há espera.
   useEffect(() => {
     if (segundosParaReenviar <= 0) {
       return;
     }
-    const temporizador = setTimeout(
-      () => setSegundosParaReenviar((s) => s - 1),
-      1000,
-    );
+    const temporizador = setTimeout(() => setAgora(Date.now()), 1000);
     return () => clearTimeout(temporizador);
-  }, [segundosParaReenviar]);
+  }, [segundosParaReenviar, agora]);
 
   const enviarLink = form.handleSubmit(async ({ email }) => {
     setErroServidor(null);
@@ -45,9 +60,8 @@ export function useRecuperarSenhaViewModel() {
     try {
       await mutation.mutateAsync(email);
       setConfirmacao(MENSAGEM_LINK_ENVIADO);
-      // O backend aceita poucos pedidos por hora e responde sucesso mesmo
-      // acima do limite (anti-enumeração): segura o botão pra não gastá-los.
-      setSegundosParaReenviar(ESPERA_REENVIO_S);
+      // Segura o botão pra não gastar os poucos pedidos por hora do backend.
+      registrarEnvio();
     } catch {
       // Sem código de negócio a tratar: a API só recusa formato, que o form já barra.
       setErroServidor(
