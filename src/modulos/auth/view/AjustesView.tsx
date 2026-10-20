@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
@@ -12,6 +13,8 @@ interface AjustesViewProps {
   aoSair: () => void;
   saindo: boolean;
   aoVoltar: () => void;
+  /** Seção "Notificações", montada pela rota a partir do módulo `conta`. */
+  secaoNotificacoes?: ReactNode;
 }
 
 export function AjustesView({
@@ -21,6 +24,7 @@ export function AjustesView({
   aoSair,
   saindo,
   aoVoltar,
+  secaoNotificacoes,
 }: AjustesViewProps) {
   return (
     <SafeAreaView className="flex-1 bg-fundo" edges={["top", "bottom"]}>
@@ -73,6 +77,27 @@ export function AjustesView({
             <Icone icone={ChevronRight} />
           </Pressable>
         </View>
+        className="flex-1"
+        contentContainerClassName="gap-6 px-margem pb-6 pt-5"
+      >
+        <Pressable
+          onPress={aoAlternarPapel}
+          className="flex-row items-center justify-between rounded-card border border-borda bg-superficie p-4"
+        >
+          <View className="gap-1">
+            <Text className="text-corpo font-semibold text-tinta">
+              Alternar papel
+            </Text>
+            {rotuloPapelAtivo ? (
+              <Text className="text-rotulo text-tinta-suave">
+                Agora: {rotuloPapelAtivo}
+              </Text>
+            ) : null}
+          </View>
+          <Icone icone={ChevronRight} />
+        </Pressable>
+
+        {secaoNotificacoes}
       </ScrollView>
 
       {/* Visual provisório: o botão "Sair" ainda não foi desenhado (pendência de design do ETI-38). */}
