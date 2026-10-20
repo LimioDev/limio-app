@@ -5,6 +5,7 @@ import {
   autenticar,
   cadastrarUsuario,
   encerrarSessao,
+  redefinirSenha,
   revogarSessaoNaoSalva,
   solicitarRecuperacaoSenha,
   trocarPapelAtivo,
@@ -44,6 +45,13 @@ export function useTrocarPapelMutation() {
 export function useRecuperarSenhaMutation() {
   return useMutation({
     mutationFn: solicitarRecuperacaoSenha,
+  });
+}
+
+export function useRedefinirSenhaMutation() {
+  return useMutation({
+    mutationFn: ({ token, novaSenha }: { token: string; novaSenha: string }) =>
+      redefinirSenha(token, novaSenha),
   });
 }
 

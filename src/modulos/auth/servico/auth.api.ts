@@ -14,6 +14,7 @@ import {
   CadastroRequestSchema,
   LoginRequestSchema,
   RecuperarSenhaRequestSchema,
+  RedefinirSenhaRequestSchema,
   PapelAtivoResponseSchema,
   PapelAlternavelSchema,
   UsuarioResponseSchema,
@@ -74,6 +75,18 @@ export async function revogarSessaoNaoSalva(tokens: TokensSessao): Promise<void>
 export async function solicitarRecuperacaoSenha(email: string): Promise<void> {
   const corpo = RecuperarSenhaRequestSchema.parse({ email });
   await api.post("/auth/recuperar-senha", corpo);
+}
+
+/**
+ * Grava a nova senha a partir do token do link de recuperação. O backend
+ * encerra todas as sessões da conta, então quem redefine entra de novo.
+ */
+export async function redefinirSenha(
+  token: string,
+  novaSenha: string,
+): Promise<void> {
+  const corpo = RedefinirSenhaRequestSchema.parse({ token, novaSenha });
+  await api.post("/auth/redefinir-senha", corpo);
 }
 
 /**

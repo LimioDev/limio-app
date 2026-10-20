@@ -3,46 +3,27 @@ import { Controller } from "react-hook-form";
 import type { Control, FieldErrors } from "react-hook-form";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Check, ChevronLeft, Circle } from "lucide-react-native";
+import { ChevronLeft } from "lucide-react-native";
 
 import { Icone } from "../../../comum/componentes/ui/Icone";
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Campo } from "../../../comum/componentes/ui/Campo";
 import type { AlterarSenhaForm } from "../tipos/auth.types";
 import { BotaoMostrarSenha } from "./componentes/BotaoMostrarSenha";
-
-interface RequisitosSenha {
-  tamanho: boolean;
-  letra: boolean;
-  numero: boolean;
-}
+import {
+  RequisitosSenha,
+  type RequisitosSenhaAtendidos,
+} from "./componentes/RequisitosSenha";
 
 interface AlterarSenhaViewProps {
   control: Control<AlterarSenhaForm>;
   erros: FieldErrors<AlterarSenhaForm>;
-  requisitos: RequisitosSenha;
+  requisitos: RequisitosSenhaAtendidos;
   podeSalvar: boolean;
   salvando: boolean;
   aoSalvar: () => void;
   erroServidor: string | null;
   aoVoltar: () => void;
-}
-
-function Requisito({ atendido, rotulo }: { atendido: boolean; rotulo: string }) {
-  return (
-    <View className="flex-row items-center gap-2">
-      <Icone
-        icone={atendido ? Check : Circle}
-        tamanho={atendido ? 16 : 8}
-        cor={atendido ? "marca" : "fraco"}
-      />
-      <Text
-        className={`text-rotulo ${atendido ? "text-marca-500" : "text-tinta-suave"}`}
-      >
-        {rotulo}
-      </Text>
-    </View>
-  );
 }
 
 export function AlterarSenhaView({
@@ -145,14 +126,7 @@ export function AlterarSenhaView({
           )}
         />
 
-        <View className="gap-2 rounded-card bg-marca-50 p-4">
-          <Text className="text-rotulo font-semibold text-tinta-suave">
-            A nova senha precisa ter:
-          </Text>
-          <Requisito atendido={requisitos.tamanho} rotulo="8 caracteres" />
-          <Requisito atendido={requisitos.letra} rotulo="uma letra" />
-          <Requisito atendido={requisitos.numero} rotulo="um número" />
-        </View>
+        <RequisitosSenha requisitos={requisitos} />
 
         <Text className="text-rotulo text-tinta-fraco">
           Você continua conectado neste aparelho depois de trocar a senha.
