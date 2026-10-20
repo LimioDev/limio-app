@@ -7,7 +7,11 @@ import { erroApi } from "../../../comum/lib/erros";
 import { useSessao } from "../../../comum/store/sessao";
 import { useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
-import { useAlterarSenhaMutation } from "../servico/auth.queries";
+import type { TokensSessao } from "../../../comum/tipos/sessao";
+import {
+  useAlterarSenhaMutation,
+  useRevogarSessaoNaoSalvaMutation,
+} from "../servico/auth.queries";
 import {
   AlterarSenhaFormSchema,
   SENHA_TAMANHO_MINIMO,
@@ -16,12 +20,15 @@ import {
   type AlterarSenhaForm,
 } from "../tipos/auth.types";
 
+const MENSAGEM_SENHA_ALTERADA_ENTRAR = "Senha alterada. Entre novamente.";
+
 export function useAlterarSenhaViewModel() {
   const router = useRouter();
   const entrar = useSessao((estado) => estado.entrar);
   const expirar = useSessao((estado) => estado.expirar);
   const mostrarToast = useToast((estado) => estado.mostrar);
   const mutation = useAlterarSenhaMutation();
+  const revogarSessao = useRevogarSessaoNaoSalvaMutation();
   const [erroServidor, setErroServidor] = useState<string | null>(null);
 
   const form = useForm<AlterarSenhaForm>({
@@ -43,12 +50,9 @@ export function useAlterarSenhaViewModel() {
 
   const aoSalvar = form.handleSubmit(async ({ senhaAtual, novaSenha }) => {
     setErroServidor(null);
+    let tokens: TokensSessao;
     try {
-      const tokens = await mutation.mutateAsync({ senhaAtual, novaSenha });
-      // A sessão deste aparelho segue com os tokens novos; os antigos já não valem.
-      await entrar(tokens);
-      mostrarToast("Senha alterada com sucesso");
-      router.back();
+      tokens = await mutation.mutateAsync({ senhaAtual, novaSenha });
     } catch (erro) {
       switch (erroApi(erro)?.codigo) {
         case CodigoErro.SENHA_ATUAL_INCORRETA:
@@ -70,7 +74,24 @@ export function useAlterarSenhaViewModel() {
             "Não foi possível alterar a senha. Verifique sua conexão e tente novamente.",
           );
       }
+      return;
     }
+
+    // Daqui pra baixo a senha já mudou no servidor e as outras sessões caíram:
+    // falha nunca pode virar "não foi possível alterar" (tentar de novo daria
+    // SENHA_ATUAL_INCORRETA, porque a atual agora é a nova).
+    try {
+      // A sessão deste aparelho segue com os tokens novos; os antigos já não valem.
+      await entrar(tokens);
+    } catch {
+      // `entrar` recusou o papel ou o SecureStore falhou: revoga a sessão
+      // nova que não foi guardada e leva ao login.
+      await revogarSessao.mutateAsync(tokens);
+      await expirar(MENSAGEM_SENHA_ALTERADA_ENTRAR);
+      return;
+    }
+    mostrarToast("Senha alterada com sucesso");
+    router.back();
   });
 
   return {

@@ -33,8 +33,11 @@ interface EstadoSessao {
   /** Recusa (lança) tokens de um papel que o app não atende — confira com `ehPapelDoApp` antes. */
   entrar: (tokens: TokensSessao) => Promise<void>;
   sair: () => Promise<void>;
-  /** Saída que o usuário não pediu: a API recusou a sessão (revogada, vencida). */
-  expirar: () => Promise<void>;
+  /**
+   * Saída que o usuário não pediu: a API recusou a sessão (revogada, vencida).
+   * `aviso` troca a mensagem padrão do login quando o motivo é outro.
+   */
+  expirar: (aviso?: string) => Promise<void>;
   definirPapelAtivo: (papel: PapelDoApp) => Promise<void>;
   limparAvisoSaida: () => void;
 }
@@ -72,9 +75,10 @@ export const useSessao = create<EstadoSessao>((set) => ({
     // possa ter disparado (ex.: sessão já revogada em outro aparelho).
     set({ ...ANONIMO, avisoSaida: null });
   },
-  expirar: async () => {
-    await limparSessaoSalva();
-    derrubarSessao(MENSAGEM_SESSAO_EXPIRADA);
+  expirar: async (aviso = MENSAGEM_SESSAO_EXPIRADA) => {
+    // Derruba mesmo se o SecureStore falhar: a sessão já não vale no servidor.
+    await limparSessaoSalva().catch(() => {});
+    derrubarSessao(aviso);
   },
   definirPapelAtivo: async (papel) => {
     await salvarPapelAtivo(papel);
