@@ -12,10 +12,14 @@ interface TrocarPapelViewProps {
   erroServidor: string | null;
   aoFechar: () => void;
   /**
-   * Perfil de atuação incompleto (vem do módulo `perfil` pela rota): o card de
-   * Prestador ganha o selo e leva a completar o perfil em vez de trocar.
+   * Situação do perfil de atuação, vinda do módulo `perfil` pela rota (o `auth`
+   * não importa o `perfil`, por isso o tipo é repetido aqui):
+   * - `verificando`: card de Prestador travado até a API responder;
+   * - `incompleto`: selo "Perfil incompleto", e tocar leva a completar o perfil;
+   * - `desconhecido`: a consulta falhou; troca liberada, com o atalho pra completar;
+   * - `completo` (ou ausente): troca normal.
    */
-  prestadorIncompleto?: boolean;
+  situacaoPerfilPrestador?: "verificando" | "incompleto" | "desconhecido" | "completo";
   aoCompletarPerfilAtuacao?: () => void;
 }
 
@@ -25,7 +29,7 @@ export function TrocarPapelView({
   papelEmTroca,
   erroServidor,
   aoFechar,
-  prestadorIncompleto = false,
+  situacaoPerfilPrestador = "completo",
   aoCompletarPerfilAtuacao,
 }: TrocarPapelViewProps) {
   const trocando = Boolean(papelEmTroca);
@@ -51,10 +55,14 @@ export function TrocarPapelView({
 
         <View className="gap-3">
           {opcoes.map((opcao) => {
-            const incompleto =
-              opcao.papel === PapelUsuario.PRESTADOR &&
-              prestadorIncompleto &&
-              Boolean(aoCompletarPerfilAtuacao);
+            const situacao =
+              opcao.papel === PapelUsuario.PRESTADOR && aoCompletarPerfilAtuacao
+                ? situacaoPerfilPrestador
+                : "completo";
+            const incompleto = situacao === "incompleto";
+            const mostrarAtalho = incompleto || situacao === "desconhecido";
+            // Toque rápido não troca de papel antes de saber se o perfil está completo.
+            const verificando = situacao === "verificando" && !opcao.ativo;
             // Prestador incompleto: tocar leva a completar o perfil, não troca.
             const aoTocar =
               incompleto && !opcao.ativo
@@ -65,8 +73,9 @@ export function TrocarPapelView({
               <Pressable
                 key={opcao.papel}
                 onPress={aoTocar}
-                disabled={trocando}
-                className={`gap-1 rounded-card border p-4 ${opcao.ativo ? "border-marca-500 bg-marca-50" : "border-borda bg-superficie"} ${trocando && papelEmTroca !== opcao.papel ? "opacity-50" : ""}`}
+                disabled={trocando || verificando}
+                accessibilityState={{ disabled: trocando || verificando, busy: verificando }}
+                className={`gap-1 rounded-card border p-4 ${opcao.ativo ? "border-marca-500 bg-marca-50" : "border-borda bg-superficie"} ${(trocando && papelEmTroca !== opcao.papel) || verificando ? "opacity-50" : ""}`}
               >
                 {incompleto ? (
                   <View className="mb-1 self-start rounded-full bg-alerta-fundo px-2.5 py-1">
@@ -86,14 +95,14 @@ export function TrocarPapelView({
                       </Text>
                     </View>
                   ) : null}
-                  {papelEmTroca === opcao.papel ? (
+                  {papelEmTroca === opcao.papel || verificando ? (
                     <ActivityIndicator color="#2159CC" />
                   ) : null}
                 </View>
                 <Text className="text-rotulo text-tinta-suave">
                   {opcao.descricao}
                 </Text>
-                {incompleto ? (
+                {mostrarAtalho ? (
                   <Text
                     className="pt-1 text-rotulo font-bold text-marca-500"
                     onPress={aoCompletarPerfilAtuacao}
