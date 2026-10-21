@@ -9,7 +9,7 @@ import { Lock, Mail, MapPin, Smartphone } from "lucide-react-native";
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Campo } from "../../../comum/componentes/ui/Campo";
 import type { DadosPessoaisForm } from "../tipos/auth.types";
-import { BotaoMostrarSenha } from "./componentes/BotaoMostrarSenha";
+import { BotaoMostrarSenha } from "../../../comum/componentes/ui/BotaoMostrarSenha";
 import { PassoCadastro } from "./componentes/PassoCadastro";
 
 interface CadastroDadosViewProps {

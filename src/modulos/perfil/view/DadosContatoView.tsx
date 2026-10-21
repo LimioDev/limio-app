@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Masks, type Mask, type MaskArray } from "react-native-mask-input";
 
 import { Botao } from "../../../comum/componentes/ui/Botao";
+import { BotaoMostrarSenha } from "../../../comum/componentes/ui/BotaoMostrarSenha";
 import { Campo } from "../../../comum/componentes/ui/Campo";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { NOME_EXIBICAO_MAX, type DadosContatoForm } from "../tipos/perfil.types";
@@ -146,13 +147,10 @@ export function DadosContatoView({
                       autoCapitalize="none"
                       autoComplete="current-password"
                       acaoDireita={
-                        <Text
-                          className="text-rotulo font-semibold text-marca-500"
-                          accessibilityRole="button"
-                          onPress={() => setMostrarSenha((v) => !v)}
-                        >
-                          {mostrarSenha ? "Ocultar" : "Mostrar"}
-                        </Text>
+                        <BotaoMostrarSenha
+                          visivel={mostrarSenha}
+                          aoAlternar={() => setMostrarSenha((v) => !v)}
+                        />
                       }
                     />
                   )}

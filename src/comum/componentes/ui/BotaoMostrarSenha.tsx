@@ -5,7 +5,10 @@ interface BotaoMostrarSenhaProps {
   aoAlternar: () => void;
 }
 
-/** "Mostrar"/"Ocultar" à direita de um campo de senha. */
+/**
+ * "Mostrar"/"Ocultar" à direita de um campo de senha (`acaoDireita` do `Campo`).
+ * Em `comum/` porque `auth` (login, cadastro, senhas) e `perfil` (Dados de contato) usam.
+ */
 export function BotaoMostrarSenha({ visivel, aoAlternar }: BotaoMostrarSenhaProps) {
   return (
     <Pressable
