@@ -2,13 +2,27 @@ import { useState } from "react";
 import { Controller, type Control, type FieldErrors } from "react-hook-form";
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Masks } from "react-native-mask-input";
+import { Masks, type Mask, type MaskArray } from "react-native-mask-input";
 
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Campo } from "../../../comum/componentes/ui/Campo";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { NOME_EXIBICAO_MAX, type DadosContatoForm } from "../tipos/perfil.types";
 import { CabecalhoVoltar } from "./componentes/CabecalhoVoltar";
+
+const D = /\d/;
+/**
+ * Fixo legado (10 dígitos) com uma posição a mais no fim: mostra "(11) 3254-4472"
+ * e ainda deixa digitar o 11º dígito, quando a máscara passa pra de celular.
+ */
+const TELEFONE_ATE_10: MaskArray = ["(", D, D, ")", " ", D, D, D, D, "-", D, D, D, D, D];
+
+/**
+ * `Masks.BRL_PHONE` é fixa em DDD + 5 + 4: uma conta antiga com telefone fixo
+ * abriria a tela como "(11) 32544-472". Escolhe a máscara pelo total de dígitos.
+ */
+const mascaraTelefone: Mask = (valor = "") =>
+  valor.replace(/\D/g, "").length <= 10 ? TELEFONE_ATE_10 : Masks.BRL_PHONE;
 
 interface DadosContatoViewProps {
   carregando: boolean;
@@ -109,7 +123,7 @@ export function DadosContatoView({
                   onChangeText={field.onChange}
                   onBlur={field.onBlur}
                   erro={erros.telefone?.message}
-                  mask={Masks.BRL_PHONE}
+                  mask={mascaraTelefone}
                   keyboardType="number-pad"
                   placeholder="(11) 98254-4472"
                 />
