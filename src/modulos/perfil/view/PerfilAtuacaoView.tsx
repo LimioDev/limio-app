@@ -16,7 +16,7 @@ interface PerfilAtuacaoViewProps {
   carregando: boolean;
   erroCarregamento: string | null;
   aoTentarDeNovo: () => void;
-  especialidades: string[];
+  especialidades: { id: string; nome: string }[];
   /** "3 de 8"; `null` enquanto as categorias não carregaram. */
   contadorEspecialidades: string | null;
   semEspecialidades: boolean;
@@ -133,12 +133,9 @@ export function PerfilAtuacaoView({
             />
             {especialidades.length > 0 ? (
               <View className="flex-row flex-wrap gap-2">
-                {especialidades.map((nome) => (
+                {especialidades.map(({ id, nome }) => (
                   <View
-                    //[AJUSTAR] `key={nome}` pode repetir se duas categorias tiverem o mesmo nome.
-                    //Por quê: chave repetida faz o React reaproveitar o item errado ao atualizar a lista.
-                    //Sugestão: passar `{ id, nome }` do viewmodel e usar `key={id}`.
-                    key={nome}
+                    key={id}
                     className="h-9 justify-center rounded-chip border border-marca-100 bg-marca-50 px-4"
                   >
                     <Text className="text-[13.5px] font-bold text-marca-500">{nome}</Text>

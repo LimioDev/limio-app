@@ -157,7 +157,8 @@ export function usePerfilAtuacaoViewModel({
     aoTentarDeNovo: () => {
       void query.refetch();
     },
-    especialidades: rascunho?.especialidades.map((categoria) => categoria.nome) ?? [],
+    especialidades:
+      rascunho?.especialidades.map(({ id, nome }) => ({ id, nome })) ?? [],
     contadorEspecialidades:
       totalCategorias === null ? null : `${qtdEspecialidades} de ${totalCategorias}`,
     semEspecialidades: qtdEspecialidades === 0,
