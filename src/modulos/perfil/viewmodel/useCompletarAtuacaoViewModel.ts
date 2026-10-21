@@ -14,6 +14,9 @@ export function useCompletarAtuacaoViewModel() {
 
   return {
     // Sem resposta da API (carregando ou erro), a troca segue como antes.
+    // ❯ [AJUSTAR] Enquanto o perfil carrega ou se o GET falha, o Prestador troca direto, sem completar o perfil.
+    //Por quê: `prestadorIncompleto` vale `false` sem `query.data`; tocar rápido ou estar sem rede
+    // Sugestão: expor `verificandoPrestador: query.isPending` e desabilitar o card de Prestador enquanto ele for `true`; no erro, tratar como incompleto.
     prestadorIncompleto: query.data ? !query.data.completo : false,
     aoCompletarPerfilAtuacao: () =>
       router.replace({
