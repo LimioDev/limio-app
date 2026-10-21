@@ -18,6 +18,12 @@ export function rotuloMunicipio(nome: string, uf: Uf): string {
 export function normalizarBusca(texto: string): string {
   return texto
     .normalize("NFD")
+    //[SUGESTÃO] Acentos invisíveis colados direto na regex.
+    //Por quê: são frágeis e ilegíveis; um formatador pode estragá-los sem ninguém perceber.
+    //Sugestão:
+    //```suggestion
+    //    .replace(/[\u0300-\u036f]/g, "")
+    //```
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .trim();
