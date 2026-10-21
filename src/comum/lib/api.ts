@@ -16,8 +16,18 @@ const CHAVE_SESSAO = "limio.sessao";
 // Margem pra não mandar um token que expira no meio do caminho.
 const MARGEM_EXPIRACAO_MS = 30_000;
 
-// Rotas públicas: 401 nelas é resposta de negócio (ex.: CREDENCIAIS_INVALIDAS), não token vencido.
-const ROTAS_SEM_RENOVACAO = ["/auth/login", "/auth/refresh", "/auth/cadastro"];
+// 401 nestas rotas é resposta de negócio (ex.: CREDENCIAIS_INVALIDAS,
+// SENHA_ATUAL_INCORRETA, TOKEN_RECUPERACAO_INVALIDO), não token vencido. `/auth/senha` é autenticada, mas
+// leva o refresh token no corpo: quem chama renova antes (`garantirTokenAcessoValido`),
+// e uma renovação reativa rotacionaria o token e a retentativa iria com o antigo.
+const ROTAS_SEM_RENOVACAO = [
+  "/auth/login",
+  "/auth/refresh",
+  "/auth/cadastro",
+  "/auth/recuperar-senha",
+  "/auth/redefinir-senha",
+  "/auth/senha",
+];
 
 // Vem do .env (staging) ou do .env.local. Fallback: emulador Android enxerga o
 // localhost da máquina host como 10.0.2.2.

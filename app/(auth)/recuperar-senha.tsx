@@ -1,9 +1,7 @@
-import { Text, View } from "react-native";
+import { useRecuperarSenhaViewModel } from "../../src/modulos/auth/viewmodel/useRecuperarSenhaViewModel";
+import { RecuperarSenhaView } from "../../src/modulos/auth/view/RecuperarSenhaView";
 
 export default function RecuperarSenha() {
-  return (
-    <View>
-      <Text>recuperar-senha</Text>
-    </View>
-  );
+  const vm = useRecuperarSenhaViewModel();
+  return <RecuperarSenhaView {...vm} />;
 }

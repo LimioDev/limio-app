@@ -6,6 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 
 import { useRestaurarSessaoViewModel } from "../src/modulos/auth/viewmodel/useRestaurarSessaoViewModel";
+import { Toast } from "../src/comum/componentes/ui/Toast";
 import { queryClient } from "../src/comum/lib/query";
 
 if (typeof globalThis.TextEncoder === "undefined") {
@@ -30,7 +31,11 @@ export default function RootLayout() {
         <Stack.Protected guard={autenticado}>
           <Stack.Screen name="(app)" />
         </Stack.Protected>
+        {/* Fora dos guards: o link do e-mail pode ser aberto com alguém já logado no aparelho. */}
+        <Stack.Screen name="nova-senha" />
+
       </Stack>
+      <Toast />
     </QueryClientProvider>
   );
 }
