@@ -1,15 +1,14 @@
-import { ChevronLeft } from "lucide-react-native";
 import { useState } from "react";
 import { Controller, type Control, type FieldErrors } from "react-hook-form";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Masks } from "react-native-mask-input";
 
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Campo } from "../../../comum/componentes/ui/Campo";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
-import { Icone } from "../../../comum/componentes/ui/Icone";
 import { NOME_EXIBICAO_MAX, type DadosContatoForm } from "../tipos/perfil.types";
+import { CabecalhoVoltar } from "./componentes/CabecalhoVoltar";
 
 interface DadosContatoViewProps {
   carregando: boolean;
@@ -41,18 +40,7 @@ export function DadosContatoView({
 
   return (
     <SafeAreaView className="flex-1 bg-fundo" edges={["top", "bottom"]}>
-      <View className="flex-row items-center gap-1 px-margem pt-2">
-        <Pressable
-          onPress={aoVoltar}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Voltar"
-          className="h-toque w-8 items-center justify-center"
-        >
-          <Icone icone={ChevronLeft} tamanho={24} cor="tinta" />
-        </Pressable>
-        <Text className="text-secao font-bold text-tinta">Dados de contato</Text>
-      </View>
+      <CabecalhoVoltar titulo="Dados de contato" aoVoltar={aoVoltar} />
 
       {carregando ? (
         <Carregando />
