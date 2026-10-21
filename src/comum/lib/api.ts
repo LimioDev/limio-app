@@ -29,7 +29,7 @@ const ROTAS_SEM_RENOVACAO = [
   "/auth/senha",
 ];
 
-// Vem do .env (staging) ou do .env.local. Fallback: emulador Android enxerga o
+// Vem do .env (não versionado — ver .env.example). Fallback: emulador Android enxerga o
 // localhost da máquina host como 10.0.2.2.
 const baseURL = process.env.EXPO_PUBLIC_API_URL ?? "http://10.0.2.2:8080";
 
