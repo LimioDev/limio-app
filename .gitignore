@@ -30,10 +30,9 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# env files (nunca versionar valores reais — use .env.example como modelo)
+# env files (nunca versionar)
 .env
 .env.*
-!.env.example
 
 # typescript
 *.tsbuildinfo
