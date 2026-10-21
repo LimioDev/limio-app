@@ -54,6 +54,90 @@ export const PapelAtivoResponseSchema = z.object({
 
 export type PapelAtivoResponse = z.infer<typeof PapelAtivoResponseSchema>;
 
+/** Espelha `SolicitarRecuperacaoSenhaRequest` — corpo de `POST /auth/recuperar-senha`. */
+export const RecuperarSenhaRequestSchema = z.object({
+  email: z.email().max(255),
+});
+
+export type RecuperarSenhaRequest = z.infer<typeof RecuperarSenhaRequestSchema>;
+
+/** Mesma regra do `@Pattern` dos records de senha no backend (72 é o limite do BCrypt). */
+export const SENHA_TAMANHO_MINIMO = 8;
+export const SENHA_TAMANHO_MAXIMO = 72;
+export const TEM_LETRA = /[A-Za-z]/;
+export const TEM_NUMERO = /\d/;
+
+const NovaSenhaSchema = z
+  .string()
+  .min(SENHA_TAMANHO_MINIMO, "A senha precisa ter pelo menos 8 caracteres")
+  .max(SENHA_TAMANHO_MAXIMO, "A senha pode ter no máximo 72 caracteres")
+  .regex(TEM_LETRA, "A senha precisa ter uma letra")
+  .regex(TEM_NUMERO, "A senha precisa ter um número");
+
+/**
+ * Espelha `AlterarSenhaRequest` — corpo de `PATCH /auth/senha`. O
+ * `refreshToken` diz qual sessão é "este aparelho": ela recebe tokens novos e
+ * as demais são encerradas.
+ */
+export const AlterarSenhaRequestSchema = z.object({
+  senhaAtual: z.string().min(1),
+  novaSenha: NovaSenhaSchema,
+  refreshToken: z.string().min(1),
+});
+
+export type AlterarSenhaRequest = z.infer<typeof AlterarSenhaRequestSchema>;
+
+/**
+ * Espelha `RedefinirSenhaRequest` — corpo de `POST /auth/redefinir-senha`. O
+ * `token` vem do link do e-mail (`limio://nova-senha?token=...`).
+ */
+export const RedefinirSenhaRequestSchema = z.object({
+  token: z.string().min(1),
+  novaSenha: NovaSenhaSchema,
+});
+
+export type RedefinirSenhaRequest = z.infer<typeof RedefinirSenhaRequestSchema>;
+
+/** Valores do formulário da tela 06 "Redefinir sua senha". */
+export const RecuperarSenhaFormSchema = z.object({
+  email: z.string().trim().pipe(z.email("E-mail inválido")),
+});
+
+export type RecuperarSenhaForm = z.infer<typeof RecuperarSenhaFormSchema>;
+
+/** "Repetir a nova senha" igual à nova — usado nos forms de alterar e de redefinir. */
+const REPETICAO_CONFERE = {
+  path: ["repetirNovaSenha"],
+  message: "As senhas não conferem",
+};
+
+/** Valores do formulário da tela 07a "Alterar senha". */
+export const AlterarSenhaFormSchema = z
+  .object({
+    senhaAtual: z.string().min(1, "Informe sua senha atual"),
+    novaSenha: NovaSenhaSchema,
+    repetirNovaSenha: z.string(),
+  })
+  .refine(
+    (dados) => dados.repetirNovaSenha === dados.novaSenha,
+    REPETICAO_CONFERE,
+  );
+
+export type AlterarSenhaForm = z.infer<typeof AlterarSenhaFormSchema>;
+
+/** Valores do formulário da tela "Nova senha" (link do e-mail de recuperação). */
+export const NovaSenhaFormSchema = z
+  .object({
+    novaSenha: NovaSenhaSchema,
+    repetirNovaSenha: z.string(),
+  })
+  .refine(
+    (dados) => dados.repetirNovaSenha === dados.novaSenha,
+    REPETICAO_CONFERE,
+  );
+
+export type NovaSenhaForm = z.infer<typeof NovaSenhaFormSchema>;
+
 /** Valores do formulário da tela 05 "Entrar". */
 export const LoginFormSchema = z.object({
   email: z.string().trim().pipe(z.email("E-mail inválido")),

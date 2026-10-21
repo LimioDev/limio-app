@@ -6,10 +6,15 @@ import {
   obterRefreshToken,
   renovarSessao,
 } from "../../../comum/lib/api";
+import { erroApi } from "../../../comum/lib/erros";
+import { CodigoErro } from "../../../comum/tipos/erros";
 import { TokensSessaoSchema, type TokensSessao } from "../../../comum/tipos/sessao";
 import {
+  AlterarSenhaRequestSchema,
   CadastroRequestSchema,
   LoginRequestSchema,
+  RecuperarSenhaRequestSchema,
+  RedefinirSenhaRequestSchema,
   PapelAtivoResponseSchema,
   PapelAlternavelSchema,
   UsuarioResponseSchema,
@@ -61,6 +66,68 @@ export async function revogarSessaoNaoSalva(tokens: TokensSessao): Promise<void>
       { headers: { Authorization: `Bearer ${tokens.token}` } },
     )
     .catch(() => {});
+}
+
+/**
+ * Pede o link de recuperação de senha. O backend responde 200 exista o e-mail
+ * ou não (anti-enumeração), então não há nada a devolver.
+ */
+export async function solicitarRecuperacaoSenha(email: string): Promise<void> {
+  const corpo = RecuperarSenhaRequestSchema.parse({ email });
+  await api.post("/auth/recuperar-senha", corpo);
+}
+
+/**
+ * Grava a nova senha a partir do token do link de recuperação. O backend
+ * encerra todas as sessões da conta, então quem redefine entra de novo.
+ */
+export async function redefinirSenha(
+  token: string,
+  novaSenha: string,
+): Promise<void> {
+  const corpo = RedefinirSenhaRequestSchema.parse({ token, novaSenha });
+  await api.post("/auth/redefinir-senha", corpo);
+}
+
+/**
+ * Altera a senha do usuário logado. A sessão deste aparelho continua, com
+ * tokens novos (devolvidos aqui); as dos outros aparelhos são encerradas.
+ */
+export async function alterarSenha(
+  senhaAtual: string,
+  novaSenha: string,
+): Promise<TokensSessao> {
+  // O refresh token vai no corpo: renova antes, porque a renovação reativa do
+  // interceptor rotacionaria o token e a retentativa iria com o antigo.
+  await garantirTokenAcessoValido();
+  try {
+    return await enviarAlteracaoSenha(senhaAtual, novaSenha);
+  } catch (erro) {
+    // Token recusado mesmo parecendo válido (ex.: relógio do aparelho errado):
+    // renova e tenta uma vez, já com o refresh token novo no corpo. Se a
+    // renovação for recusada, `aoExpirar` já derrubou a sessão.
+    if (erroApi(erro)?.codigo !== CodigoErro.NAO_AUTENTICADO) {
+      throw erro;
+    }
+    if (!(await renovarSessao())) {
+      throw erro;
+    }
+    return enviarAlteracaoSenha(senhaAtual, novaSenha);
+  }
+}
+
+async function enviarAlteracaoSenha(
+  senhaAtual: string,
+  novaSenha: string,
+): Promise<TokensSessao> {
+  const refreshToken = await obterRefreshToken();
+  const corpo = AlterarSenhaRequestSchema.parse({
+    senhaAtual,
+    novaSenha,
+    refreshToken,
+  });
+  const { data } = await api.patch("/auth/senha", corpo);
+  return TokensSessaoSchema.parse(data);
 }
 
 /**

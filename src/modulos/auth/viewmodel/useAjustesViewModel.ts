@@ -24,6 +24,7 @@ export function useAjustesViewModel() {
   return {
     rotuloPapelAtivo: papelAtivo ? rotuloPapel(papelAtivo) : null,
     aoAlternarPapel: () => router.push("/(app)/trocar-papel"),
+    aoAlterarSenha: () => router.push("/(app)/alterar-senha"),
     aoSair,
     saindo: mutation.isPending,
     aoVoltar: () => router.back(),
