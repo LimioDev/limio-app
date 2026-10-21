@@ -17,7 +17,8 @@ interface MeuPerfilViewProps {
   atualizando: boolean;
   aoAtualizar: () => void;
   papelAtivo: { rotulo: string; descricao: string };
-  mostrarAtuacao: boolean;
+  /** `null` fora do papel Prestador. */
+  atuacao: { resumo: string; incompleto: boolean } | null;
   aoAbrirAjustes: () => void;
   aoTrocarPapel: () => void;
   aoEditarContato: () => void;
@@ -39,7 +40,7 @@ export function MeuPerfilView({
   atualizando,
   aoAtualizar,
   papelAtivo,
-  mostrarAtuacao,
+  atuacao,
   aoAbrirAjustes,
   aoTrocarPapel,
   aoEditarContato,
@@ -118,7 +119,7 @@ export function MeuPerfilView({
             </Pressable>
           </View>
 
-          {mostrarAtuacao ? (
+          {atuacao ? (
             <View className="gap-2.5">
               <TituloSecao>Atuação</TituloSecao>
               <Pressable
@@ -127,12 +128,20 @@ export function MeuPerfilView({
                 className="flex-row items-center gap-3 rounded-campo border border-borda bg-superficie px-4 py-3.5 active:opacity-70"
               >
                 <View className="flex-1 gap-0.5">
-                  <Text className="text-corpo font-bold text-tinta">
-                    Perfil de atuação
-                  </Text>
-                  {/* Resumo (especialidades e raio) chega com o card do perfil de atuação. */}
-                  <Text className="text-rotulo text-tinta-fraco">
-                    Especialidades e raio de atendimento
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-corpo font-bold text-tinta">
+                      Perfil de atuação
+                    </Text>
+                    {atuacao.incompleto ? (
+                      <View className="rounded-full bg-alerta-fundo px-2 py-0.5">
+                        <Text className="text-overline font-bold uppercase text-alerta">
+                          Incompleto
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text className="text-rotulo text-tinta-fraco" numberOfLines={2}>
+                    {atuacao.resumo}
                   </Text>
                 </View>
                 <Icone icone={ChevronRight} tamanho={20} cor="suave" />
