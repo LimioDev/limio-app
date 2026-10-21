@@ -31,6 +31,9 @@ export default function RootLayout() {
         <Stack.Protected guard={autenticado}>
           <Stack.Screen name="(app)" />
         </Stack.Protected>
+        {/* Fora dos guards: o link do e-mail pode ser aberto com alguém já logado no aparelho. */}
+        <Stack.Screen name="nova-senha" />
+
       </Stack>
       <Toast />
     </QueryClientProvider>

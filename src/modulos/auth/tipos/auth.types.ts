@@ -109,17 +109,6 @@ export type RecuperarSenhaForm = z.infer<typeof RecuperarSenhaFormSchema>;
 const REPETICAO_CONFERE = {
   path: ["repetirNovaSenha"],
   message: "As senhas não conferem",
-  // Sem isto o Zod pula o refine enquanto outro campo tiver erro, e a
-  // divergência só apareceria depois de todo o resto estar certo.
-  when: ({ value }: { value: unknown }) => {
-    const dados = value as
-      | { novaSenha?: unknown; repetirNovaSenha?: unknown }
-      | undefined;
-    return (
-      typeof dados?.novaSenha === "string" &&
-      typeof dados.repetirNovaSenha === "string"
-    );
-  },
 };
 
 /** Valores do formulário da tela 07a "Alterar senha". */

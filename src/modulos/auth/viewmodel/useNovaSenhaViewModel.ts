@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { erroApi } from "../../../comum/lib/erros";
+import { useSessao } from "../../../comum/store/sessao";
 import { useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import { useRedefinirSenhaMutation } from "../servico/auth.queries";
@@ -24,6 +25,7 @@ export function useNovaSenhaViewModel() {
   const { token: tokenParam } = useLocalSearchParams<{ token?: string }>();
   const token = Array.isArray(tokenParam) ? tokenParam[0] : tokenParam;
   const mostrarToast = useToast((estado) => estado.mostrar);
+  const sair = useSessao((estado) => estado.sair);
   const mutation = useRedefinirSenhaMutation();
   const [linkInvalido, setLinkInvalido] = useState(!token);
   const [erroServidor, setErroServidor] = useState<string | null>(null);
@@ -54,6 +56,10 @@ export function useNovaSenhaViewModel() {
     try {
       await mutation.mutateAsync({ token, novaSenha });
       // O backend encerra todas as sessões da conta: entra de novo com a senha nova.
+      // Se o link foi aberto com alguém logado aqui, a sessão local também caiu.
+      if (useSessao.getState().status === "autenticado") {
+        await sair();
+      }
       mostrarToast("Senha redefinida. Entre com a nova senha.");
       router.replace("/(auth)/login");
     } catch (erro) {
