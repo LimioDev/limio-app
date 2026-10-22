@@ -15,11 +15,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Icone } from "../../../comum/componentes/ui/Icone";
 
-/** O que acontece ao encerrar (regras do ETI-36), na ordem da tela 12. */
+/**
+ * O que acontece ao encerrar (regras do ETI-36), na ordem da tela 12. A
+ * primeira linha descreve o que o back faz hoje (TICKET-0034); volta ao texto
+ * do Figma (nome de exibição, foto, endereços) quando o listener de `perfil`
+ * entrar.
+ */
 const CONSEQUENCIAS: readonly { icone: LucideIcon; texto: string }[] = [
   {
     icone: User,
-    texto: "Nome, foto, e-mail, telefone e endereços são anonimizados.",
+    texto:
+      "Nome, e-mail e telefone são anonimizados; CPF, data de nascimento e cidade são apagados.",
   },
   {
     icone: LayoutGrid,
@@ -64,6 +70,7 @@ export function EncerrarContaView({
       <View className="flex-row items-center gap-1 px-margem pt-2">
         <Pressable
           onPress={aoVoltar}
+          disabled={encerrando}
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Voltar"
@@ -122,13 +129,14 @@ export function EncerrarContaView({
             Entendi que a exclusão é irreversível.
           </Text>
         </Pressable>
-
-        {erroServidor ? (
-          <Text className="text-rotulo text-perigo">{erroServidor}</Text>
-        ) : null}
       </ScrollView>
 
       <View className="gap-1 px-margem pb-2 pt-4">
+        {/* No rodapé, junto do botão: em tela baixa a lista já ocupa a área
+            visível e o erro dentro do ScrollView ficaria abaixo da dobra. */}
+        {erroServidor ? (
+          <Text className="pb-2 text-rotulo text-perigo">{erroServidor}</Text>
+        ) : null}
         <Botao
           rotulo="Encerrar minha conta"
           variante="destrutivo"
