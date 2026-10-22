@@ -2,12 +2,12 @@ import { ChevronRight, Mail, Settings, Smartphone, User } from "lucide-react-nat
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Avatar } from "../../../comum/componentes/ui/Avatar";
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { Icone } from "../../../comum/componentes/ui/Icone";
 import { Reputacao } from "../../../comum/componentes/ui/Reputacao";
 import type { PerfilExibido } from "../viewmodel/useMeuPerfilViewModel";
+import { FotoPerfilEditavel } from "./componentes/FotoPerfilEditavel";
 import { LinhaPerfil } from "./componentes/LinhaPerfil";
 
 interface MeuPerfilViewProps {
@@ -23,6 +23,10 @@ interface MeuPerfilViewProps {
   aoTrocarPapel: () => void;
   aoEditarContato: () => void;
   aoAbrirAtuacao: () => void;
+  /** Link temporário da foto; `null` mostra as iniciais. */
+  fotoUrl: string | null;
+  enviandoFoto: boolean;
+  aoTrocarFoto: () => void;
 }
 
 function TituloSecao({ children }: { children: string }) {
@@ -45,6 +49,9 @@ export function MeuPerfilView({
   aoTrocarPapel,
   aoEditarContato,
   aoAbrirAtuacao,
+  fotoUrl,
+  enviandoFoto,
+  aoTrocarFoto,
 }: MeuPerfilViewProps) {
   return (
     <SafeAreaView className="flex-1 bg-fundo" edges={["top"]}>
@@ -87,7 +94,12 @@ export function MeuPerfilView({
           }
         >
           <View className="flex-row items-center gap-4">
-            <Avatar nome={perfil.nomeExibicao} tamanho={72} />
+            <FotoPerfilEditavel
+              nome={perfil.nomeExibicao}
+              fotoUrl={fotoUrl}
+              enviando={enviandoFoto}
+              aoTrocar={aoTrocarFoto}
+            />
             <View className="flex-1 gap-1">
               <Text className="text-[20px] font-bold text-tinta" numberOfLines={2}>
                 {perfil.nomeExibicao}
