@@ -9,7 +9,7 @@ import { Icone } from "../../../comum/componentes/ui/Icone";
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Campo } from "../../../comum/componentes/ui/Campo";
 import type { AlterarSenhaForm } from "../tipos/auth.types";
-import { BotaoMostrarSenha } from "./componentes/BotaoMostrarSenha";
+import { BotaoMostrarSenha } from "../../../comum/componentes/ui/BotaoMostrarSenha";
 import {
   RequisitosSenha,
   type RequisitosSenhaAtendidos,

@@ -10,7 +10,7 @@ import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Campo } from "../../../comum/componentes/ui/Campo";
 import type { NovaSenhaForm } from "../tipos/auth.types";
 import { AvisoInfo } from "./componentes/AvisoInfo";
-import { BotaoMostrarSenha } from "./componentes/BotaoMostrarSenha";
+import { BotaoMostrarSenha } from "../../../comum/componentes/ui/BotaoMostrarSenha";
 import {
   RequisitosSenha,
   type RequisitosSenhaAtendidos,
