@@ -15,3 +15,13 @@ export const PreferenciasNotificacaoSchema = z.object({
 export type PreferenciasNotificacao = z.infer<
   typeof PreferenciasNotificacaoSchema
 >;
+
+/**
+ * Corpo de `POST /auth/encerrar-conta` (contrato do ETI-36). A confirmação
+ * explícita é obrigatória: sem `true`, o backend recusa com 400.
+ */
+export const EncerrarContaRequestSchema = z.object({
+  confirmacao: z.literal(true),
+});
+
+export type EncerrarContaRequest = z.infer<typeof EncerrarContaRequestSchema>;
