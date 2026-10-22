@@ -53,7 +53,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "O LIMIO acessa suas fotos para anexá-las ao anúncio e ao check-out do serviço.",
+          "photosPermission": "O LIMIO acessa suas fotos para a sua foto de perfil, o anúncio e o check-out do serviço.",
           "cameraPermission": "O LIMIO usa a câmera para fotografar o anúncio e o check-out do serviço."
         }
       ]
