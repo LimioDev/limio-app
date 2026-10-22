@@ -3,7 +3,7 @@ import axios, {
   isAxiosError,
   type InternalAxiosRequestConfig,
 } from "axios";
-import * as SecureStore from "expo-secure-store";
+import { lerItem, removerItem, salvarItem } from "./armazenamento";
 
 import type { PapelUsuario } from "../tipos/papel";
 import { TokensSessaoSchema, type TokensSessao } from "../tipos/sessao";
@@ -67,7 +67,7 @@ export function registrarEventosSessao(eventos: EventosSessao): void {
 
 /** Sessão guardada no aparelho; `null` se não há (ou se o conteúdo não é uma sessão válida). */
 async function lerSessaoSalva(): Promise<TokensSessao | null> {
-  const bruto = await SecureStore.getItemAsync(CHAVE_SESSAO);
+  const bruto = await lerItem(CHAVE_SESSAO);
   if (!bruto) {
     return null;
   }
@@ -88,7 +88,7 @@ export async function obterRefreshToken(): Promise<string | null> {
 }
 
 export async function salvarSessao(tokens: TokensSessao): Promise<void> {
-  await SecureStore.setItemAsync(CHAVE_SESSAO, JSON.stringify(tokens));
+  await salvarItem(CHAVE_SESSAO, JSON.stringify(tokens));
 }
 
 export async function salvarPapelAtivo(papel: PapelUsuario): Promise<void> {
@@ -104,7 +104,7 @@ export async function lerPapelSalvo(): Promise<PapelUsuario | null> {
 }
 
 export async function limparSessaoSalva(): Promise<void> {
-  await SecureStore.deleteItemAsync(CHAVE_SESSAO);
+  await removerItem(CHAVE_SESSAO);
 }
 
 api.interceptors.request.use(async (config) => {
