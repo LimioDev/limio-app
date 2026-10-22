@@ -7,12 +7,20 @@ import { chavesPerfil } from "./perfil.queries";
 // Consulta de novo um pouco antes do link vencer, pra a tela nunca ficar com URL morta.
 const MARGEM_RENOVACAO_MS = 5 * 60_000;
 
+/**
+ * A API manda o `Instant` com nanossegundos ("...32.427242988Z"); o Hermes nem
+ * sempre interpreta mais de 3 casas. Corta pra milissegundos antes do parse.
+ */
+function instanteEmMs(instante: string): number {
+  return Date.parse(instante.replace(/(\.\d{3})\d+/, "$1"));
+}
+
 /** Tempo até o link temporário precisar ser trocado; sem foto, segue o padrão do app. */
 function validadeDoLink(foto: FotoPerfilResponse | null | undefined): number {
   if (!foto) {
     return 30_000;
   }
-  const restante = Date.parse(foto.expiraEm) - Date.now() - MARGEM_RENOVACAO_MS;
+  const restante = instanteEmMs(foto.expiraEm) - Date.now() - MARGEM_RENOVACAO_MS;
   return Number.isFinite(restante) ? Math.max(restante, 0) : 0;
 }
 
