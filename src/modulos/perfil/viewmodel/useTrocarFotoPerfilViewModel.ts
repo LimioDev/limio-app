@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Alert } from "react-native";
 
 import { erroApi } from "../../../comum/lib/erros";
-import { useToast } from "../../../comum/store/toast";
+import { TipoToast, useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import { prepararFotoPerfil } from "../servico/fotoPerfil.helpers";
 import {
@@ -84,17 +84,17 @@ export function useTrocarFotoPerfilViewModel() {
     try {
       const preparo = await prepararFotoPerfil(imagem).catch(() => null);
       if (!preparo) {
-        mostrarToast(MENSAGEM_FALHA_PREPARO);
+        mostrarToast(MENSAGEM_FALHA_PREPARO, TipoToast.ERRO);
         return;
       }
       if (!preparo.valido) {
-        mostrarToast(preparo.mensagem);
+        mostrarToast(preparo.mensagem, TipoToast.ERRO);
         return;
       }
       await envio.mutateAsync(preparo.arquivo);
       mostrarToast(MENSAGEM_ENVIADA);
     } catch (erro) {
-      mostrarToast(mensagemErroEnvio(erro));
+      mostrarToast(mensagemErroEnvio(erro), TipoToast.ERRO);
     } finally {
       setPreparando(false);
     }
