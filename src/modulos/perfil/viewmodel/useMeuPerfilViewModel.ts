@@ -8,6 +8,7 @@ import { usePerfilAtuacaoQuery } from "../servico/atuacao.queries";
 import { formatarTelefone, telefoneNacional } from "../servico/perfil.helpers";
 import { useMeuPerfilQuery } from "../servico/perfil.queries";
 import type { PerfilEmpregadorResponse } from "../tipos/perfil.types";
+import { useTrocarFotoPerfilViewModel } from "./useTrocarFotoPerfilViewModel";
 
 const DESCRICAO_PAPEL: Record<PapelDoApp, string> = {
   EMPREGADOR: "Seus anúncios e candidatos",
@@ -50,6 +51,7 @@ export function useMeuPerfilViewModel() {
   const query = useMeuPerfilQuery();
   const ehPrestador = papelAtivo === PapelUsuario.PRESTADOR;
   const atuacao = usePerfilAtuacaoQuery({ habilitado: ehPrestador });
+  const { aoAtualizarFoto, ...foto } = useTrocarFotoPerfilViewModel();
 
   return {
     perfil: query.data ? paraExibicao(query.data) : null,
@@ -60,6 +62,7 @@ export function useMeuPerfilViewModel() {
     atualizando: query.isRefetching,
     aoAtualizar: () => {
       void query.refetch();
+      aoAtualizarFoto();
       if (ehPrestador) {
         void atuacao.refetch();
       }
@@ -81,5 +84,6 @@ export function useMeuPerfilViewModel() {
     aoTrocarPapel: () => router.push("/(app)/trocar-papel"),
     aoEditarContato: () => router.push("/(app)/conta/dados-contato"),
     aoAbrirAtuacao: () => router.push("/(app)/conta/atuacao"),
+    ...foto,
   };
 }
