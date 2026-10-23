@@ -1,6 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
 import * as Linking from "expo-linking";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Alert } from "react-native";
 
 import { erroApi } from "../../../comum/lib/erros";
@@ -16,6 +16,7 @@ import { MENSAGEM_FOTO_INVALIDA } from "../tipos/fotoPerfil.types";
 const MENSAGEM_ENVIADA = "Foto de perfil atualizada.";
 const MENSAGEM_FALHA_PREPARO = "Não foi possível ler essa imagem. Escolha outra.";
 const MENSAGEM_FALHA_ENVIO = "Não foi possível enviar a foto. Tente de novo.";
+const MENSAGEM_FALHA_GALERIA = "Não foi possível abrir suas fotos. Tente de novo.";
 const MENSAGEM_ARMAZENAMENTO =
   "O envio de fotos está fora do ar agora. Tente de novo em instantes.";
 
@@ -52,36 +53,46 @@ export function useTrocarFotoPerfilViewModel() {
   const foto = useFotoPerfilQuery();
   const envio = useEnviarFotoPerfilMutation();
   const mostrarToast = useToast((estado) => estado.mostrar);
+  // Trava desde o toque: o estado do React só muda no próximo render, e o
+  // fluxo tem esperas (permissão, galeria) em que um segundo toque passaria.
+  const emAndamento = useRef(false);
   // Cobre o preparo da imagem também, não só a requisição: o carregando
   // aparece assim que a galeria fecha.
   const [preparando, setPreparando] = useState(false);
   const enviandoFoto = preparando || envio.isPending;
 
-  const aoTrocarFoto = async () => {
-    if (enviandoFoto) {
-      return;
-    }
-
+  /** Permissão → galeria. `null` quando não há imagem pra enviar. */
+  const escolherImagem = async (): Promise<ImagePicker.ImagePickerAsset | null> => {
     // iOS com acesso "limitado" também vem `granted`. No web a chamada não faz nada.
     const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissao.granted) {
       avisarPermissaoNegada();
-      return;
+      return null;
     }
-
     const escolha = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: "images",
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
     });
-    const imagem = escolha.assets?.[0];
-    if (escolha.canceled || !imagem) {
+    return escolha.canceled ? null : (escolha.assets[0] ?? null);
+  };
+
+  const aoTrocarFoto = async () => {
+    if (emAndamento.current || envio.isPending) {
       return;
     }
-
-    setPreparando(true);
+    emAndamento.current = true;
     try {
+      const imagem = await escolherImagem().catch(() => {
+        mostrarToast(MENSAGEM_FALHA_GALERIA, TipoToast.ERRO);
+        return null;
+      });
+      if (!imagem) {
+        return;
+      }
+
+      setPreparando(true);
       const preparo = await prepararFotoPerfil(imagem).catch(() => null);
       if (!preparo) {
         mostrarToast(MENSAGEM_FALHA_PREPARO, TipoToast.ERRO);
@@ -96,6 +107,7 @@ export function useTrocarFotoPerfilViewModel() {
     } catch (erro) {
       mostrarToast(mensagemErroEnvio(erro), TipoToast.ERRO);
     } finally {
+      emAndamento.current = false;
       setPreparando(false);
     }
   };
