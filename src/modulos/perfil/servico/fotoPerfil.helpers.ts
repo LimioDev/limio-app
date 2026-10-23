@@ -12,6 +12,15 @@ import { lerArquivoLocal } from "./arquivoLocal";
 const LADO_MAXIMO_PX = 2048;
 const QUALIDADE_JPEG = 0.85;
 
+/**
+ * Chave de cache da foto: a URL sem a assinatura (query). O link é renovado a
+ * cada `GET`, mas o objeto no storage é o mesmo até a próxima troca, que grava
+ * um objeto novo (`fotos-perfil/<usuarioId>/<uuid>.<ext>`, TICKET-0056).
+ */
+export function chaveCacheFoto(url: string): string {
+  return url.split("?")[0];
+}
+
 export type PreparoFotoPerfil =
   | { valido: true; arquivo: ArquivoFotoPerfil }
   | { valido: false; mensagem: string };

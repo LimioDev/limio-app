@@ -7,6 +7,7 @@ import { Icone } from "../../../../comum/componentes/ui/Icone";
 interface FotoPerfilEditavelProps {
   nome: string;
   fotoUrl: string | null;
+  fotoCacheKey: string | null;
   enviando: boolean;
   aoTrocar: () => void;
   tamanho?: number;
@@ -20,6 +21,7 @@ interface FotoPerfilEditavelProps {
 export function FotoPerfilEditavel({
   nome,
   fotoUrl,
+  fotoCacheKey,
   enviando,
   aoTrocar,
   tamanho = 72,
@@ -35,7 +37,7 @@ export function FotoPerfilEditavel({
       className="active:opacity-80"
       style={{ width: tamanho, height: tamanho }}
     >
-      <Avatar nome={nome} fotoUrl={fotoUrl} tamanho={tamanho} />
+      <Avatar nome={nome} fotoUrl={fotoUrl} cacheKey={fotoCacheKey} tamanho={tamanho} />
 
       {enviando ? (
         <View

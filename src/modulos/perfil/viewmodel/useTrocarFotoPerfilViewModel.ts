@@ -6,7 +6,7 @@ import { Alert } from "react-native";
 import { erroApi } from "../../../comum/lib/erros";
 import { TipoToast, useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
-import { prepararFotoPerfil } from "../servico/fotoPerfil.helpers";
+import { chaveCacheFoto, prepararFotoPerfil } from "../servico/fotoPerfil.helpers";
 import {
   useEnviarFotoPerfilMutation,
   useFotoPerfilQuery,
@@ -114,6 +114,7 @@ export function useTrocarFotoPerfilViewModel() {
 
   return {
     fotoUrl: foto.data?.url ?? null,
+    fotoCacheKey: foto.data ? chaveCacheFoto(foto.data.url) : null,
     enviandoFoto,
     aoTrocarFoto: () => void aoTrocarFoto(),
     aoAtualizarFoto: () => void foto.refetch(),

@@ -1,4 +1,5 @@
 import { formatarDiaPorExtenso } from "../../../comum/lib/datas";
+import { chaveCacheFoto } from "../servico/fotoPerfil.helpers";
 import { useFotoPerfilQuery } from "../servico/fotoPerfil.queries";
 import { useMeuPerfilQuery } from "../servico/perfil.queries";
 
@@ -21,5 +22,6 @@ export function useCabecalhoInicioViewModel() {
     saudacao: nome ? `Olá, ${primeiroNome(nome)}` : "Olá",
     dataHoje: formatarDiaPorExtenso(),
     fotoUrl: foto.data?.url ?? null,
+    fotoCacheKey: foto.data ? chaveCacheFoto(foto.data.url) : null,
   };
 }

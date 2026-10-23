@@ -25,6 +25,7 @@ interface MeuPerfilViewProps {
   aoAbrirAtuacao: () => void;
   /** Link temporário da foto; `null` mostra as iniciais. */
   fotoUrl: string | null;
+  fotoCacheKey: string | null;
   enviandoFoto: boolean;
   aoTrocarFoto: () => void;
 }
@@ -50,6 +51,7 @@ export function MeuPerfilView({
   aoEditarContato,
   aoAbrirAtuacao,
   fotoUrl,
+  fotoCacheKey,
   enviandoFoto,
   aoTrocarFoto,
 }: MeuPerfilViewProps) {
@@ -97,6 +99,7 @@ export function MeuPerfilView({
             <FotoPerfilEditavel
               nome={perfil.nomeExibicao}
               fotoUrl={fotoUrl}
+              fotoCacheKey={fotoCacheKey}
               enviando={enviandoFoto}
               aoTrocar={aoTrocarFoto}
             />
