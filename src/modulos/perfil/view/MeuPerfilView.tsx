@@ -1,4 +1,4 @@
-import { ChevronRight, Mail, Settings, Smartphone, User } from "lucide-react-native";
+import { ChevronRight, Mail, MapPin, Settings, Smartphone, User } from "lucide-react-native";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -19,10 +19,13 @@ interface MeuPerfilViewProps {
   papelAtivo: { rotulo: string; descricao: string };
   /** `null` fora do papel Prestador. */
   atuacao: { resumo: string; incompleto: boolean } | null;
+  /** Resumo dos endereços salvos; `null` fora do papel Empregador. */
+  enderecos: string | null;
   aoAbrirAjustes: () => void;
   aoTrocarPapel: () => void;
   aoEditarContato: () => void;
   aoAbrirAtuacao: () => void;
+  aoAbrirEnderecos: () => void;
 }
 
 function TituloSecao({ children }: { children: string }) {
@@ -41,10 +44,12 @@ export function MeuPerfilView({
   aoAtualizar,
   papelAtivo,
   atuacao,
+  enderecos,
   aoAbrirAjustes,
   aoTrocarPapel,
   aoEditarContato,
   aoAbrirAtuacao,
+  aoAbrirEnderecos,
 }: MeuPerfilViewProps) {
   return (
     <SafeAreaView className="flex-1 bg-fundo" edges={["top"]}>
@@ -172,6 +177,15 @@ export function MeuPerfilView({
                 onPress={aoEditarContato}
                 comDivisoria
               />
+              {enderecos !== null ? (
+                <LinhaPerfil
+                  icone={MapPin}
+                  rotulo="Endereços salvos"
+                  valor={enderecos}
+                  onPress={aoAbrirEnderecos}
+                  comDivisoria
+                />
+              ) : null}
             </View>
           </View>
         </ScrollView>
