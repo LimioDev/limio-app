@@ -1,12 +1,12 @@
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import type { ImagePickerAsset } from "expo-image-picker";
-import { Platform } from "react-native";
 
 import {
   ArquivoFotoPerfilSchema,
   MENSAGEM_FOTO_INVALIDA,
   type ArquivoFotoPerfil,
 } from "../tipos/fotoPerfil.types";
+import { lerArquivoLocal } from "./arquivoLocal";
 
 /** Mesmo teto que a API aplica ao guardar (TICKET-0056): lado maior até 2048 px. */
 const LADO_MAXIMO_PX = 2048;
@@ -46,18 +46,17 @@ export async function prepararFotoPerfil(
     compress: QUALIDADE_JPEG,
   });
 
-  // `fetch` da URI local dá o tamanho real do arquivo gravado (o picker só sabe
-  // o do original) e, no web, o conteúdo que vai no `FormData`.
-  const conteudo = await (await fetch(salva.uri)).blob();
+  // Tamanho do arquivo gravado (o picker só sabe o do original) e, no web, o
+  // conteúdo que vai no `FormData`.
+  const { tamanhoBytes, conteudo } = await lerArquivoLocal(salva.uri);
 
   const resultado = ArquivoFotoPerfilSchema.safeParse({
     uri: salva.uri,
     nome: "foto-perfil.jpg",
-    // O arquivo acabou de ser gravado em JPEG. O `type` do blob não serve: no
-    // Android, o `fetch` de `file://` pode devolver vazio ou octet-stream.
+    // O arquivo acabou de ser gravado em JPEG.
     tipo: "image/jpeg",
-    tamanhoBytes: conteudo.size,
-    conteudo: Platform.OS === "web" ? conteudo : undefined,
+    tamanhoBytes,
+    conteudo,
   });
 
   return resultado.success
