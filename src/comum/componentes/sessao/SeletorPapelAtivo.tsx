@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { Pressable, Text } from "react-native";
-import { ChevronDown } from "lucide-react-native";
+import { ChevronDown, LayoutGrid } from "lucide-react-native";
 
 import { Icone } from "../ui/Icone";
 import { useSessao } from "../../store/sessao";
@@ -23,12 +23,15 @@ export function SeletorPapelAtivo() {
     <Pressable
       onPress={() => router.push("/(app)/trocar-papel")}
       hitSlop={8}
-      className="flex-row items-center gap-1 self-start rounded-full border border-borda px-3 py-1"
+      accessibilityRole="button"
+      accessibilityLabel={`Papel ativo: ${rotuloPapel(papelAtivo)}. Trocar papel`}
+      className="flex-row items-center gap-2 self-start rounded-chip bg-marca-800 py-2 pl-3 pr-2.5 active:opacity-80"
     >
-      <Text className="text-rotulo font-semibold text-tinta">
+      <Icone icone={LayoutGrid} tamanho={16} cor="branco" />
+      <Text className="text-[14px] font-bold text-white">
         {rotuloPapel(papelAtivo)}
       </Text>
-      <Icone icone={ChevronDown} tamanho={16} />
+      <Icone icone={ChevronDown} tamanho={18} cor="branco" />
     </Pressable>
   );
 }
