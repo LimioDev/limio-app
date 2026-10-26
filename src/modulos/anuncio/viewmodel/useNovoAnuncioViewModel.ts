@@ -11,7 +11,13 @@ import {
   type ErrosAnuncio,
   type FotoRascunho,
 } from "../store/rascunhoAnuncio.store";
-import { DESCRICAO_MAX, FOTOS_MAX, PassoUmSchema, TITULO_MAX } from "../tipos/anuncio.types";
+import {
+  DESCRICAO_MAX,
+  FOTOS_MAX,
+  PassoUmSchema,
+  TITULO_MAX,
+  TITULO_MIN,
+} from "../tipos/anuncio.types";
 
 const MENSAGEM_FALHA_GALERIA = "Não foi possível abrir suas fotos. Tente de novo.";
 const MENSAGEM_FALHA_PREPARO = "Não foi possível ler essa imagem. Escolha outra.";
@@ -23,10 +29,20 @@ export interface FotoExibida {
   erro: string | null;
 }
 
-function avisarPermissaoNegada(): void {
+const Origem = {
+  CAMERA: "CAMERA",
+  GALERIA: "GALERIA",
+} as const;
+
+type Origem = (typeof Origem)[keyof typeof Origem];
+
+function avisarPermissaoNegada(origem: Origem): void {
+  const camera = origem === Origem.CAMERA;
   Alert.alert(
-    "Sem acesso às fotos",
-    "Para anexar fotos ao anúncio, permita que o LIMIO acesse suas fotos nos ajustes do aparelho.",
+    camera ? "Sem acesso à câmera" : "Sem acesso às fotos",
+    camera
+      ? "Para tirar fotos do anúncio, permita que o LIMIO use a câmera nos ajustes do aparelho."
+      : "Para anexar fotos ao anúncio, permita que o LIMIO acesse suas fotos nos ajustes do aparelho.",
     [
       { text: "Agora não", style: "cancel" },
       { text: "Abrir ajustes", onPress: () => void Linking.openSettings() },
@@ -68,6 +84,7 @@ export function useNovoAnuncioViewModel() {
   // Trava desde o toque: a galeria e o preparo têm esperas em que um segundo toque passaria.
   const escolhendo = useRef(false);
   const [preparandoFotos, setPreparandoFotos] = useState(false);
+  const [folhaFotoVisivel, setFolhaFotoVisivel] = useState(false);
 
   // Sair do fluxo (voltar daqui) descarta o rascunho. Ir pra 14a/15 não
   // desmonta esta tela, então o rascunho continua.
@@ -75,24 +92,32 @@ export function useNovoAnuncioViewModel() {
 
   const vagas = FOTOS_MAX - rascunho.fotos.length;
 
-  const aoAdicionarFoto = async () => {
+  /** Tela 14c → câmera (uma foto) ou galeria (várias, até as vagas). */
+  const adicionarDe = async (origem: Origem) => {
+    setFolhaFotoVisivel(false);
     if (escolhendo.current || vagas <= 0) {
       return;
     }
     escolhendo.current = true;
     try {
       // iOS com acesso "limitado" também vem `granted`. No web a chamada não faz nada.
-      const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permissao =
+        origem === Origem.CAMERA
+          ? await ImagePicker.requestCameraPermissionsAsync()
+          : await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissao.granted) {
-        avisarPermissaoNegada();
+        avisarPermissaoNegada(origem);
         return;
       }
-      const escolha = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: "images",
-        allowsMultipleSelection: true,
-        selectionLimit: vagas,
-        quality: 1,
-      });
+      const escolha =
+        origem === Origem.CAMERA
+          ? await ImagePicker.launchCameraAsync({ mediaTypes: "images", quality: 1 })
+          : await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: "images",
+              allowsMultipleSelection: true,
+              selectionLimit: vagas,
+              quality: 1,
+            });
       if (escolha.canceled) {
         return;
       }
@@ -142,6 +167,7 @@ export function useNovoAnuncioViewModel() {
     aoTrocarCategoria: () => router.push("/(app)/anuncio/novo/categoria"),
     titulo: rascunho.titulo,
     aoMudarTitulo: (texto: string) => alterar("titulo", texto),
+    tituloDica: `obrigatório · ${TITULO_MIN} a ${TITULO_MAX} caracteres`,
     tituloMax: TITULO_MAX,
     descricao: rascunho.descricao,
     aoMudarDescricao: (texto: string) => alterar("descricao", texto),
@@ -150,7 +176,11 @@ export function useNovoAnuncioViewModel() {
     fotosMax: FOTOS_MAX,
     podeAdicionarFoto: vagas > 0 && !preparandoFotos,
     preparandoFotos,
-    aoAdicionarFoto: () => void aoAdicionarFoto(),
+    aoAdicionarFoto: () => setFolhaFotoVisivel(true),
+    folhaFotoVisivel,
+    aoTirarFoto: () => void adicionarDe(Origem.CAMERA),
+    aoEscolherDaGaleria: () => void adicionarDe(Origem.GALERIA),
+    aoFecharFolhaFoto: () => setFolhaFotoVisivel(false),
     aoRemoverFoto: removerFoto,
     erros,
     podeContinuar: !preparandoFotos,

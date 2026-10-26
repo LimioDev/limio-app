@@ -8,6 +8,7 @@ import type { ErrosAnuncio } from "../store/rascunhoAnuncio.store";
 import type { FotoExibida } from "../viewmodel/useNovoAnuncioViewModel";
 import { CabecalhoPasso } from "./componentes/CabecalhoPasso";
 import { CampoContador } from "./componentes/CampoContador";
+import { FolhaAdicionarFoto } from "./componentes/FolhaAdicionarFoto";
 import { GradeFotos } from "./componentes/GradeFotos";
 
 interface NovoAnuncioViewProps {
@@ -15,6 +16,7 @@ interface NovoAnuncioViewProps {
   aoTrocarCategoria: () => void;
   titulo: string;
   aoMudarTitulo: (texto: string) => void;
+  tituloDica: string;
   tituloMax: number;
   descricao: string;
   aoMudarDescricao: (texto: string) => void;
@@ -24,6 +26,10 @@ interface NovoAnuncioViewProps {
   podeAdicionarFoto: boolean;
   preparandoFotos: boolean;
   aoAdicionarFoto: () => void;
+  folhaFotoVisivel: boolean;
+  aoTirarFoto: () => void;
+  aoEscolherDaGaleria: () => void;
+  aoFecharFolhaFoto: () => void;
   aoRemoverFoto: (chave: string) => void;
   erros: ErrosAnuncio;
   podeContinuar: boolean;
@@ -87,6 +93,7 @@ export function NovoAnuncioView({
   aoTrocarCategoria,
   titulo,
   aoMudarTitulo,
+  tituloDica,
   tituloMax,
   descricao,
   aoMudarDescricao,
@@ -96,6 +103,10 @@ export function NovoAnuncioView({
   podeAdicionarFoto,
   preparandoFotos,
   aoAdicionarFoto,
+  folhaFotoVisivel,
+  aoTirarFoto,
+  aoEscolherDaGaleria,
+  aoFecharFolhaFoto,
   aoRemoverFoto,
   erros,
   podeContinuar,
@@ -137,6 +148,7 @@ export function NovoAnuncioView({
             valor={titulo}
             aoMudar={aoMudarTitulo}
             maximo={tituloMax}
+            dica={tituloDica}
             placeholder="Ex.: Instalar 3 tomadas e trocar disjuntor"
             erro={erros.titulo}
           />
@@ -178,6 +190,13 @@ export function NovoAnuncioView({
           <Botao rotulo="Continuar" onPress={aoContinuar} disabled={!podeContinuar} />
         </View>
       </KeyboardAvoidingView>
+
+      <FolhaAdicionarFoto
+        visivel={folhaFotoVisivel}
+        aoTirarFoto={aoTirarFoto}
+        aoEscolherDaGaleria={aoEscolherDaGaleria}
+        aoFechar={aoFecharFolhaFoto}
+      />
     </SafeAreaView>
   );
 }

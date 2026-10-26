@@ -48,7 +48,8 @@ export type PainelEmpregadorResponse = z.infer<
  * pro back. Mudou lá, muda aqui.
  */
 
-/** Tamanhos máximos do `AnuncioRequest`. */
+/** Tamanhos do `AnuncioRequest`. O título conta sem os espaços das pontas. */
+export const TITULO_MIN = 5;
 export const TITULO_MAX = 80;
 export const DESCRICAO_MAX = 600;
 export const TAMANHO_LOCAL_MAX = 100;
@@ -63,7 +64,7 @@ export const FOTOS_MAX = 5;
 export const AnuncioRequestSchema = z
   .object({
     categoriaId: z.uuid(),
-    titulo: z.string().trim().min(1).max(TITULO_MAX),
+    titulo: z.string().trim().min(TITULO_MIN).max(TITULO_MAX),
     descricao: z.string().trim().min(1).max(DESCRICAO_MAX),
     /** Instante em UTC (ISO-8601), no futuro. */
     dataHoraPretendida: z.iso.datetime(),
@@ -71,6 +72,7 @@ export const AnuncioRequestSchema = z
     enderecoAvulso: CamposEnderecoRequestSchema.nullable(),
     tamanhoLocal: z.string().trim().max(TAMANHO_LOCAL_MAX).nullable(),
     numeroPessoas: z.number().int().positive().nullable(),
+    /** Opcional, sem limite no app (decisão de 26/10): quem limita é a API. */
     observacoes: z.string().trim().nullable(),
   })
   .refine((r) => (r.enderecoSalvoId === null) !== (r.enderecoAvulso === null), {
@@ -134,6 +136,8 @@ export const PassoUmSchema = z.object({
     .string()
     .trim()
     .min(1, "Dê um título ao anúncio")
+    // Só espaços cai no `min(1)` acima: o `trim` vem antes.
+    .min(TITULO_MIN, `Escreva um título com pelo menos ${TITULO_MIN} caracteres.`)
     .max(TITULO_MAX, `Use no máximo ${TITULO_MAX} caracteres`),
   descricao: z
     .string()
