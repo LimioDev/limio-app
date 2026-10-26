@@ -10,6 +10,7 @@ import { useEnderecosQuery } from "../servico/endereco.queries";
 import { formatarTelefone, telefoneNacional } from "../servico/perfil.helpers";
 import { useMeuPerfilQuery } from "../servico/perfil.queries";
 import type { PerfilEmpregadorResponse } from "../tipos/perfil.types";
+import { useTrocarFotoPerfilViewModel } from "./useTrocarFotoPerfilViewModel";
 
 const DESCRICAO_PAPEL: Record<PapelDoApp, string> = {
   EMPREGADOR: "Seus anúncios e candidatos",
@@ -55,6 +56,7 @@ export function useMeuPerfilViewModel() {
   // Endereços salvos são só do Empregador. O resumo vem da lista: o `GET` do
   // perfil ainda devolve `enderecos` vazio (fora do escopo do card do back).
   const enderecos = useEnderecosQuery({ habilitado: !ehPrestador });
+  const { aoAtualizarFoto, ...foto } = useTrocarFotoPerfilViewModel();
 
   return {
     perfil: query.data ? paraExibicao(query.data) : null,
@@ -65,6 +67,7 @@ export function useMeuPerfilViewModel() {
     atualizando: query.isRefetching,
     aoAtualizar: () => {
       void query.refetch();
+      aoAtualizarFoto();
       if (ehPrestador) {
         void atuacao.refetch();
       } else {
@@ -97,5 +100,6 @@ export function useMeuPerfilViewModel() {
     aoEditarContato: () => router.push("/(app)/conta/dados-contato"),
     aoAbrirAtuacao: () => router.push("/(app)/conta/atuacao"),
     aoAbrirEnderecos: () => router.push("/(app)/conta/enderecos"),
+    ...foto,
   };
 }

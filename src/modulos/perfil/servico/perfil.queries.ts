@@ -13,6 +13,7 @@ import {
 
 export const chavesPerfil = {
   meuPerfil: ["perfil", "meu"] as const,
+  fotoPerfil: ["perfil", "foto"] as const,
 };
 
 export function useMeuPerfilQuery() {
