@@ -1,7 +1,7 @@
 import { useMunicipioBaseViewModel } from "../../../src/modulos/perfil/viewmodel/useMunicipioBaseViewModel";
-import { MunicipioBaseView } from "../../../src/modulos/perfil/view/MunicipioBaseView";
+import { SeletorMunicipioView } from "../../../src/modulos/perfil/view/SeletorMunicipioView";
 
 export default function MunicipioBase() {
   const vm = useMunicipioBaseViewModel();
-  return <MunicipioBaseView {...vm} />;
+  return <SeletorMunicipioView {...vm} />;
 }

@@ -15,7 +15,7 @@ interface MunicipioItem {
   selecionado: boolean;
 }
 
-interface MunicipioBaseViewProps {
+interface SeletorMunicipioViewProps {
   titulo: string;
   ufs: readonly Uf[];
   uf: Uf | null;
@@ -31,7 +31,7 @@ interface MunicipioBaseViewProps {
   aoVoltar: () => void;
 }
 
-export function MunicipioBaseView({
+export function SeletorMunicipioView({
   titulo,
   ufs,
   uf,
@@ -45,7 +45,7 @@ export function MunicipioBaseView({
   semResultado,
   aoEscolher,
   aoVoltar,
-}: MunicipioBaseViewProps) {
+}: SeletorMunicipioViewProps) {
   return (
     <SafeAreaView className="flex-1 bg-fundo" edges={["top", "bottom"]}>
       <CabecalhoVoltar titulo={titulo} aoVoltar={aoVoltar} />
