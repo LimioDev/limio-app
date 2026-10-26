@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 import { CategoriaSchema } from "../../../comum/tipos/categoria";
-import { CamposEnderecoRequestSchema } from "../../../comum/tipos/endereco";
+import {
+  APELIDO_MAX,
+  CamposEnderecoFormSchema,
+  CamposEnderecoRequestSchema,
+} from "../../../comum/tipos/endereco";
 import { Uf } from "../../../comum/tipos/localidade";
 import { StatusAnuncio } from "./anuncio.enums";
 
@@ -145,6 +149,30 @@ export const PassoUmSchema = z.object({
     .min(1, "Conte o que precisa ser feito")
     .max(DESCRICAO_MAX, `Use no máximo ${DESCRICAO_MAX} caracteres`),
 });
+
+/**
+ * "Novo endereço" do anúncio (tela 15b). Com `salvar`, vira endereço salvo
+ * (POST de endereços) e o apelido é obrigatório; sem, vai como avulso só neste
+ * anúncio e o apelido só dá nome à opção na tela 15.
+ */
+export const EnderecoAnuncioFormSchema = z
+  .object({
+    apelido: z.string().trim().max(APELIDO_MAX, `Use no máximo ${APELIDO_MAX} caracteres`),
+    ...CamposEnderecoFormSchema.shape,
+    salvar: z.boolean(),
+  })
+  .superRefine((form, ctx) => {
+    if (form.salvar && !form.apelido) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["apelido"],
+        message: "Informe um apelido, como Casa ou Escritório",
+      });
+    }
+  });
+
+export type EnderecoAnuncioFormEntrada = z.input<typeof EnderecoAnuncioFormSchema>;
+export type EnderecoAnuncioForm = z.output<typeof EnderecoAnuncioFormSchema>;
 
 /**
  * Passo 2 (tela 15), sem o endereço (escolha em lista, conferida à parte).

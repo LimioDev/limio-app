@@ -132,7 +132,7 @@ export function useDetalhesAnuncioViewModel() {
   if (rascunho.avulso) {
     opcoes.push({
       chave: CHAVE_AVULSO,
-      titulo: "Outro endereço",
+      titulo: rascunho.avulso.apelido || "Outro endereço",
       linha: `${linhaLogradouro({ ...rascunho.avulso, complemento: rascunho.avulso.complemento || null })} · ${rascunho.avulso.bairro}`,
       selecionado: escolhido?.tipo === "avulso",
     });

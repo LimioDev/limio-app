@@ -14,9 +14,12 @@ export interface FotoRascunho {
   erro: string | null;
 }
 
+/** Endereço só deste anúncio; o apelido (opcional) dá nome à opção na tela 15. */
+export type EnderecoAvulso = CamposEnderecoForm & { apelido: string };
+
 export type EnderecoEscolhido =
   | { tipo: "salvo"; id: string }
-  | { tipo: "avulso"; campos: CamposEnderecoForm };
+  | { tipo: "avulso"; campos: EnderecoAvulso };
 
 export interface RascunhoAnuncio {
   categoria: Categoria | null;
@@ -28,7 +31,7 @@ export interface RascunhoAnuncio {
   /** `null` até escolher: a tela 15 mostra o endereço padrão como marcado. */
   endereco: EnderecoEscolhido | null;
   /** Endereço avulso digitado, guardado mesmo se outro for marcado depois. */
-  avulso: CamposEnderecoForm | null;
+  avulso: EnderecoAvulso | null;
   tamanhoLocal: string;
   numeroPessoas: string;
   observacoes: string;
@@ -81,7 +84,9 @@ interface EstadoRascunhoAnuncio {
   alterar: <C extends CampoRascunho>(campo: C, valor: RascunhoAnuncio[C]) => void;
   adicionarFotos: (fotos: FotoRascunho[]) => void;
   removerFoto: (chave: string) => void;
-  usarAvulso: (campos: CamposEnderecoForm) => void;
+  usarAvulso: (campos: EnderecoAvulso) => void;
+  /** Endereço recém-cadastrado pela tela 15b: marca e descarta o avulso. */
+  usarSalvoNovo: (id: string) => void;
   definirCidadeAvulso: (cidade: MunicipioEscolhido | null) => void;
   definirErros: (erros: ErrosAnuncio) => void;
   descartar: () => void;
@@ -120,6 +125,11 @@ export const useRascunhoAnuncio = create<EstadoRascunhoAnuncio>((set) => ({
         avulso: campos,
         endereco: { tipo: "avulso", campos },
       },
+      erros: { ...estado.erros, endereco: undefined },
+    })),
+  usarSalvoNovo: (id) =>
+    set((estado) => ({
+      rascunho: { ...estado.rascunho, avulso: null, endereco: { tipo: "salvo", id } },
       erros: { ...estado.erros, endereco: undefined },
     })),
   definirCidadeAvulso: (cidadeAvulso) => set({ cidadeAvulso }),

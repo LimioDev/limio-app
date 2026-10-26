@@ -7,21 +7,25 @@ import { Botao } from "../../../comum/componentes/ui/Botao";
 import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
 import { Campo } from "../../../comum/componentes/ui/Campo";
 import { CampoSelecao } from "../../../comum/componentes/ui/CampoSelecao";
+import { Interruptor } from "../../../comum/componentes/ui/Interruptor";
 import {
+  APELIDO_MAX,
   BAIRRO_MAX,
   COMPLEMENTO_MAX,
   NUMERO_MAX,
   RUA_MAX,
-  type CamposEnderecoFormEntrada,
 } from "../../../comum/tipos/endereco";
+import type { EnderecoAnuncioFormEntrada } from "../tipos/anuncio.types";
 
 interface EnderecoAvulsoViewProps {
-  control: Control<CamposEnderecoFormEntrada>;
-  erros: FieldErrors<CamposEnderecoFormEntrada>;
+  control: Control<EnderecoAnuncioFormEntrada>;
+  erros: FieldErrors<EnderecoAnuncioFormEntrada>;
   /** "São Paulo · SP"; `null` antes de escolher. */
   cidadeUf: string | null;
   aoEscolherCidade: () => void;
   aoUsar: () => void;
+  usando: boolean;
+  erroServidor: string | null;
   aoVoltar: () => void;
 }
 
@@ -31,11 +35,13 @@ export function EnderecoAvulsoView({
   cidadeUf,
   aoEscolherCidade,
   aoUsar,
+  usando,
+  erroServidor,
   aoVoltar,
 }: EnderecoAvulsoViewProps) {
   return (
     <SafeAreaView className="flex-1 bg-fundo" edges={["top", "bottom"]}>
-      <CabecalhoVoltar titulo="Outro endereço" aoVoltar={aoVoltar} />
+      <CabecalhoVoltar titulo="Novo endereço" aoVoltar={aoVoltar} />
 
       <KeyboardAvoidingView
         className="flex-1"
@@ -46,10 +52,22 @@ export function EnderecoAvulsoView({
           contentContainerClassName="gap-4 pb-6 pt-5"
           keyboardShouldPersistTaps="handled"
         >
-          <Text className="text-rotulo text-tinta-suave">
-            Vale só para este anúncio. Para guardar o endereço, cadastre em Perfil →
-            Endereços salvos.
-          </Text>
+          <Controller
+            control={control}
+            name="apelido"
+            render={({ field }) => (
+              <Campo
+                rotulo="Apelido"
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                erro={erros.apelido?.message}
+                placeholder="Casa, Escritório..."
+                autoCapitalize="sentences"
+                maxLength={APELIDO_MAX}
+              />
+            )}
+          />
 
           <View className="flex-row gap-4">
             <View className="flex-1">
@@ -151,16 +169,35 @@ export function EnderecoAvulsoView({
             )}
           />
 
+          <Controller
+            control={control}
+            name="salvar"
+            render={({ field }) => (
+              <View className="mt-1 h-[60px] flex-row items-center justify-between rounded-campo border border-borda bg-superficie px-4">
+                <Text className="text-corpo text-tinta">Salvar este endereço para depois</Text>
+                <Interruptor
+                  ligado={field.value}
+                  aoAlternar={field.onChange}
+                  rotuloAcessivel="Salvar este endereço para depois"
+                />
+              </View>
+            )}
+          />
+
           <View className="rounded-card bg-marca-50 p-4">
             <Text className="text-rotulo text-tinta-suave">
               No mural aparece só o bairro. O endereço completo é liberado para o
               prestador escolhido, depois da escolha.
             </Text>
           </View>
+
+          {erroServidor ? (
+            <Text className="text-rotulo text-perigo">{erroServidor}</Text>
+          ) : null}
         </ScrollView>
 
         <View className="border-t border-borda bg-superficie px-margem py-4">
-          <Botao rotulo="Usar este endereço" onPress={aoUsar} />
+          <Botao rotulo="Usar neste anúncio" onPress={aoUsar} carregando={usando} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
