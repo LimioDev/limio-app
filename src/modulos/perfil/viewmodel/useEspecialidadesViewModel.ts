@@ -2,8 +2,8 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 
 import { mensagemErroApi } from "../../../comum/lib/erros";
-import { normalizarBusca } from "../servico/atuacao.helpers";
-import { useCategoriasQuery } from "../servico/atuacao.queries";
+import { normalizarBusca } from "../../../comum/lib/busca";
+import { useCategoriasQuery } from "../../../comum/servico/categoria.queries";
 import { useRascunhoAtuacao } from "../store/rascunhoAtuacao.store";
 
 export interface ItemEspecialidade {

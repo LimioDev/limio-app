@@ -6,7 +6,7 @@ import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { Chip } from "../../../comum/componentes/ui/Chip";
 import { Icone } from "../../../comum/componentes/ui/Icone";
-import type { Uf } from "../tipos/perfil.enums";
+import type { Uf } from "../../../comum/tipos/localidade";
 import { CabecalhoVoltar } from "./componentes/CabecalhoVoltar";
 
 interface MunicipioItem {

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { Uf } from "./perfil.enums";
+import { Uf } from "../../../comum/tipos/localidade";
 
 /** Tamanhos máximos de `EnderecoSalvoRequest` no backend. */
 export const APELIDO_MAX = 60;

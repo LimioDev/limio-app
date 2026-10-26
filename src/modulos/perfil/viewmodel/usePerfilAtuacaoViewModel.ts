@@ -3,11 +3,14 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
-import { CodigoErro } from "../../../comum/tipos/erros";
-import { agruparJanelas, rotuloMunicipio } from "../servico/atuacao.helpers";
 import {
-  chavesAtuacao,
+  chavesCategoria,
   useCategoriasQuery,
+} from "../../../comum/servico/categoria.queries";
+import { CodigoErro } from "../../../comum/tipos/erros";
+import { rotuloMunicipio } from "../../../comum/tipos/localidade";
+import { agruparJanelas } from "../servico/atuacao.helpers";
+import {
   usePerfilAtuacaoQuery,
   useSalvarPerfilAtuacaoMutation,
 } from "../servico/atuacao.queries";
@@ -123,7 +126,7 @@ export function usePerfilAtuacaoViewModel({
       switch (resposta?.codigo) {
         case CodigoErro.CATEGORIA_INVALIDA:
           // Alguma categoria foi desativada: a lista é recarregada pra nova escolha.
-          void queryClient.invalidateQueries({ queryKey: chavesAtuacao.categorias });
+          void queryClient.invalidateQueries({ queryKey: chavesCategoria.lista });
           definirErros({ especialidades: resposta.mensagem });
           return;
         case CodigoErro.MUNICIPIO_NAO_ENCONTRADO:
