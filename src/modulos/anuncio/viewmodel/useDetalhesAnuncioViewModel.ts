@@ -53,6 +53,7 @@ const CAMPO_DA_API: Record<string, CampoErro> = {
   ),
   tamanhoLocal: "tamanhoLocal",
   numeroPessoas: "numeroPessoas",
+  observacoes: "observacoes",
 };
 
 export interface OpcaoEndereco {
@@ -88,8 +89,7 @@ function paraRequest(
     enderecoAvulso: endereco.tipo === "avulso" ? paraCamposRequest(endereco.campos) : null,
     tamanhoLocal: rascunho.tamanhoLocal.trim() || null,
     numeroPessoas: rascunho.numeroPessoas.trim() ? Number(rascunho.numeroPessoas) : null,
-    // Está no contrato, mas não aparece no Figma.
-    observacoes: null,
+    observacoes: rascunho.observacoes.trim() || null,
   };
 }
 
@@ -325,6 +325,8 @@ export function useDetalhesAnuncioViewModel() {
     tamanhoLocalMax: TAMANHO_LOCAL_MAX,
     numeroPessoas: rascunho.numeroPessoas,
     aoMudarNumeroPessoas: (texto: string) => alterar("numeroPessoas", texto.replace(/\D/g, "")),
+    observacoes: rascunho.observacoes,
+    aoMudarObservacoes: (texto: string) => alterar("observacoes", texto),
     erros,
     erroServidor,
     avisoContatos,

@@ -17,6 +17,7 @@ import { CORES_ICONE, Icone } from "../../../comum/componentes/ui/Icone";
 import type { ErrosAnuncio } from "../store/rascunhoAnuncio.store";
 import type { OpcaoEndereco } from "../viewmodel/useDetalhesAnuncioViewModel";
 import { CabecalhoPasso } from "./componentes/CabecalhoPasso";
+import { CampoContador } from "./componentes/CampoContador";
 
 const MASCARA_HORA: Mask = [/\d/, /\d/, ":", /\d/, /\d/];
 
@@ -37,6 +38,8 @@ interface DetalhesAnuncioViewProps {
   tamanhoLocalMax: number;
   numeroPessoas: string;
   aoMudarNumeroPessoas: (texto: string) => void;
+  observacoes: string;
+  aoMudarObservacoes: (texto: string) => void;
   erros: ErrosAnuncio;
   erroServidor: string | null;
   avisoContatos: string | null;
@@ -103,6 +106,8 @@ export function DetalhesAnuncioView({
   tamanhoLocalMax,
   numeroPessoas,
   aoMudarNumeroPessoas,
+  observacoes,
+  aoMudarObservacoes,
   erros,
   erroServidor,
   avisoContatos,
@@ -220,6 +225,16 @@ export function DetalhesAnuncioView({
                 />
               </View>
             </View>
+            <CampoContador
+              rotulo="Observações"
+              dica="opcional"
+              estiloRotulo="campo"
+              valor={observacoes}
+              aoMudar={aoMudarObservacoes}
+              placeholder="Ex.: portão azul, interfone 12. Tem escada no local."
+              multilinha
+              erro={erros.observacoes}
+            />
           </View>
 
           <View className="flex-row gap-3 rounded-card bg-marca-50 p-4">

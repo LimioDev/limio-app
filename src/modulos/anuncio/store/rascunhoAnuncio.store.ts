@@ -31,6 +31,7 @@ export interface RascunhoAnuncio {
   avulso: CamposEnderecoForm | null;
   tamanhoLocal: string;
   numeroPessoas: string;
+  observacoes: string;
 }
 
 /** Erro por campo das telas 14 e 15 — da validação local ou do `CodigoErro` da API. */
@@ -44,7 +45,8 @@ export type ErrosAnuncio = Partial<
     | "hora"
     | "endereco"
     | "tamanhoLocal"
-    | "numeroPessoas",
+    | "numeroPessoas"
+    | "observacoes",
     string
   >
 >;
@@ -62,6 +64,7 @@ const RASCUNHO_VAZIO: RascunhoAnuncio = {
   avulso: null,
   tamanhoLocal: "",
   numeroPessoas: "",
+  observacoes: "",
 };
 
 /**
