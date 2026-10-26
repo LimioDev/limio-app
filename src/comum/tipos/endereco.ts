@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Uf } from "./localidade";
 
 /** Tamanhos máximos dos campos de endereço no backend (`EnderecoSalvoRequest`). */
+export const APELIDO_MAX = 60;
 export const RUA_MAX = 255;
 export const NUMERO_MAX = 20;
 export const COMPLEMENTO_MAX = 100;
@@ -48,6 +49,19 @@ export const CamposEnderecoRequestSchema = z.object({
 });
 
 export type CamposEnderecoRequest = z.infer<typeof CamposEnderecoRequestSchema>;
+
+/**
+ * Espelha `EnderecoSalvoRequest` do backend — corpo do `POST` e do `PUT` (estado
+ * completo). Cadastrar fica no `comum` porque o anúncio também salva endereço
+ * ("Salvar este endereço para depois", tela 15b).
+ */
+export const EnderecoSalvoRequestSchema = z.object({
+  apelido: z.string().trim().min(1).max(APELIDO_MAX),
+  ...CamposEnderecoRequestSchema.shape,
+  isPadrao: z.boolean(),
+});
+
+export type EnderecoSalvoRequest = z.infer<typeof EnderecoSalvoRequestSchema>;
 
 /**
  * Campos de endereço nos formulários ("Novo endereço" e endereço avulso do

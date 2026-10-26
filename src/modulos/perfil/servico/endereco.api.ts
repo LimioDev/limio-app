@@ -1,23 +1,13 @@
 import { api } from "../../../comum/lib/api";
 import { ROTA_ENDERECOS } from "../../../comum/servico/endereco.api";
 import {
+  EnderecoSalvoRequestSchema,
   EnderecoSalvoResponseSchema,
+  type EnderecoSalvoRequest,
   type EnderecoSalvoResponse,
 } from "../../../comum/tipos/endereco";
-import {
-  EnderecoSalvoRequestSchema,
-  type EnderecoSalvoRequest,
-} from "../tipos/endereco.types";
 
-// A listagem (`listarEnderecos`) fica em `comum/servico`: o anúncio também usa.
-
-export async function criarEndereco(
-  request: EnderecoSalvoRequest,
-): Promise<EnderecoSalvoResponse> {
-  const corpo = EnderecoSalvoRequestSchema.parse(request);
-  const { data } = await api.post(ROTA_ENDERECOS, corpo);
-  return EnderecoSalvoResponseSchema.parse(data);
-}
+// Listar e cadastrar ficam em `comum/servico`: o anúncio também usa.
 
 /** `PUT`: substitui todos os campos do endereço. */
 export async function editarEndereco({

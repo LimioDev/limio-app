@@ -4,7 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
-import { useEnderecosQuery } from "../../../comum/servico/endereco.queries";
+import {
+  useCriarEnderecoMutation,
+  useEnderecosQuery,
+} from "../../../comum/servico/endereco.queries";
 import { useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import {
@@ -13,10 +16,7 @@ import {
   paraFormulario,
   paraRequest,
 } from "../servico/endereco.helpers";
-import {
-  useCriarEnderecoMutation,
-  useEditarEnderecoMutation,
-} from "../servico/endereco.queries";
+import { useEditarEnderecoMutation } from "../servico/endereco.queries";
 import { useCidadeEndereco } from "../store/cidadeEndereco.store";
 import {
   EnderecoFormSchema,

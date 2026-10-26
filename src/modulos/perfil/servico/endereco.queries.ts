@@ -2,13 +2,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { chavesEndereco } from "../../../comum/servico/endereco.queries";
 import {
-  criarEndereco,
   editarEndereco,
   marcarEnderecoPadrao,
   removerEndereco,
 } from "./endereco.api";
 
-// A query da lista (`useEnderecosQuery`) fica em `comum/servico`: o anúncio também usa.
+// Listar e cadastrar (`useEnderecosQuery`, `useCriarEnderecoMutation`) ficam em
+// `comum/servico`: o anúncio também usa.
 
 /**
  * Toda escrita pode mexer em outros itens (o padrão muda de endereço) e na
@@ -20,11 +20,6 @@ import {
 function useRecarregarLista() {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries({ queryKey: chavesEndereco.lista });
-}
-
-export function useCriarEnderecoMutation() {
-  const recarregar = useRecarregarLista();
-  return useMutation({ mutationFn: criarEndereco, onSettled: recarregar });
 }
 
 export function useEditarEnderecoMutation() {

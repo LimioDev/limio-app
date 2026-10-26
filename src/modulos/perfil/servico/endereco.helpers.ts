@@ -5,12 +5,14 @@ import {
   paraCamposRequest,
 } from "../../../comum/lib/endereco";
 import { errosPorCampo as separarErrosPorCampo } from "../../../comum/lib/erros";
-import type { EnderecoSalvoResponse } from "../../../comum/tipos/endereco";
+import type {
+  EnderecoSalvoRequest,
+  EnderecoSalvoResponse,
+} from "../../../comum/tipos/endereco";
 import type {
   CampoEnderecoForm,
   EnderecoForm,
   EnderecoFormEntrada,
-  EnderecoSalvoRequest,
 } from "../tipos/endereco.types";
 
 /** "Pinheiros · São Paulo · SP". */
