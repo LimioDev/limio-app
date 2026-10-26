@@ -10,7 +10,7 @@ const DIAS_SEMANA_CURTOS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 /** "Qua, 03/09 · 14h" (ou "14h30"), no fuso do sistema. */
 export function quandoCurto(dataHoraUtc: string): string {
   const data = paraFusoLocal(dataHoraUtc);
-  const hora = data.getMinutes() === 0 ? format(data, "HH'h'") : format(data, "HH'h'mm");
+  const hora = data.getMinutes() === 0 ? format(data, "H'h'") : format(data, "H'h'mm");
   return `${DIAS_SEMANA_CURTOS[data.getDay()]}, ${format(data, "dd/MM")} · ${hora}`;
 }
 

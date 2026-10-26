@@ -16,7 +16,8 @@ export function usePainelEmpregadorQuery() {
   return useQuery({
     queryKey: chavesAnuncio.painelEmpregador,
     queryFn: buscarPainelEmpregador,
-    // Consulta a cada abertura da tela: candidatos chegam o tempo todo.
+    // Candidatos chegam o tempo todo. A nova consulta ao voltar pra tela
+    // (aba já montada) fica no `useFocusEffect` do ViewModel.
     staleTime: 0,
   });
 }
