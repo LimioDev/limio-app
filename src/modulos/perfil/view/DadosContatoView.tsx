@@ -9,7 +9,7 @@ import { BotaoMostrarSenha } from "../../../comum/componentes/ui/BotaoMostrarSen
 import { Campo } from "../../../comum/componentes/ui/Campo";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { NOME_EXIBICAO_MAX, type DadosContatoForm } from "../tipos/perfil.types";
-import { CabecalhoVoltar } from "./componentes/CabecalhoVoltar";
+import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
 
 const D = /\d/;
 /**

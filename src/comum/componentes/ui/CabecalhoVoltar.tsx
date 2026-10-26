@@ -2,7 +2,7 @@ import { ChevronLeft } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 
-import { Icone } from "../../../../comum/componentes/ui/Icone";
+import { Icone } from "./Icone";
 
 interface CabecalhoVoltarProps {
   titulo: string;
@@ -10,7 +10,7 @@ interface CabecalhoVoltarProps {
   direita?: ReactNode;
 }
 
-/** Topo das telas empilhadas do perfil: seta de voltar e título. */
+/** Topo das telas empilhadas (perfil, anúncio): seta de voltar e título. */
 export function CabecalhoVoltar({ titulo, aoVoltar, direita }: CabecalhoVoltarProps) {
   return (
     <View className="flex-row items-center gap-1 px-margem pt-2">

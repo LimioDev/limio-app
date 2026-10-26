@@ -14,8 +14,8 @@ import {
   RUA_MAX,
 } from "../../../comum/tipos/endereco";
 import { APELIDO_MAX, type EnderecoFormEntrada } from "../tipos/endereco.types";
-import { CabecalhoVoltar } from "./componentes/CabecalhoVoltar";
-import { CampoSelecao } from "./componentes/CampoSelecao";
+import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
+import { CampoSelecao } from "../../../comum/componentes/ui/CampoSelecao";
 
 interface EnderecoViewProps {
   titulo: string;

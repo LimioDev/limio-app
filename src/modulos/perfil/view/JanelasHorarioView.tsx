@@ -7,7 +7,7 @@ import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Campo } from "../../../comum/componentes/ui/Campo";
 import { Interruptor } from "../../../comum/componentes/ui/Interruptor";
 import type { JanelasForm } from "../tipos/atuacao.types";
-import { CabecalhoVoltar } from "./componentes/CabecalhoVoltar";
+import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
 
 const MASCARA_HORA: Mask = [/\d/, /\d/, ":", /\d/, /\d/];
 

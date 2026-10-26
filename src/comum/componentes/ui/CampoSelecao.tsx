@@ -1,7 +1,7 @@
 import { ChevronRight } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
 
-import { Icone } from "../../../../comum/componentes/ui/Icone";
+import { Icone } from "./Icone";
 
 interface CampoSelecaoProps {
   rotulo: string;

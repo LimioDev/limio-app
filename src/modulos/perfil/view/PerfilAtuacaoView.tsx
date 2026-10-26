@@ -9,7 +9,7 @@ import { Icone } from "../../../comum/componentes/ui/Icone";
 import type { FaixaJanela } from "../servico/atuacao.helpers";
 import type { ErrosAtuacao } from "../store/rascunhoAtuacao.store";
 import { AreaAtendimento } from "./componentes/AreaAtendimento";
-import { CabecalhoVoltar } from "./componentes/CabecalhoVoltar";
+import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
 import { ControleDeslizante } from "./componentes/ControleDeslizante";
 
 interface PerfilAtuacaoViewProps {

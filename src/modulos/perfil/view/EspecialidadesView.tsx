@@ -9,7 +9,7 @@ import type {
   GrupoEspecialidades,
   ItemEspecialidade,
 } from "../viewmodel/useEspecialidadesViewModel";
-import { CabecalhoVoltar } from "./componentes/CabecalhoVoltar";
+import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
 
 interface EspecialidadesViewProps {
   carregando: boolean;
