@@ -1,5 +1,5 @@
 import { formatarDiaPorExtenso } from "../../../comum/lib/datas";
-import { chaveCacheFoto } from "../servico/fotoPerfil.helpers";
+import { chaveCacheFoto } from "../../../comum/lib/foto";
 import { useFotoPerfilQuery } from "../servico/fotoPerfil.queries";
 import { useMeuPerfilQuery } from "../servico/perfil.queries";
 
