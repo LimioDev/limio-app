@@ -1,22 +1,17 @@
+import {
+  CAMPO_ENDERECO_DA_API,
+  CAMPOS_ENDERECO_VAZIOS,
+  formatarCep,
+  paraCamposRequest,
+} from "../../../comum/lib/endereco";
+import { errosPorCampo as separarErrosPorCampo } from "../../../comum/lib/erros";
+import type { EnderecoSalvoResponse } from "../../../comum/tipos/endereco";
 import type {
   CampoEnderecoForm,
   EnderecoForm,
   EnderecoFormEntrada,
   EnderecoSalvoRequest,
-  EnderecoSalvoResponse,
 } from "../tipos/endereco.types";
-
-/** "05407002" → "05407-002". Fora de 8 dígitos devolve como veio. */
-export function formatarCep(cep: string): string {
-  const digitos = cep.replace(/\D/g, "");
-  return digitos.length === 8 ? `${digitos.slice(0, 5)}-${digitos.slice(5)}` : cep;
-}
-
-/** "R. Cardeal Arcoverde, 1424 · ap 82". */
-export function linhaLogradouro(endereco: EnderecoSalvoResponse): string {
-  const base = `${endereco.rua}, ${endereco.numero}`;
-  return endereco.complemento ? `${base} · ${endereco.complemento}` : base;
-}
 
 /** "Pinheiros · São Paulo · SP". */
 export function linhaLocal(endereco: EnderecoSalvoResponse): string {
@@ -36,13 +31,7 @@ export function resumoEnderecos(enderecos: EnderecoSalvoResponse[]): string {
 
 export const FORMULARIO_VAZIO: EnderecoFormEntrada = {
   apelido: "",
-  cep: "",
-  cidade: "",
-  uf: null,
-  rua: "",
-  numero: "",
-  complemento: "",
-  bairro: "",
+  ...CAMPOS_ENDERECO_VAZIOS,
   isPadrao: false,
 };
 
@@ -63,13 +52,7 @@ export function paraFormulario(endereco: EnderecoSalvoResponse): EnderecoFormEnt
 export function paraRequest(form: EnderecoForm): EnderecoSalvoRequest {
   return {
     apelido: form.apelido,
-    cep: form.cep,
-    rua: form.rua,
-    numero: form.numero,
-    complemento: form.complemento || null,
-    bairroRegiao: form.bairro,
-    cidade: form.cidade,
-    uf: form.uf,
+    ...paraCamposRequest(form),
     isPadrao: form.isPadrao,
   };
 }
@@ -77,35 +60,10 @@ export function paraRequest(form: EnderecoForm): EnderecoSalvoRequest {
 /** Nome do campo no `EnderecoSalvoRequest` da API → campo do formulário. */
 const CAMPO_DA_API: Record<string, CampoEnderecoForm> = {
   apelido: "apelido",
-  cep: "cep",
-  rua: "rua",
-  numero: "numero",
-  complemento: "complemento",
-  bairroRegiao: "bairro",
-  cidade: "cidade",
-  uf: "cidade",
+  ...CAMPO_ENDERECO_DA_API,
 };
 
-/**
- * O `VALIDACAO_FALHOU` da API traz os campos na mensagem, no formato
- * `"cep: CEP deve ter 8 dígitos; rua: rua é obrigatória"`. Separa por campo
- * do formulário; o que não reconhecer fica de fora (a tela mostra a
- * mensagem inteira se nada for reconhecido).
- */
-export function errosPorCampo(
-  mensagem: string,
-): Partial<Record<CampoEnderecoForm, string>> {
-  const erros: Partial<Record<CampoEnderecoForm, string>> = {};
-  for (const trecho of mensagem.split(";")) {
-    const separador = trecho.indexOf(":");
-    if (separador < 0) {
-      continue;
-    }
-    const campo = CAMPO_DA_API[trecho.slice(0, separador).trim()];
-    const texto = trecho.slice(separador + 1).trim();
-    if (campo && texto && !erros[campo]) {
-      erros[campo] = texto.charAt(0).toUpperCase() + texto.slice(1);
-    }
-  }
-  return erros;
+/** Erros por campo do `VALIDACAO_FALHOU` do `POST`/`PUT` de endereço. */
+export function errosPorCampo(mensagem: string): Partial<Record<CampoEnderecoForm, string>> {
+  return separarErrosPorCampo(mensagem, CAMPO_DA_API);
 }

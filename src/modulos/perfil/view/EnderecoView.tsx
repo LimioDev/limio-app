@@ -8,13 +8,12 @@ import { Campo } from "../../../comum/componentes/ui/Campo";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { Interruptor } from "../../../comum/componentes/ui/Interruptor";
 import {
-  APELIDO_MAX,
   BAIRRO_MAX,
   COMPLEMENTO_MAX,
   NUMERO_MAX,
   RUA_MAX,
-  type EnderecoFormEntrada,
-} from "../tipos/endereco.types";
+} from "../../../comum/tipos/endereco";
+import { APELIDO_MAX, type EnderecoFormEntrada } from "../tipos/endereco.types";
 import { CabecalhoVoltar } from "./componentes/CabecalhoVoltar";
 import { CampoSelecao } from "./componentes/CampoSelecao";
 
