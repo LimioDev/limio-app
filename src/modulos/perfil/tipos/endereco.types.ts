@@ -16,7 +16,8 @@ export const CEP_REGEX = /^\d{8}$/;
 /**
  * Espelha `EnderecoSalvoResponse` do backend — itens do `GET` e resposta do
  * `POST`, `PUT` e `PATCH .../padrao` de `/conta/perfil-empregador/enderecos`.
- * Latitude e longitude vêm da geocodificação do servidor; o app não usa.
+ * A API também devolve `latitude` e `longitude`; ficam de fora porque o app
+ * não usa, e um valor inesperado nelas derrubaria o `parse` da lista inteira.
  */
 export const EnderecoSalvoResponseSchema = z.object({
   id: z.uuid(),
@@ -28,8 +29,6 @@ export const EnderecoSalvoResponseSchema = z.object({
   bairroRegiao: z.string(),
   cidade: z.string(),
   uf: z.enum(Uf),
-  latitude: z.number(),
-  longitude: z.number(),
   isPadrao: z.boolean(),
 });
 
