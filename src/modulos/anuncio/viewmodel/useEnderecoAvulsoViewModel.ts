@@ -56,7 +56,17 @@ export function useEnderecoAvulsoViewModel() {
     defaultValues: valoresIniciais(useRascunhoAnuncio.getState().rascunho.avulso),
   });
 
-  const [cidade, uf] = useWatch({ control: form.control, name: ["cidade", "uf"] });
+  const [cidade, uf, salvar] = useWatch({
+    control: form.control,
+    name: ["cidade", "uf", "salvar"],
+  });
+
+  // Desligar "salvar" torna o apelido opcional: some o erro de um envio anterior.
+  useEffect(() => {
+    if (!salvar) {
+      form.clearErrors("apelido");
+    }
+  }, [salvar, form]);
 
   // A cidade escolhida não pode vazar pra próxima vez que a tela abrir.
   useEffect(() => () => definirCidade(null), [definirCidade]);

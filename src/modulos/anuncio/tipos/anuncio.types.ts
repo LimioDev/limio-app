@@ -161,14 +161,14 @@ export const EnderecoAnuncioFormSchema = z
     ...CamposEnderecoFormSchema.shape,
     salvar: z.boolean(),
   })
-  .superRefine((form, ctx) => {
-    if (form.salvar && !form.apelido) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["apelido"],
-        message: "Informe um apelido, como Casa ou Escritório",
-      });
-    }
+  .refine((form) => !form.salvar || form.apelido.trim().length > 0, {
+    path: ["apelido"],
+    message: "Informe um apelido, como Casa ou Escritório",
+    // Sem isso o Zod só confere o apelido quando os outros campos já estão válidos.
+    when: (contexto) => {
+      const valor = contexto.value as { salvar?: unknown; apelido?: unknown };
+      return typeof valor.salvar === "boolean" && typeof valor.apelido === "string";
+    },
   });
 
 export type EnderecoAnuncioFormEntrada = z.input<typeof EnderecoAnuncioFormSchema>;

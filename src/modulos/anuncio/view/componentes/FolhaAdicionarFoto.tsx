@@ -63,35 +63,43 @@ export function FolhaAdicionarFoto({
       >
         {/* Toque dentro da folha não fecha. */}
         <Pressable onPress={() => {}} className="rounded-t-sheet bg-superficie">
-          <SafeAreaView edges={["bottom"]} className="gap-4 px-margem pb-2 pt-3">
-            <View className="h-1 w-10 self-center rounded-full bg-borda-campo" />
-            <View className="gap-1">
-              <Text className="text-secao font-bold text-tinta" accessibilityRole="header">
-                Adicionar foto
-              </Text>
-              <Text className="text-rotulo text-tinta-suave">
-                Escolha de onde vem a foto do anúncio.
-              </Text>
+          {/* Padding numa View interna: o SafeAreaView sobrescreve o padding da className. */}
+          <SafeAreaView edges={["bottom"]}>
+            <View className="gap-4 px-margem pb-2 pt-3">
+              <View className="h-1 w-10 self-center rounded-full bg-borda-campo" />
+              <View className="gap-1">
+                <Text
+                  className="text-secao font-bold text-tinta"
+                  accessibilityRole="header"
+                >
+                  Adicionar foto
+                </Text>
+                <Text className="text-rotulo text-tinta-suave">
+                  Escolha de onde vem a foto do anúncio.
+                </Text>
+              </View>
+              <Opcao
+                icone={Camera}
+                titulo="Tirar foto"
+                descricao="Abre a câmera do celular"
+                onPress={aoTirarFoto}
+              />
+              <Opcao
+                icone={IconeGaleria}
+                titulo="Escolher da galeria"
+                descricao="Usa fotos já salvas no celular"
+                onPress={aoEscolherDaGaleria}
+              />
+              <Pressable
+                onPress={aoFechar}
+                accessibilityRole="button"
+                className="h-botao items-center justify-center active:opacity-70"
+              >
+                <Text className="text-corpo font-semibold text-tinta-suave">
+                  Cancelar
+                </Text>
+              </Pressable>
             </View>
-            <Opcao
-              icone={Camera}
-              titulo="Tirar foto"
-              descricao="Abre a câmera do celular"
-              onPress={aoTirarFoto}
-            />
-            <Opcao
-              icone={IconeGaleria}
-              titulo="Escolher da galeria"
-              descricao="Usa fotos já salvas no celular"
-              onPress={aoEscolherDaGaleria}
-            />
-            <Pressable
-              onPress={aoFechar}
-              accessibilityRole="button"
-              className="h-botao items-center justify-center active:opacity-70"
-            >
-              <Text className="text-corpo font-semibold text-tinta-suave">Cancelar</Text>
-            </Pressable>
           </SafeAreaView>
         </Pressable>
       </Pressable>
