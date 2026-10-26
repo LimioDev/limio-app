@@ -10,6 +10,7 @@ interface AjustesViewProps {
   rotuloPapelAtivo: string | null;
   aoAlternarPapel: () => void;
   aoAlterarSenha: () => void;
+  aoEncerrarConta: () => void;
   aoSair: () => void;
   saindo: boolean;
   aoVoltar: () => void;
@@ -21,6 +22,7 @@ export function AjustesView({
   rotuloPapelAtivo,
   aoAlternarPapel,
   aoAlterarSenha,
+  aoEncerrarConta,
   aoSair,
   saindo,
   aoVoltar,
@@ -47,13 +49,24 @@ export function AjustesView({
           <Text className="text-overline font-semibold uppercase text-tinta-fraco">
             Conta
           </Text>
-          <Pressable
-            onPress={aoAlterarSenha}
-            className="flex-row items-center justify-between rounded-card border border-borda bg-superficie p-4"
-          >
-            <Text className="text-corpo text-tinta">Alterar senha</Text>
-            <Icone icone={ChevronRight} />
-          </Pressable>
+          <View className="rounded-card border border-borda bg-superficie px-4">
+            <Pressable
+              onPress={aoAlterarSenha}
+              className="flex-row items-center justify-between border-b border-borda py-4 active:opacity-70"
+            >
+              <Text className="text-corpo text-tinta">Alterar senha</Text>
+              <Icone icone={ChevronRight} />
+            </Pressable>
+            <Pressable
+              onPress={aoEncerrarConta}
+              className="flex-row items-center justify-between py-4 active:opacity-70"
+            >
+              <Text className="text-corpo text-perigo">
+                Encerrar minha conta
+              </Text>
+              <Icone icone={ChevronRight} />
+            </Pressable>
+          </View>
         </View>
 
         <View className="gap-2">

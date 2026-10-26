@@ -4,6 +4,7 @@ import type { PreferenciasNotificacao } from "../tipos/conta.types";
 import {
   atualizarPreferenciasNotificacao,
   buscarPreferenciasNotificacao,
+  encerrarConta,
 } from "./conta.api";
 
 const CHAVE_PREFERENCIAS_NOTIFICACAO = [
@@ -52,5 +53,11 @@ export function useAtualizarPreferenciasNotificacaoMutation() {
       queryClient.invalidateQueries({
         queryKey: CHAVE_PREFERENCIAS_NOTIFICACAO,
       }),
+  });
+}
+
+export function useEncerrarContaMutation() {
+  return useMutation({
+    mutationFn: encerrarConta,
   });
 }

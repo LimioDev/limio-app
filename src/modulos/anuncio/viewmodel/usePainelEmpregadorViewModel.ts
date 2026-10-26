@@ -1,16 +1,16 @@
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useRef } from "react";
 
 import { paraFusoLocal } from "../../../comum/lib/datas";
 import { mensagemErroApi } from "../../../comum/lib/erros";
+import { TipoToast, useToast } from "../../../comum/store/toast";
 import type { Estado } from "../../../comum/tipos/api";
 import { usePainelEmpregadorQuery } from "../servico/anuncio.queries";
 import { StatusAnuncio } from "../tipos/anuncio.enums";
 import type { AnuncioResumo } from "../tipos/anuncio.types";
 
-// Os rótulos do protótipo ("Segunda", "Qua") não batem com o `EEEE` do ptBR ("segunda-feira").
-const DIAS_SEMANA = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+// O rótulo do protótipo ("Qua") não bate com o `EEE` do ptBR ("qua.").
 const DIAS_SEMANA_CURTOS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export interface AnuncioExibido {
@@ -25,25 +25,16 @@ export interface AnuncioExibido {
   rodape: string;
 }
 
+/** Foto, data e saudação ficam no `CabecalhoInicioView` (módulo `perfil`), composto pela rota. */
 export interface PainelExibido {
-  nomeExibicao: string;
-  /** Saudação "Olá, Marina" usa só o primeiro nome. */
-  primeiroNome: string;
-  fotoUrl: string | null;
   anunciosAbertos: number;
   novosCandidatos: number;
   anuncios: AnuncioExibido[];
 }
 
-/** "Segunda, 31 de agosto", no fuso do sistema. */
-function dataDoDia(agora: Date): string {
-  const hoje = paraFusoLocal(agora);
-  return `${DIAS_SEMANA[hoje.getDay()]}, ${format(hoje, "d 'de' MMMM", { locale: ptBR })}`;
-}
-
 function quando(dataHoraUtc: string): string {
   const data = paraFusoLocal(dataHoraUtc);
-  const hora = data.getMinutes() === 0 ? format(data, "HH'h'") : format(data, "HH'h'mm");
+  const hora = data.getMinutes() === 0 ? format(data, "H'h'") : format(data, "H'h'mm");
   return `${DIAS_SEMANA_CURTOS[data.getDay()]}, ${format(data, "dd/MM")} · ${hora}`;
 }
 
@@ -86,24 +77,51 @@ function anuncioParaExibicao(anuncio: AnuncioResumo): AnuncioExibido {
 export function usePainelEmpregadorViewModel() {
   const router = useRouter();
   const query = usePainelEmpregadorQuery();
+  const mostrarToast = useToast((estado) => estado.mostrar);
+  const { refetch } = query;
+
+  // Sem painel, a falha já aparece na tela de erro. Com painel em cache, a
+  // lista continua visível e o toast avisa que ela não foi atualizada.
+  const consultarDeNovo = useCallback(async () => {
+    const resultado = await refetch();
+    if (resultado.isError && resultado.data) {
+      mostrarToast(
+        mensagemErroApi(resultado.error, "Não foi possível atualizar seus anúncios."),
+        TipoToast.ERRO,
+      );
+    }
+  }, [refetch, mostrarToast]);
+
+  // A tela das abas continua montada ao trocar de aba ou voltar de `novo` e
+  // `anuncio/[id]`, então o `staleTime: 0` sozinho não consulta de novo. O
+  // primeiro foco é pulado porque o mount já consultou.
+  const primeiroFoco = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (primeiroFoco.current) {
+        primeiroFoco.current = false;
+        return;
+      }
+      void consultarDeNovo();
+    }, [consultarDeNovo]),
+  );
 
   const painel: PainelExibido | null = query.data
     ? {
-        ...query.data,
-        primeiroNome: query.data.nomeExibicao.trim().split(/\s+/)[0],
+        anunciosAbertos: query.data.anunciosAbertos,
+        novosCandidatos: query.data.novosCandidatos,
         anuncios: query.data.anuncios.map(anuncioParaExibicao),
       }
     : null;
 
   return {
-    dataDoDia: dataDoDia(new Date()),
     painel,
     carregando: query.isPending,
     erro: query.isError
       ? mensagemErroApi(query.error, "Não foi possível carregar seus anúncios.")
       : null,
     atualizando: query.isRefetching,
-    aoAtualizar: () => void query.refetch(),
+    aoAtualizar: () => void consultarDeNovo(),
     aoAbrirNotificacoes: () => router.push("/(app)/notificacoes"),
     aoPublicar: () => router.push("/(app)/(contratante)/novo"),
     aoVerHistorico: () => router.push("/(app)/(contratante)/anuncios"),

@@ -1,9 +1,9 @@
 import { Bell, LayoutGrid, Plus, User, type LucideIcon } from "lucide-react-native";
+import type { ReactNode } from "react";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { SeletorPapelAtivo } from "../../../comum/componentes/sessao/SeletorPapelAtivo";
-import { Avatar } from "../../../comum/componentes/ui/Avatar";
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { Icone } from "../../../comum/componentes/ui/Icone";
@@ -12,7 +12,8 @@ import type { PainelExibido } from "../viewmodel/usePainelEmpregadorViewModel";
 import { CartaoAnuncio } from "./componentes/CartaoAnuncio";
 
 interface PainelEmpregadorViewProps {
-  dataDoDia: string;
+  /** Foto, data e saudação: vem pronto da rota, pra `anuncio` não importar `perfil`. */
+  cabecalho: ReactNode;
   painel: PainelExibido | null;
   carregando: boolean;
   erro: string | null;
@@ -45,7 +46,7 @@ function Contador({
 }
 
 export function PainelEmpregadorView({
-  dataDoDia,
+  cabecalho,
   painel,
   carregando,
   erro,
@@ -73,6 +74,7 @@ export function PainelEmpregadorView({
             rotulo="Tentar de novo"
             variante="contorno"
             tamanho="padrao"
+            carregando={atualizando}
             onPress={aoAtualizar}
           />
         </View>
@@ -94,17 +96,9 @@ export function PainelEmpregadorView({
           />
         }
       >
-        <View className="flex-row items-start justify-between">
-          <View className="gap-3">
-            <View className="flex-row items-center gap-3">
-              <Avatar nome={painel.nomeExibicao} fotoUrl={painel.fotoUrl} tamanho={44} />
-              <View>
-                <Text className="text-rotulo text-tinta-fraco">{dataDoDia}</Text>
-                <Text className="text-secao font-bold text-tinta" numberOfLines={1}>
-                  Olá, {painel.primeiroNome}
-                </Text>
-              </View>
-            </View>
+        <View className="flex-row items-start justify-between gap-3">
+          <View className="flex-1 gap-3">
+            {cabecalho}
             <SeletorPapelAtivo />
           </View>
           <Pressable

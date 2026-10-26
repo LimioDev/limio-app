@@ -4,6 +4,11 @@ import { Text, View } from "react-native";
 interface AvatarProps {
   nome: string;
   fotoUrl?: string | null;
+  /**
+   * Chave estável do cache de imagem quando a URL muda sem a foto mudar (ex.:
+   * link assinado que é renovado). Sem ela, o cache usa a própria URL.
+   */
+  cacheKey?: string | null;
   tamanho?: number;
 }
 
@@ -28,13 +33,13 @@ function fundoPorNome(nome: string): string {
   return FUNDOS[soma % FUNDOS.length];
 }
 
-export function Avatar({ nome, fotoUrl, tamanho = 44 }: AvatarProps) {
+export function Avatar({ nome, fotoUrl, cacheKey, tamanho = 44 }: AvatarProps) {
   const dimensao = { width: tamanho, height: tamanho, borderRadius: tamanho / 2 };
 
   if (fotoUrl) {
     return (
       <Image
-        source={{ uri: fotoUrl }}
+        source={{ uri: fotoUrl, cacheKey: cacheKey ?? undefined }}
         style={dimensao}
         contentFit="cover"
         accessibilityLabel={nome}
