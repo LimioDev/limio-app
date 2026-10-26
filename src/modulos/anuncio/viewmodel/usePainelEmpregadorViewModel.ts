@@ -82,9 +82,9 @@ export function usePainelEmpregadorViewModel() {
     atualizando: query.isRefetching,
     aoAtualizar: () => void query.refetch(),
     aoAbrirNotificacoes: () => router.push("/(app)/notificacoes"),
-    aoPublicar: () => router.push("/(app)/(contratante)/novo"),
+    aoPublicar: () => router.push("/(app)/anuncio/novo"),
     aoVerHistorico: () => router.push("/(app)/(contratante)/anuncios"),
     aoAbrirAnuncio: (id: string) =>
-      router.push({ pathname: "/(app)/(contratante)/anuncio/[id]", params: { id } }),
+      router.push({ pathname: "/(app)/anuncio/[id]", params: { id } }),
   };
 }

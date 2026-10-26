@@ -126,3 +126,37 @@ export const AnuncioDetalheResponseSchema = z.object({
 });
 
 export type AnuncioDetalheResponse = z.infer<typeof AnuncioDetalheResponseSchema>;
+
+/** Passo 1 (tela 14). Mensagens em português: o schema valida o rascunho antes de seguir. */
+export const PassoUmSchema = z.object({
+  categoriaId: z.uuid({ error: "Escolha a categoria do serviço" }),
+  titulo: z
+    .string()
+    .trim()
+    .min(1, "Dê um título ao anúncio")
+    .max(TITULO_MAX, `Use no máximo ${TITULO_MAX} caracteres`),
+  descricao: z
+    .string()
+    .trim()
+    .min(1, "Conte o que precisa ser feito")
+    .max(DESCRICAO_MAX, `Use no máximo ${DESCRICAO_MAX} caracteres`),
+});
+
+/**
+ * Passo 2 (tela 15), sem o endereço (escolha em lista, conferida à parte).
+ * A data e a hora juntas precisam formar um instante no futuro; isso é
+ * conferido no ViewModel, que sabe o "agora".
+ */
+export const PassoDoisSchema = z.object({
+  data: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, "Informe a data (dd/mm/aaaa)"),
+  hora: z.string().regex(/^\d{2}:\d{2}$/, "Informe a hora (hh:mm)"),
+  tamanhoLocal: z
+    .string()
+    .trim()
+    .max(TAMANHO_LOCAL_MAX, `Use no máximo ${TAMANHO_LOCAL_MAX} caracteres`),
+  numeroPessoas: z
+    .string()
+    .trim()
+    .regex(/^(\d+)?$/, "Use um número inteiro")
+    .refine((valor) => valor === "" || Number(valor) > 0, "Use um número maior que zero"),
+});
