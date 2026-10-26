@@ -2,6 +2,13 @@ import { create } from "zustand";
 
 const DURACAO_MS = 3000;
 
+export const TipoToast = {
+  SUCESSO: "SUCESSO",
+  ERRO: "ERRO",
+} as const;
+
+export type TipoToast = (typeof TipoToast)[keyof typeof TipoToast];
+
 /**
  * Aviso curto que sobrevive à navegação (ex.: "Senha alterada" ao voltar pra
  * Ajustes). Fica num store porque quem dispara é a tela que está saindo; quem
@@ -9,7 +16,9 @@ const DURACAO_MS = 3000;
  */
 interface EstadoToast {
   mensagem: string | null;
-  mostrar: (mensagem: string) => void;
+  tipo: TipoToast;
+  /** `tipo` padrão é sucesso; erro troca ícone e cor pra não parecer confirmação. */
+  mostrar: (mensagem: string, tipo?: TipoToast) => void;
   esconder: () => void;
 }
 
@@ -17,11 +26,12 @@ let temporizador: ReturnType<typeof setTimeout> | null = null;
 
 export const useToast = create<EstadoToast>((set) => ({
   mensagem: null,
-  mostrar: (mensagem) => {
+  tipo: TipoToast.SUCESSO,
+  mostrar: (mensagem, tipo = TipoToast.SUCESSO) => {
     if (temporizador) {
       clearTimeout(temporizador);
     }
-    set({ mensagem });
+    set({ mensagem, tipo });
     temporizador = setTimeout(() => {
       temporizador = null;
       set({ mensagem: null });
