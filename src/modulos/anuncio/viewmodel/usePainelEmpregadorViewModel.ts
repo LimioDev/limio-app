@@ -5,13 +5,12 @@ import { useRouter } from "expo-router";
 import { paraFusoLocal } from "../../../comum/lib/datas";
 import { mensagemErroApi } from "../../../comum/lib/erros";
 import type { Estado } from "../../../comum/tipos/api";
+import { estadoDoAnuncio, quandoCurto } from "../servico/anuncio.helpers";
 import { usePainelEmpregadorQuery } from "../servico/anuncio.queries";
-import { StatusAnuncio } from "../tipos/anuncio.enums";
 import type { AnuncioResumo } from "../tipos/anuncio.types";
 
-// Os rótulos do protótipo ("Segunda", "Qua") não batem com o `EEEE` do ptBR ("segunda-feira").
+// Os rótulos do protótipo ("Segunda") não batem com o `EEEE` do ptBR ("segunda-feira").
 const DIAS_SEMANA = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-const DIAS_SEMANA_CURTOS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export interface AnuncioExibido {
   id: string;
@@ -41,28 +40,6 @@ function dataDoDia(agora: Date): string {
   return `${DIAS_SEMANA[hoje.getDay()]}, ${format(hoje, "d 'de' MMMM", { locale: ptBR })}`;
 }
 
-function quando(dataHoraUtc: string): string {
-  const data = paraFusoLocal(dataHoraUtc);
-  const hora = data.getMinutes() === 0 ? format(data, "HH'h'") : format(data, "HH'h'mm");
-  return `${DIAS_SEMANA_CURTOS[data.getDay()]}, ${format(data, "dd/MM")} · ${hora}`;
-}
-
-/** Selo do anúncio. `PUBLICADO` com prestador escolhido é o "Combinado" do protótipo. */
-function estadoDoSelo(anuncio: AnuncioResumo): Estado {
-  switch (anuncio.status) {
-    case StatusAnuncio.PUBLICADO:
-      return anuncio.prestadorEscolhido ? "combinado" : "aguardando";
-    case StatusAnuncio.EM_ANDAMENTO:
-      return "andamento";
-    case StatusAnuncio.AGUARDANDO_VALIDACAO:
-      return "validacao";
-    case StatusAnuncio.CONCLUIDO:
-      return "concluido";
-    case StatusAnuncio.ENCERRADO:
-      return "cancelado";
-  }
-}
-
 function rodape(anuncio: AnuncioResumo): string {
   if (anuncio.prestadorEscolhido) {
     return `com ${anuncio.prestadorEscolhido}`;
@@ -76,9 +53,9 @@ function anuncioParaExibicao(anuncio: AnuncioResumo): AnuncioExibido {
     id: anuncio.id,
     descricao: anuncio.descricao,
     fotoUrl: anuncio.fotoUrl,
-    quando: quando(anuncio.dataHoraPretendida),
+    quando: quandoCurto(anuncio.dataHoraPretendida),
     bairro: anuncio.bairro,
-    estado: estadoDoSelo(anuncio),
+    estado: estadoDoAnuncio(anuncio.status, anuncio.prestadorEscolhido !== null),
     rodape: rodape(anuncio),
   };
 }
