@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronLeft, MapPin } from "lucide-react-native";
+import { ChevronLeft, Clock, MapPin, User } from "lucide-react-native";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -60,7 +60,7 @@ function Cabecalho({
       </Text>
       <View className="flex-row flex-wrap items-center gap-x-5 gap-y-1">
         <View className="flex-row items-center gap-1.5">
-          <CalendarDays size={14} color="#C2CEF4" strokeWidth={1.7} absoluteStrokeWidth />
+          <Clock size={14} color="#C2CEF4" strokeWidth={1.7} absoluteStrokeWidth />
           <Text className="text-rotulo text-marca-100">{anuncio.quando}</Text>
         </View>
         {anuncio.local ? (
@@ -116,9 +116,9 @@ export function AnuncioPublicadoView({
         <Cabecalho anuncio={anuncio} aoVoltar={aoVoltar} />
 
         <View className="gap-5 px-margem pt-5">
-          <Card className="flex-row items-center gap-3">
-            <View className="flex-1 gap-2.5">
-              {anuncio.avatares.length > 0 ? (
+          {anuncio.temCandidatos ? (
+            <Card className="flex-row items-center gap-3">
+              <View className="flex-1 gap-2.5">
                 <View className="flex-row">
                   {anuncio.avatares.map((avatar, indice) => (
                     <View
@@ -129,17 +129,32 @@ export function AnuncioPublicadoView({
                     </View>
                   ))}
                 </View>
-              ) : null}
-              <Text className="text-corpo font-bold text-tinta">{anuncio.resumoCandidatos}</Text>
-            </View>
-            {/* Lista de candidatos é a tela 18 (ETI-67/68), ainda sem rota. */}
-            <Botao
-              rotulo="Ver todos"
-              tamanho="padrao"
-              disabled
-              accessibilityHint="Disponível em breve"
-            />
-          </Card>
+                <Text className="text-corpo font-bold text-tinta">{anuncio.resumoCandidatos}</Text>
+              </View>
+              {/* Lista de candidatos é a tela 18 (ETI-67/68), ainda sem rota. */}
+              <Botao
+                rotulo="Ver todos"
+                tamanho="padrao"
+                disabled
+                accessibilityHint="Disponível em breve"
+              />
+            </Card>
+          ) : (
+            // Tela 16b: sem candidatos, sem "Ver todos".
+            <Card className="flex-row items-center gap-3">
+              <View className="h-11 w-11 items-center justify-center rounded-chip bg-marca-50">
+                <Icone icone={User} tamanho={20} cor="marca" />
+              </View>
+              <View className="flex-1 gap-0.5">
+                <Text className="text-corpo font-bold text-tinta">
+                  Nenhum prestador se candidatou ainda
+                </Text>
+                <Text className="text-rotulo text-tinta-fraco">
+                  Você recebe um aviso quando alguém se candidatar.
+                </Text>
+              </View>
+            </Card>
+          )}
 
           <View className="gap-2">
             <Text className="text-overline font-bold uppercase tracking-[0.8px] text-tinta-fraco">

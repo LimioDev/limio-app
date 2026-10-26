@@ -149,6 +149,8 @@ export function useDetalhesAnuncioViewModel() {
   const tratarErroCriacao = (erro: unknown) => {
     const resposta = erroApi(erro);
     switch (resposta?.codigo) {
+      // `DADOS_INVALIDOS` é o nome sugerido no card; o back pode usar o `VALIDACAO_FALHOU` que já existe.
+      case CodigoErro.DADOS_INVALIDOS:
       case CodigoErro.VALIDACAO_FALHOU: {
         const porCampo = errosPorCampo(resposta.mensagem, CAMPO_DA_API);
         if (Object.keys(porCampo).length > 0) {
