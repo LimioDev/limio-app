@@ -16,7 +16,8 @@ const DIAMETRO_PINO = 28;
 /**
  * Slider de passo 1 (trilho de 4 px, pino de 28 px, como no protótipo). Feito
  * com o responder do próprio `View` porque o projeto não tem lib de slider.
- * Acessível como "adjustable": o leitor de tela sobe e desce de 1 em 1.
+ * Acessível como "adjustable": o leitor de tela sobe e desce de 1 em 1. Em
+ * `comum/` porque o perfil de atuação e os filtros do mural usam.
  */
 export function ControleDeslizante({
   valor,

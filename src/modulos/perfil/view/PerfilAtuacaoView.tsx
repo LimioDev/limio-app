@@ -5,12 +5,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
+import { ControleDeslizante } from "../../../comum/componentes/ui/ControleDeslizante";
 import { Icone } from "../../../comum/componentes/ui/Icone";
 import type { FaixaJanela } from "../servico/atuacao.helpers";
 import type { ErrosAtuacao } from "../store/rascunhoAtuacao.store";
 import { AreaAtendimento } from "./componentes/AreaAtendimento";
 import { CabecalhoVoltar } from "./componentes/CabecalhoVoltar";
-import { ControleDeslizante } from "./componentes/ControleDeslizante";
 
 interface PerfilAtuacaoViewProps {
   carregando: boolean;

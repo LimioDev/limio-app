@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 
 import { mensagemErroApi } from "../../../comum/lib/erros";
-import { normalizarBusca } from "../servico/atuacao.helpers";
+import { normalizarBusca } from "../../../comum/lib/texto";
 import { useCategoriasQuery } from "../servico/atuacao.queries";
 import { useRascunhoAtuacao } from "../store/rascunhoAtuacao.store";
 

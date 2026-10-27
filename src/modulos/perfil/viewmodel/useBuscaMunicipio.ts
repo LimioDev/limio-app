@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { normalizarBusca } from "../servico/atuacao.helpers";
+import { normalizarBusca } from "../../../comum/lib/texto";
 import { useMunicipiosQuery } from "../servico/atuacao.queries";
 import type { MunicipioEscolhido } from "../store/rascunhoAtuacao.store";
 import { UFS, type Uf } from "../tipos/perfil.enums";
