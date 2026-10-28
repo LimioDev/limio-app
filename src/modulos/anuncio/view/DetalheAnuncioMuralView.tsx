@@ -22,6 +22,8 @@ interface DetalheAnuncioMuralViewProps {
   anuncio: DetalheMuralExibido | null;
   carregando: boolean;
   erro: string | null;
+  /** `false` quando o anúncio saiu do mural: troca "Tentar de novo" por "Voltar ao mural". */
+  podeTentarDeNovo: boolean;
   atualizando: boolean;
   fotoAtual: number;
   aoMudarFoto: (indice: number) => void;
@@ -141,6 +143,7 @@ export function DetalheAnuncioMuralView({
   anuncio,
   carregando,
   erro,
+  podeTentarDeNovo,
   atualizando,
   fotoAtual,
   aoMudarFoto,
@@ -160,13 +163,22 @@ export function DetalheAnuncioMuralView({
         ) : (
           <View className="flex-1 items-center justify-center gap-4 px-margem">
             <Text className="text-center text-corpo text-tinta-suave">{erro}</Text>
-            <Botao
-              rotulo="Tentar de novo"
-              variante="contorno"
-              tamanho="padrao"
-              carregando={atualizando}
-              onPress={aoTentarDeNovo}
-            />
+            {podeTentarDeNovo ? (
+              <Botao
+                rotulo="Tentar de novo"
+                variante="contorno"
+                tamanho="padrao"
+                carregando={atualizando}
+                onPress={aoTentarDeNovo}
+              />
+            ) : (
+              <Botao
+                rotulo="Voltar ao mural"
+                variante="contorno"
+                tamanho="padrao"
+                onPress={aoVoltar}
+              />
+            )}
           </View>
         )}
       </SafeAreaView>

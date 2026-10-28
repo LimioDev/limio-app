@@ -96,17 +96,20 @@ export function useDetalheAnuncioMuralViewModel(id: string) {
   const [fotoAtual, setFotoAtual] = useState(0);
 
   let erro: string | null = null;
+  // Anúncio que saiu do mural não volta com "Tentar de novo".
+  let podeTentarDeNovo = true;
   if (query.isError && !query.data) {
-    erro =
-      erroApi(query.error)?.codigo === CodigoErro.ANUNCIO_NAO_ENCONTRADO
-        ? "Este anúncio não está mais disponível no mural."
-        : mensagemErroApi(query.error, "Não foi possível carregar o anúncio.");
+    podeTentarDeNovo = erroApi(query.error)?.codigo !== CodigoErro.ANUNCIO_NAO_ENCONTRADO;
+    erro = podeTentarDeNovo
+      ? mensagemErroApi(query.error, "Não foi possível carregar o anúncio.")
+      : "Este anúncio não está mais disponível no mural.";
   }
 
   return {
     anuncio: query.data ? detalheParaExibicao(query.data) : null,
     carregando: query.isPending,
     erro,
+    podeTentarDeNovo,
     atualizando: query.isRefetching,
     fotoAtual,
     aoMudarFoto: setFotoAtual,
