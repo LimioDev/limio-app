@@ -7,6 +7,7 @@ import {
   AnuncioCriadoResponseSchema,
   AnuncioDetalheResponseSchema,
   AnuncioRequestSchema,
+  CandidaturaCriadaSchema,
   DetalheAnuncioMuralSchema,
   FotoAnuncioResponseSchema,
   MuralResponseSchema,
@@ -14,6 +15,7 @@ import {
   type AnuncioCriadoResponse,
   type AnuncioDetalheResponse,
   type AnuncioRequest,
+  type CandidaturaCriada,
   type DetalheAnuncioMural,
   type FiltrosMural,
   type FotoAnuncioResponse,
@@ -89,4 +91,15 @@ export async function anexarFotoAnuncio({
 export async function buscarAnuncio(id: string): Promise<AnuncioDetalheResponse> {
   const { data } = await api.get(`/anuncios/${id}`);
   return AnuncioDetalheResponseSchema.parse(data);
+}
+
+/**
+ * Candidata o Prestador logado ao anúncio (ETI-75). Rota provisória: o card do
+ * back-end ainda está "a definir". A cota é conferida pela API, não aqui.
+ */
+export async function candidatarAoAnuncio(
+  anuncioId: string,
+): Promise<CandidaturaCriada> {
+  const { data } = await api.post(`/anuncios/${anuncioId}/candidaturas`);
+  return CandidaturaCriadaSchema.parse(data);
 }

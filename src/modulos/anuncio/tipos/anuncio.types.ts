@@ -276,3 +276,14 @@ export const DetalheAnuncioMuralSchema = z.object({
 });
 
 export type DetalheAnuncioMural = z.infer<typeof DetalheAnuncioMuralSchema>;
+
+/**
+ * Resposta do "Candidatar-se" (ETI-75): `201` com a candidatura criada em
+ * `ENVIADA`. Rota e corpo provisórios até o back-end publicar.
+ */
+export const CandidaturaCriadaSchema = z.object({
+  id: z.string(),
+  status: z.enum(StatusAplicacao),
+});
+
+export type CandidaturaCriada = z.infer<typeof CandidaturaCriadaSchema>;
