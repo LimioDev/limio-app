@@ -14,6 +14,8 @@ import { StatusAplicacao } from "../tipos/anuncio.enums";
 import type { DetalheAnuncioMural } from "../tipos/anuncio.types";
 
 export interface SituacaoCandidaturaExibida {
+  /** Abre o chat 1:1 da candidatura (tela 21). */
+  aplicacaoId: string;
   titulo: string;
   descricao: string;
 }
@@ -43,20 +45,31 @@ export interface DetalheMuralExibido {
   candidatura: SituacaoCandidaturaExibida | null;
 }
 
+/** "Marina B." → "Marina", como o protótipo usa nos textos corridos. */
+function primeiroNome(nomeExibicao: string): string {
+  return nomeExibicao.trim().split(/\s+/)[0] ?? nomeExibicao;
+}
+
 /** `null` quando o Prestador pode se candidatar de novo (anterior recusada ou encerrada). */
-function situacaoCandidatura(status: StatusAplicacao): SituacaoCandidaturaExibida | null {
-  switch (status) {
+function situacaoCandidatura(
+  candidatura: NonNullable<DetalheAnuncioMural["minhaCandidatura"]>,
+  empregador: string,
+): SituacaoCandidaturaExibida | null {
+  const aplicacaoId = candidatura.id;
+  switch (candidatura.status) {
     case StatusAplicacao.ENVIADA:
       return {
+        aplicacaoId,
         titulo: "Candidatura enviada",
-        descricao: "O Empregador está analisando os candidatos. Avisaremos você se for o escolhido.",
+        descricao: `Converse com ${empregador} no chat para combinar escopo e valor.`,
       };
     case StatusAplicacao.ESCOLHIDA:
     case StatusAplicacao.AGUARDANDO_VALIDACAO:
     case StatusAplicacao.CONCLUIDA:
       return {
+        aplicacaoId,
         titulo: "Você foi escolhido",
-        descricao: "Combine os detalhes do serviço com o Empregador pelo chat.",
+        descricao: `Combine os detalhes do serviço com ${empregador} pelo chat.`,
       };
     case StatusAplicacao.RECUSADA:
     case StatusAplicacao.ENCERRADA:
@@ -95,7 +108,7 @@ function detalheParaExibicao(anuncio: DetalheAnuncioMural): DetalheMuralExibido 
           : null,
     },
     candidatura: anuncio.minhaCandidatura
-      ? situacaoCandidatura(anuncio.minhaCandidatura.status)
+      ? situacaoCandidatura(anuncio.minhaCandidatura, primeiroNome(empregador.nomeExibicao))
       : null,
   };
 }
@@ -126,6 +139,8 @@ export function useDetalheAnuncioMuralViewModel(id: string) {
     aoMudarFoto: setFotoAtual,
     aoTentarDeNovo: () => void query.refetch(),
     aoVoltar: () => router.back(),
+    aoAbrirChat: (aplicacaoId: string) =>
+      router.push({ pathname: "/(app)/chat/[aplicacaoId]", params: { aplicacaoId } }),
     // "Candidatar-se" chega com o ETI-75/ETI-76 e "Ver perfil" com o ETI-106;
     // até lá, o botão fica desabilitado e o link escondido.
     aoCandidatar: undefined as (() => void) | undefined,
