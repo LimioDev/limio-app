@@ -9,7 +9,7 @@ import {
   horaPretendida,
 } from "../servico/anuncio.helpers";
 import { useDetalheAnuncioMuralQuery } from "../servico/anuncio.queries";
-import { StatusCandidatura } from "../tipos/anuncio.enums";
+import { StatusAplicacao } from "../tipos/anuncio.enums";
 import type { DetalheAnuncioMural } from "../tipos/anuncio.types";
 
 export interface SituacaoCandidaturaExibida {
@@ -42,23 +42,24 @@ export interface DetalheMuralExibido {
   candidatura: SituacaoCandidaturaExibida | null;
 }
 
-function situacaoCandidatura(status: StatusCandidatura): SituacaoCandidaturaExibida {
+/** `null` quando o Prestador pode se candidatar de novo (anterior recusada ou encerrada). */
+function situacaoCandidatura(status: StatusAplicacao): SituacaoCandidaturaExibida | null {
   switch (status) {
-    case StatusCandidatura.ENVIADA:
+    case StatusAplicacao.ENVIADA:
       return {
         titulo: "Candidatura enviada",
         descricao: "O Empregador está analisando os candidatos. Avisaremos você se for o escolhido.",
       };
-    case StatusCandidatura.ESCOLHIDA:
+    case StatusAplicacao.ESCOLHIDA:
+    case StatusAplicacao.AGUARDANDO_VALIDACAO:
+    case StatusAplicacao.CONCLUIDA:
       return {
         titulo: "Você foi escolhido",
         descricao: "Combine os detalhes do serviço com o Empregador pelo chat.",
       };
-    case StatusCandidatura.CANCELADA:
-      return {
-        titulo: "Candidatura cancelada",
-        descricao: "Você não está mais concorrendo a este serviço.",
-      };
+    case StatusAplicacao.RECUSADA:
+    case StatusAplicacao.ENCERRADA:
+      return null;
   }
 }
 

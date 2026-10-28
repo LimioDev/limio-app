@@ -8,7 +8,7 @@ import {
   CamposEnderecoRequestSchema,
 } from "../../../comum/tipos/endereco";
 import { Uf } from "../../../comum/tipos/localidade";
-import { StatusAnuncio, StatusCandidatura, type QuandoMural } from "./anuncio.enums";
+import { StatusAnuncio, StatusAplicacao, type QuandoMural } from "./anuncio.enums";
 
 /**
  * Um anúncio da lista "Seus anúncios" (`AnuncioPainelResponse` do backend).
@@ -259,7 +259,8 @@ export const DetalheAnuncioMuralSchema = z.object({
   }),
   minhaCandidatura: z
     .object({
-      status: z.enum(StatusCandidatura),
+      id: z.string(),
+      status: z.enum(StatusAplicacao),
     })
     .nullable(),
 });

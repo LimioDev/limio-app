@@ -35,12 +35,15 @@ export function rotuloQuando(quando: QuandoMural): string {
   }
 }
 
-/** Espelha `StatusCandidatura` do backend (valores provisórios até o ETI-73/ETI-75). */
-export const StatusCandidatura = {
+/** Espelha `StatusAplicacao` do backend (`modulos/anuncio/enums/StatusAplicacao.java`). */
+export const StatusAplicacao = {
   ENVIADA: "ENVIADA",
   ESCOLHIDA: "ESCOLHIDA",
-  CANCELADA: "CANCELADA",
+  RECUSADA: "RECUSADA",
+  AGUARDANDO_VALIDACAO: "AGUARDANDO_VALIDACAO",
+  CONCLUIDA: "CONCLUIDA",
+  ENCERRADA: "ENCERRADA",
 } as const;
 
-export type StatusCandidatura =
-  (typeof StatusCandidatura)[keyof typeof StatusCandidatura];
+export type StatusAplicacao =
+  (typeof StatusAplicacao)[keyof typeof StatusAplicacao];
