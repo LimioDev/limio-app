@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
+import { TipoToast, useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import { rotuloMunicipio } from "../../../comum/tipos/localidade";
 import {
@@ -9,7 +10,10 @@ import {
   formatarDistancia,
   horaPretendida,
 } from "../servico/anuncio.helpers";
-import { useDetalheAnuncioMuralQuery } from "../servico/anuncio.queries";
+import {
+  useCandidatarMutation,
+  useDetalheAnuncioMuralQuery,
+} from "../servico/anuncio.queries";
 import { StatusAplicacao } from "../tipos/anuncio.enums";
 import type { DetalheAnuncioMural } from "../tipos/anuncio.types";
 
@@ -43,6 +47,16 @@ export interface DetalheMuralExibido {
   };
   /** Preenchida quando o Prestador já se candidatou: substitui "Candidatar-se". */
   candidatura: SituacaoCandidaturaExibida | null;
+}
+
+export interface FolhaCandidatarExibida {
+  aberta: boolean;
+  /** Primeiro nome do Empregador, usado nos itens da folha. */
+  empregador: string;
+  /** "Confirmar candidatura" em andamento: botões travados e a folha não fecha. */
+  enviando: boolean;
+  /** `atalho` é o rótulo do link (só em contatos não confirmados). */
+  erro: { mensagem: string; atalho: string | null } | null;
 }
 
 /** "Marina B." → "Marina", como o protótipo usa nos textos corridos. */
@@ -118,6 +132,10 @@ export function useDetalheAnuncioMuralViewModel(id: string) {
   const router = useRouter();
   const query = useDetalheAnuncioMuralQuery(id);
   const [fotoAtual, setFotoAtual] = useState(0);
+  const candidatar = useCandidatarMutation(id);
+  const [folhaAberta, setFolhaAberta] = useState(false);
+  const [erroFolha, setErroFolha] = useState<FolhaCandidatarExibida["erro"]>(null);
+  const mostrarToast = useToast((estado) => estado.mostrar);
 
   let erro: string | null = null;
   // Anúncio que saiu do mural não volta com "Tentar de novo".
@@ -129,8 +147,57 @@ export function useDetalheAnuncioMuralViewModel(id: string) {
       : "Este anúncio não está mais disponível no mural.";
   }
 
+  const anuncio = query.data ? detalheParaExibicao(query.data) : null;
+
+  function fecharFolha() {
+    setFolhaAberta(false);
+    setErroFolha(null);
+  }
+
+  // A cota não é conferida aqui: quem decide é a API (ETI-75).
+  function confirmarCandidatura() {
+    setErroFolha(null);
+    candidatar.mutate(undefined, {
+      onSuccess: fecharFolha,
+      onError: (falha) => {
+        switch (erroApi(falha)?.codigo) {
+          case CodigoErro.COTA_ESGOTADA:
+            fecharFolha();
+            router.push("/(app)/(prestador)/cota");
+            return;
+          case CodigoErro.ANUNCIO_ESTADO_INVALIDO:
+            fecharFolha();
+            mostrarToast("Este anúncio não aceita mais candidaturas", TipoToast.ERRO);
+            router.back();
+            return;
+          case CodigoErro.CANDIDATURA_DUPLICADA:
+            setErroFolha({ mensagem: "Você já se candidatou a este serviço.", atalho: null });
+            return;
+          case CodigoErro.CONTATOS_NAO_CONFIRMADOS:
+            setErroFolha({
+              mensagem: "Confirme seu telefone e e-mail para se candidatar.",
+              atalho: "Confirmar telefone e e-mail",
+            });
+            return;
+          default:
+            setErroFolha({
+              mensagem: mensagemErroApi(falha, "Não foi possível enviar sua candidatura."),
+              atalho: null,
+            });
+        }
+      },
+    });
+  }
+
+  const folha: FolhaCandidatarExibida = {
+    aberta: folhaAberta,
+    empregador: query.data ? primeiroNome(query.data.empregador.nomeExibicao) : "",
+    enviando: candidatar.isPending,
+    erro: erroFolha,
+  };
+
   return {
-    anuncio: query.data ? detalheParaExibicao(query.data) : null,
+    anuncio,
     carregando: query.isPending,
     erro,
     podeTentarDeNovo,
@@ -141,9 +208,16 @@ export function useDetalheAnuncioMuralViewModel(id: string) {
     aoVoltar: () => router.back(),
     aoAbrirChat: (aplicacaoId: string) =>
       router.push({ pathname: "/(app)/chat/[aplicacaoId]", params: { aplicacaoId } }),
-    // "Candidatar-se" chega com o ETI-75/ETI-76 e "Ver perfil" com o ETI-106;
-    // até lá, o botão fica desabilitado e o link escondido.
-    aoCandidatar: undefined as (() => void) | undefined,
+    folha,
+    aoCandidatar: () => setFolhaAberta(true),
+    aoConfirmarCandidatura: confirmarCandidatura,
+    aoFecharFolha: fecharFolha,
+    // Único atalho da folha: contatos não confirmados.
+    aoAtalhoErroFolha: () => {
+      fecharFolha();
+      router.push("/(app)/conta/dados-contato");
+    },
+    // "Ver perfil" chega com o ETI-106; até lá, o link fica escondido.
     aoVerPerfilEmpregador: undefined as (() => void) | undefined,
   };
 }

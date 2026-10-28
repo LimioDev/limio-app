@@ -63,6 +63,8 @@ export function useTotalMuralQuery(filtros: FiltrosMural, habilitado: boolean) {
 /**
  * "Confirmar candidatura" da tela 31. No sucesso, a tela 30 já mostra a
  * candidatura enviada sem esperar a nova consulta, que confirma em seguida.
+ * Na falha também recarrega: candidatura duplicada ou anúncio fechado mudam
+ * o que o detalhe e o mural mostram.
  */
 export function useCandidatarMutation(anuncioId: string) {
   const queryClient = useQueryClient();
@@ -76,6 +78,9 @@ export function useCandidatarMutation(anuncioId: string) {
             ? { ...atual, minhaCandidatura: { id: candidatura.id, status: candidatura.status } }
             : atual,
       );
+    },
+    // Sem `return`: a folha não espera a nova consulta pra fechar.
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ["anuncio", "mural"] });
     },
   });

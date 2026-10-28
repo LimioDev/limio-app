@@ -18,7 +18,11 @@ import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { Icone } from "../../../comum/componentes/ui/Icone";
 import { Reputacao } from "../../../comum/componentes/ui/Reputacao";
-import type { DetalheMuralExibido } from "../viewmodel/useDetalheAnuncioMuralViewModel";
+import type {
+  DetalheMuralExibido,
+  FolhaCandidatarExibida,
+} from "../viewmodel/useDetalheAnuncioMuralViewModel";
+import { FolhaCandidatar } from "./componentes/FolhaCandidatar";
 
 interface DetalheAnuncioMuralViewProps {
   anuncio: DetalheMuralExibido | null;
@@ -32,8 +36,11 @@ interface DetalheAnuncioMuralViewProps {
   aoTentarDeNovo: () => void;
   aoVoltar: () => void;
   aoAbrirChat: (aplicacaoId: string) => void;
-  /** Sem handler, "Candidatar-se" fica desabilitado. */
-  aoCandidatar?: () => void;
+  folha: FolhaCandidatarExibida;
+  aoCandidatar: () => void;
+  aoConfirmarCandidatura: () => void;
+  aoFecharFolha: () => void;
+  aoAtalhoErroFolha: () => void;
   /** Sem handler, "Ver perfil" não aparece (ETI-106). */
   aoVerPerfilEmpregador?: () => void;
 }
@@ -153,7 +160,11 @@ export function DetalheAnuncioMuralView({
   aoTentarDeNovo,
   aoVoltar,
   aoAbrirChat,
+  folha,
   aoCandidatar,
+  aoConfirmarCandidatura,
+  aoFecharFolha,
+  aoAtalhoErroFolha,
   aoVerPerfilEmpregador,
 }: DetalheAnuncioMuralViewProps) {
   if (!anuncio) {
@@ -282,7 +293,7 @@ export function DetalheAnuncioMuralView({
               onPress={() => aoAbrirChat(candidatura.aplicacaoId)}
             />
           ) : (
-            <Botao rotulo="Candidatar-se" onPress={aoCandidatar} disabled={!aoCandidatar} />
+            <Botao rotulo="Candidatar-se" onPress={aoCandidatar} />
           )}
         </View>
       </SafeAreaView>
@@ -294,6 +305,13 @@ export function DetalheAnuncioMuralView({
       >
         <BotaoVoltar aoVoltar={aoVoltar} />
       </SafeAreaView>
+
+      <FolhaCandidatar
+        folha={folha}
+        aoConfirmar={aoConfirmarCandidatura}
+        aoFechar={aoFecharFolha}
+        aoAtalhoErro={aoAtalhoErroFolha}
+      />
     </View>
   );
 }
