@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-import { DiaSemana, Uf } from "./perfil.enums";
+import { CategoriaSchema } from "../../../comum/tipos/categoria";
+import { Uf } from "../../../comum/tipos/localidade";
+import { DiaSemana } from "./perfil.enums";
 
 /** Faixa de `PerfilAtuacaoRequest.raioAtendimentoKm` no backend. */
 export const RAIO_MIN_KM = 1;
@@ -11,15 +13,6 @@ export const MUNICIPIO_BASE_MAX = 100;
 
 /** `HH:mm`, de 00:00 a 23:59 — formato da API nas janelas. */
 export const HORA_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
-
-/** Espelha `CategoriaResponse` do backend; `grupo` é o cabeçalho na tela "Especialidades". */
-export const CategoriaSchema = z.object({
-  id: z.uuid(),
-  nome: z.string(),
-  grupo: z.string(),
-});
-
-export type Categoria = z.infer<typeof CategoriaSchema>;
 
 /** Espelha `JanelaAtendimentoRequest`/`Response` do backend. */
 export const JanelaAtendimentoSchema = z.object({
@@ -74,14 +67,6 @@ export const PerfilAtuacaoRequestSchema = z.object({
 });
 
 export type PerfilAtuacaoRequest = z.infer<typeof PerfilAtuacaoRequestSchema>;
-
-/** Município da API de localidades do IBGE (`/estados/{UF}/municipios`). */
-export const MunicipioIbgeSchema = z.object({
-  id: z.number(),
-  nome: z.string(),
-});
-
-export type MunicipioIbge = z.infer<typeof MunicipioIbgeSchema>;
 
 /** Uma linha do editor "Janelas de horário": um horário por dia. */
 export const JanelaDiaFormSchema = z

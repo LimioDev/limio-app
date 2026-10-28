@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import type { MunicipioEscolhido } from "./rascunhoAtuacao.store";
+import type { MunicipioEscolhido } from "../../../comum/tipos/localidade";
 
 /**
  * Ponte entre o formulário "Novo endereço" e o seletor de cidade, que é outra

@@ -22,9 +22,7 @@ export default function ContratanteLayout() {
         name="perfil"
         options={{ title: "Perfil", headerShown: false, tabBarIcon: iconeAba(User) }}
       />
-      {/* Ainda sem tela: fora da tab bar até os cards delas chegarem. */}
-      <Tabs.Screen name="novo" options={{ href: null }} />
-      <Tabs.Screen name="anuncio/[id]" options={{ href: null }} />
+      {/* Criar e ver o anúncio ficam em `(app)/anuncio`, fora das abas. */}
     </Tabs>
   );
 }

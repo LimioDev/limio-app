@@ -4,14 +4,14 @@ import { useRef, useState } from "react";
 import { Alert } from "react-native";
 
 import { erroApi } from "../../../comum/lib/erros";
+import { chaveCacheFoto, prepararFoto } from "../../../comum/lib/foto";
 import { TipoToast, useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
-import { chaveCacheFoto, prepararFotoPerfil } from "../servico/fotoPerfil.helpers";
+import { MENSAGEM_FOTO_INVALIDA } from "../../../comum/tipos/foto";
 import {
   useEnviarFotoPerfilMutation,
   useFotoPerfilQuery,
 } from "../servico/fotoPerfil.queries";
-import { MENSAGEM_FOTO_INVALIDA } from "../tipos/fotoPerfil.types";
 
 const MENSAGEM_ENVIADA = "Foto de perfil atualizada.";
 const MENSAGEM_FALHA_PREPARO = "Não foi possível ler essa imagem. Escolha outra.";
@@ -93,7 +93,7 @@ export function useTrocarFotoPerfilViewModel() {
       }
 
       setPreparando(true);
-      const preparo = await prepararFotoPerfil(imagem).catch(() => null);
+      const preparo = await prepararFoto(imagem, "foto-perfil.jpg").catch(() => null);
       if (!preparo) {
         mostrarToast(MENSAGEM_FALHA_PREPARO, TipoToast.ERRO);
         return;

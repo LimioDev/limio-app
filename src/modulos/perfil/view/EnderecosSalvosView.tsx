@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { Icone } from "../../../comum/componentes/ui/Icone";
-import { CabecalhoVoltar } from "./componentes/CabecalhoVoltar";
+import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
 import type { EnderecoExibido } from "../viewmodel/useEnderecosSalvosViewModel";
 import { CartaoEndereco } from "./componentes/CartaoEndereco";
 import { ModalConfirmacao } from "./componentes/ModalConfirmacao";

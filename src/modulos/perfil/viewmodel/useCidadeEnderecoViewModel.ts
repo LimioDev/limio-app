@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 
 import { useCidadeEndereco } from "../store/cidadeEndereco.store";
-import { useBuscaMunicipio } from "./useBuscaMunicipio";
+import { useBuscaMunicipio } from "../../../comum/hooks/useBuscaMunicipio";
 
 /** Seletor de "Cidade e UF" do endereço, na lista de municípios do IBGE. */
 export function useCidadeEnderecoViewModel() {

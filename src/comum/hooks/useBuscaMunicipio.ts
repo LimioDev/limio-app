@@ -1,14 +1,14 @@
 import { useState } from "react";
 
-import { normalizarBusca } from "../servico/atuacao.helpers";
-import { useMunicipiosQuery } from "../servico/atuacao.queries";
-import type { MunicipioEscolhido } from "../store/rascunhoAtuacao.store";
-import { UFS, type Uf } from "../tipos/perfil.enums";
+import { normalizarBusca } from "../lib/busca";
+import { useMunicipiosQuery } from "../servico/ibge.queries";
+import { UFS, type MunicipioEscolhido, type Uf } from "../tipos/localidade";
 
 /**
- * Estado comum dos seletores de município (município-base do Prestador e
- * cidade do endereço): escolhe a UF, depois busca na lista do IBGE. O nome vai
- * como o IBGE escreve, que é o que a geocodificação da API reconhece.
+ * Estado comum dos seletores de município (município-base do Prestador,
+ * cidade do endereço salvo e do endereço avulso do anúncio): escolhe a UF,
+ * depois busca na lista do IBGE. O nome vai como o IBGE escreve, que é o que a
+ * geocodificação da API reconhece.
  */
 export function useBuscaMunicipio(atual: MunicipioEscolhido | null) {
   const [uf, setUf] = useState<Uf | null>(atual?.uf ?? null);

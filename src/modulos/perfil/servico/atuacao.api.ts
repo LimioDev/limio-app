@@ -1,20 +1,10 @@
-import { z } from "zod";
-
 import { api } from "../../../comum/lib/api";
 import {
-  CategoriaSchema,
   PerfilAtuacaoRequestSchema,
   PerfilAtuacaoResponseSchema,
-  type Categoria,
   type PerfilAtuacaoRequest,
   type PerfilAtuacaoResponse,
 } from "../tipos/atuacao.types";
-
-/** Categorias ativas, em ordem de exibição. */
-export async function listarCategorias(): Promise<Categoria[]> {
-  const { data } = await api.get("/categorias");
-  return z.array(CategoriaSchema).parse(data);
-}
 
 export async function buscarPerfilAtuacao(): Promise<PerfilAtuacaoResponse> {
   const { data } = await api.get("/perfil/prestador/atuacao");

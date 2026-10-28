@@ -2,27 +2,7 @@ import type {
   JanelaAtendimento,
   PerfilAtuacaoResponse,
 } from "../tipos/atuacao.types";
-import {
-  DIAS_SEMANA,
-  rotuloDia,
-  rotuloDiaCurto,
-  type Uf,
-} from "../tipos/perfil.enums";
-
-/** "São Paulo · SP" — mesmo formato do campo "Cidade e UF" do cadastro. */
-export function rotuloMunicipio(nome: string, uf: Uf): string {
-  return `${nome} · ${uf}`;
-}
-
-/** Busca sem diferenciar maiúsculas nem acentos ("eletrica" acha "Elétrica"). */
-export function normalizarBusca(texto: string): string {
-  return texto
-    .normalize("NFD")
-    // Remove os acentos que o NFD separou da letra (faixa dos diacríticos combinantes).
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-}
+import { DIAS_SEMANA, rotuloDia, rotuloDiaCurto } from "../tipos/perfil.enums";
 
 export interface FaixaJanela {
   /** "Seg a Sex", "Seg e Ter" ou "Sábado". */

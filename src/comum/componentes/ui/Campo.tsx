@@ -46,7 +46,10 @@ export function Campo({
         className={`h-campo flex-row items-center gap-2.5 rounded-campo bg-superficie px-4 ${corBorda} ${emFoco ? "border-[1.5px]" : "border"}`}
       >
         {icone ? (
-          <Icone icone={icone} tamanho={16} cor={emFoco ? "marca" : "fraco"} />
+          // Sem o `shrink-0`, no web o SVG encolhe até sumir ao lado do input `flex-1`.
+          <View className="shrink-0">
+            <Icone icone={icone} tamanho={16} cor={emFoco ? "marca" : "fraco"} />
+          </View>
         ) : null}
         <TextInput
           className="h-full flex-1 text-corpo text-tinta"

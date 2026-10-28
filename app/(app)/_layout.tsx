@@ -13,6 +13,8 @@ export default function AppLayout() {
           então nenhum papel cai num dashboard por exclusão. */}
       <Stack.Protected guard={papelAtivo === PapelUsuario.EMPREGADOR}>
         <Stack.Screen name="(contratante)" />
+        {/* Criar e acompanhar o próprio anúncio (telas 14 a 16). */}
+        <Stack.Screen name="anuncio" />
       </Stack.Protected>
       <Stack.Protected guard={papelAtivo === PapelUsuario.PRESTADOR}>
         <Stack.Screen name="(prestador)" />
