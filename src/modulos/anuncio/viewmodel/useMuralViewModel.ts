@@ -243,6 +243,9 @@ export function useMuralViewModel(atuacao: AtuacaoMural) {
     bloqueio,
     erro,
     vazio: query.isSuccess && total === 0,
+    // Vazio por categoria ou "Quando": raio não resolve, a ação é limpar os filtros.
+    vazioPorFiltro:
+      filtros.categorias.length > 0 || filtros.quando !== QuandoMural.QUALQUER,
     buscaSemResultado: query.isSuccess && total > 0 && anuncios.length === 0,
     carregandoMais: query.isFetchingNextPage,
     atualizando: query.isRefetching && !query.isFetchingNextPage,
@@ -273,6 +276,7 @@ export function useMuralViewModel(atuacao: AtuacaoMural) {
         router.push("/(app)/conta/atuacao");
       }
     },
+    aoLimparFiltrosDoMural: () => setFiltros(FILTROS_PADRAO),
     aoAbrirFiltros: () => {
       setRascunho(filtros);
       setRascunhoContado(filtros);

@@ -49,8 +49,19 @@ function BotaoTopo({
   );
 }
 
-/** Tela 29: nenhum anúncio compatível dentro do raio. */
-function MuralVazio({ aoAumentarRaio }: { aoAumentarRaio: () => void }) {
+/**
+ * Tela 29: nenhum anúncio compatível dentro do raio. Quando quem esvaziou foi
+ * o filtro de categoria ou "Quando", o texto e a ação passam a ser dos filtros.
+ */
+function MuralVazio({
+  porFiltro,
+  aoAumentarRaio,
+  aoLimparFiltros,
+}: {
+  porFiltro: boolean;
+  aoAumentarRaio: () => void;
+  aoLimparFiltros: () => void;
+}) {
   return (
     <View className="flex-1 items-center justify-center gap-8 px-margem pb-6">
       <View className="h-[184px] w-[184px] items-center justify-center rounded-full border border-marca-100">
@@ -67,11 +78,17 @@ function MuralVazio({ aoAumentarRaio }: { aoAumentarRaio: () => void }) {
           Nenhum serviço na sua área
         </Text>
         <Text className="text-center text-corpo text-tinta-suave">
-          Não encontramos nenhum anúncio dentro do seu raio por enquanto.
+          {porFiltro
+            ? "Não encontramos nenhum anúncio com esses filtros."
+            : "Não encontramos nenhum anúncio dentro do seu raio por enquanto."}
         </Text>
       </View>
       <View className="w-full px-6">
-        <Botao rotulo="Aumentar raio de busca" onPress={aoAumentarRaio} />
+        {porFiltro ? (
+          <Botao rotulo="Limpar filtros" onPress={aoLimparFiltros} />
+        ) : (
+          <Botao rotulo="Aumentar raio de busca" onPress={aoAumentarRaio} />
+        )}
       </View>
       <Text className="text-center text-rotulo text-tinta-fraco">
         Avisaremos você quando novas oportunidades aparecerem.
@@ -114,6 +131,7 @@ export function MuralView({
   bloqueio,
   erro,
   vazio,
+  vazioPorFiltro,
   buscaSemResultado,
   carregandoMais,
   atualizando,
@@ -127,6 +145,7 @@ export function MuralView({
   aoAlternarBusca,
   aoBuscar,
   aoAumentarRaio,
+  aoLimparFiltrosDoMural,
   aoAbrirFiltros,
   aoFecharFiltros,
   aoLimparFiltros,
@@ -153,7 +172,13 @@ export function MuralView({
       />
     );
   } else if (vazio) {
-    conteudo = <MuralVazio aoAumentarRaio={aoAumentarRaio} />;
+    conteudo = (
+      <MuralVazio
+        porFiltro={vazioPorFiltro}
+        aoAumentarRaio={aoAumentarRaio}
+        aoLimparFiltros={aoLimparFiltrosDoMural}
+      />
+    );
   } else {
     conteudo = (
       <FlatList
