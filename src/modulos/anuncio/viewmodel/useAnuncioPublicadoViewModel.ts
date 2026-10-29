@@ -1,11 +1,14 @@
 import { isAxiosError } from "axios";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
+import { TipoToast, useToast } from "../../../comum/store/toast";
 import type { Estado } from "../../../comum/tipos/api";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import { estadoDoAnuncio, quandoCurto } from "../servico/anuncio.helpers";
-import { useAnuncioQuery } from "../servico/anuncio.queries";
+import { useAnuncioQuery, useCancelarAnuncioMutation } from "../servico/anuncio.queries";
+import { StatusAnuncio } from "../tipos/anuncio.enums";
 import type { AnuncioDetalheResponse } from "../tipos/anuncio.types";
 
 export interface AnuncioPublicadoExibido {
@@ -18,6 +21,10 @@ export interface AnuncioPublicadoExibido {
   /** "4 prestadores se candidataram". */
   resumoCandidatos: string;
   temCandidatos: boolean;
+  /** Candidaturas `ENVIADA`, pro texto da folha de cancelar (tela 17). */
+  candidaturasPendentes: number;
+  /** Botão "Cancelar" (ETI-64): só em `PUBLICADO` sem candidatura escolhida. */
+  podeCancelar: boolean;
   avatares: { chave: string; nome: string; fotoUrl: string | null }[];
   descricao: string;
   fotos: { chave: string; uri: string }[];
@@ -44,6 +51,10 @@ function paraExibicao(anuncio: AnuncioDetalheResponse): AnuncioPublicadoExibido 
     local,
     resumoCandidatos: resumoCandidatos(anuncio.candidatos),
     temCandidatos: anuncio.candidatos > 0,
+    candidaturasPendentes: anuncio.candidatos,
+    // O detalhe ainda não diz se há escolhida; se houver, a API recusa com
+    // `ANUNCIO_ESTADO_INVALIDO` e a tela recarrega.
+    podeCancelar: anuncio.status === StatusAnuncio.PUBLICADO,
     avatares: anuncio.primeirosCandidatos.slice(0, 4).map((c, i) => ({
       chave: `${i}-${c.nome}`,
       nome: c.nome,
@@ -64,13 +75,40 @@ function naoEncontrado(erro: unknown): boolean {
 }
 
 /**
- * Tela 16 "Anúncio publicado": o anúncio do Empregador logado. "Ver todos",
- * "Editar" e "Cancelar" ficam desligados até os cards deles chegarem
- * (ETI-67/68, ETI-61/62 e ETI-63/64).
+ * Tela 16 "Anúncio publicado": o anúncio do Empregador logado, com a folha de
+ * cancelar (tela 17, ETI-64). "Ver todos" e "Editar" ficam desligados até os
+ * cards deles chegarem (ETI-67/68 e ETI-61/62).
  */
 export function useAnuncioPublicadoViewModel(id: string) {
   const router = useRouter();
   const query = useAnuncioQuery(id);
+  const cancelar = useCancelarAnuncioMutation();
+  const mostrarToast = useToast((estado) => estado.mostrar);
+  const [folhaCancelarVisivel, setFolhaCancelarVisivel] = useState(false);
+  const [erroCancelar, setErroCancelar] = useState<string | null>(null);
+
+  const aoConfirmarCancelar = async () => {
+    if (cancelar.isPending) {
+      return;
+    }
+    setErroCancelar(null);
+    try {
+      await cancelar.mutateAsync(id);
+      setFolhaCancelarVisivel(false);
+      mostrarToast("Anúncio cancelado");
+      // Tela 13b: o Início já sem o anúncio.
+      router.dismissTo("/(app)/(contratante)");
+    } catch (erro) {
+      if (erroApi(erro)?.codigo === CodigoErro.ANUNCIO_ESTADO_INVALIDO) {
+        setFolhaCancelarVisivel(false);
+        mostrarToast("Este anúncio já foi combinado", TipoToast.ERRO);
+        void query.refetch();
+        return;
+      }
+      // Na folha, não em toast: o modal fica por cima do toast.
+      setErroCancelar(mensagemErroApi(erro, "Não foi possível cancelar o anúncio."));
+    }
+  };
 
   let erro: string | null = null;
   if (query.isError && !query.data) {
@@ -90,6 +128,16 @@ export function useAnuncioPublicadoViewModel(id: string) {
     aoAtualizar: () => {
       void query.refetch();
     },
+    folhaCancelarVisivel,
+    cancelando: cancelar.isPending,
+    erroCancelar,
+    aoAbrirCancelar: () => {
+      setErroCancelar(null);
+      setFolhaCancelarVisivel(true);
+    },
+    aoConfirmarCancelar: () => void aoConfirmarCancelar(),
+    // "Manter no mural": fecha sem chamar a API.
+    aoManterNoMural: () => setFolhaCancelarVisivel(false),
     // Aberta direto pelo link (sem tela antes), volta pro Início.
     aoVoltar: () =>
       router.canGoBack() ? router.back() : router.replace("/(app)/(contratante)"),

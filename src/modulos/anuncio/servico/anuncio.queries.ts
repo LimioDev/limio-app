@@ -1,9 +1,10 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   anexarFotoAnuncio,
   buscarAnuncio,
   buscarPainelEmpregador,
+  cancelarAnuncio,
   criarAnuncio,
 } from "./anuncio.api";
 
@@ -37,4 +38,16 @@ export function useCriarAnuncioMutation() {
 
 export function useAnexarFotoAnuncioMutation() {
   return useMutation({ mutationFn: anexarFotoAnuncio });
+}
+
+export function useCancelarAnuncioMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: cancelarAnuncio,
+    // A tela 13 deixa de listar o anúncio. Sem `await`: a volta pro Início
+    // não espera a nova consulta do painel.
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
+    },
+  });
 }
