@@ -60,11 +60,11 @@ export function FolhaCandidatar({ folha, aoConfirmar, aoFechar, aoAtalhoErro }: 
               />
               <Item
                 icone={CircleCheck}
-                texto={`Esta candidatura é gratuita. Sua cota mensal só é usada se ${empregador} escolher sua candidatura.`}
+                texto={`Esta candidatura é gratuita. Sua cota mensal só será consumida se ${empregador} escolher você.`}
               />
               <Item
                 icone={Lock}
-                texto={`Os dados de contato de ${empregador} só aparecem se sua candidatura for escolhida.`}
+                texto={`Os dados de contato de ${empregador} só aparecem se ${empregador} escolher você.`}
               />
               <Item
                 icone={X}
