@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { CodigoErro } from "../../../comum/tipos/erros";
+import { rotuloMunicipio } from "../../../comum/tipos/localidade";
 import {
   diaComData,
   formatarDistancia,
@@ -63,24 +64,34 @@ function situacaoCandidatura(status: StatusAplicacao): SituacaoCandidaturaExibid
   }
 }
 
+/** "São Paulo · SP"; só a parte que veio quando falta cidade ou UF (anúncio antigo). */
+function rotuloCidadeUf({ cidade, uf }: DetalheAnuncioMural): string {
+  if (cidade && uf) {
+    return rotuloMunicipio(cidade, uf);
+  }
+  return cidade ?? uf ?? "";
+}
+
 function detalheParaExibicao(anuncio: DetalheAnuncioMural): DetalheMuralExibido {
   const { empregador } = anuncio;
+  const cidadeUf = rotuloCidadeUf(anuncio);
   return {
-    fotos: anuncio.fotos,
+    // Foto sem link (storage fora do ar) fica de fora do carrossel.
+    fotos: anuncio.fotos.flatMap((foto) => (foto.url ? [foto.url] : [])),
     categoria: anuncio.categoria.nome,
     distancia: `${formatarDistancia(anuncio.distanciaKm)} de você`,
     titulo: anuncio.titulo,
     dia: diaComData(anuncio.dataHoraPretendida),
     hora: horaPretendida(anuncio.dataHoraPretendida),
-    local: anuncio.bairro ?? anuncio.cidade,
-    cidadeUf: `${anuncio.cidade} · ${anuncio.uf}`,
+    local: anuncio.bairroRegiao ?? anuncio.cidade ?? cidadeUf,
+    cidadeUf,
     descricao: anuncio.descricao,
     empregador: {
       nome: empregador.nomeExibicao,
       fotoUrl: empregador.fotoUrl,
       reputacao:
-        empregador.mediaAvaliacoes !== null && empregador.totalAvaliacoes > 0
-          ? { nota: empregador.mediaAvaliacoes, totalAvaliacoes: empregador.totalAvaliacoes }
+        empregador.mediaAvaliacoes !== null && empregador.qtdAvaliacoes > 0
+          ? { nota: empregador.mediaAvaliacoes, totalAvaliacoes: empregador.qtdAvaliacoes }
           : null,
     },
     candidatura: anuncio.minhaCandidatura

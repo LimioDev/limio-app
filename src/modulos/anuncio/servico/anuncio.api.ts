@@ -28,9 +28,9 @@ export async function buscarPainelEmpregador(): Promise<PainelEmpregadorResponse
 }
 
 /**
- * Mural do Prestador logado (ETI-73). Rota e parâmetros provisórios: o card do
- * back-end ainda está "a definir". A compatibilidade (especialidade, "Outros" e
- * raio do perfil) é da API; os filtros só reduzem a lista.
+ * Mural do Prestador logado (ETI-73, `MuralController`). A compatibilidade
+ * (especialidade, "Outros" e raio do perfil) é da API; os filtros só reduzem a
+ * lista. Sem `raio`, vale o raio do perfil; `tamanho` fica no padrão (20).
  */
 export async function listarMural(
   filtros: FiltrosMural,
@@ -39,7 +39,7 @@ export async function listarMural(
   const { data } = await api.get("/anuncios/mural", {
     params: {
       categorias: filtros.categorias.length > 0 ? filtros.categorias : undefined,
-      raioKm: filtros.raioKm ?? undefined,
+      raio: filtros.raioKm ?? undefined,
       quando: filtros.quando,
       pagina,
     },

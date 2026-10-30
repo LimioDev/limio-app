@@ -93,12 +93,15 @@ function cartaoParaExibicao(anuncio: AnuncioMural, agora: Date): CartaoMuralExib
   return {
     id: anuncio.id,
     categoria: anuncio.categoria.nome,
-    novo: differenceInHours(agora, new Date(anuncio.publicadoEm)) < HORAS_NOVO,
+    // Sem `publicadoEm` (ainda fora do contrato do ETI-73), o selo não aparece.
+    novo: anuncio.publicadoEm
+      ? differenceInHours(agora, new Date(anuncio.publicadoEm)) < HORAS_NOVO
+      : false,
     titulo: anuncio.titulo,
-    nomeEmpregador: anuncio.nomeEmpregador,
-    fotoEmpregadorUrl: anuncio.fotoEmpregadorUrl,
+    nomeEmpregador: anuncio.empregador.nomeExibicao,
+    fotoEmpregadorUrl: anuncio.empregador.fotoUrl,
     quando: quandoCurto(anuncio.dataHoraPretendida),
-    local: anuncio.bairro ? `${anuncio.bairro} · ${distancia}` : distancia,
+    local: anuncio.bairroRegiao ? `${anuncio.bairroRegiao} · ${distancia}` : distancia,
     fotoUrl: anuncio.fotoUrl,
   };
 }
@@ -160,7 +163,7 @@ export function useMuralViewModel(atuacao: AtuacaoMural) {
   const agora = new Date();
   const termo = normalizarBusca(busca);
   const anuncios = paginas
-    .flatMap((pagina) => pagina.conteudo)
+    .flatMap((pagina) => pagina.content)
     // A lupa só procura no que já carregou; o contrato não tem busca por texto.
     .filter((anuncio) => !termo || normalizarBusca(anuncio.titulo).includes(termo))
     .map((anuncio) => cartaoParaExibicao(anuncio, agora));

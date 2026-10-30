@@ -193,28 +193,27 @@ export const PassoDoisSchema = z.object({
     .regex(/^(\d+)?$/, "Use um número inteiro")
     .refine((valor) => valor === "" || Number(valor) > 0, "Use um número maior que zero"),
 });
-/** Categoria resumida que vem dentro do anúncio do mural. */
-export const CategoriaAnuncioSchema = z.object({
-  id: z.string(),
-  nome: z.string(),
-});
-
 /**
- * Um anúncio do mural do Prestador (tela 28). Contrato provisório: o ETI-73
- * deixou a rota e os nomes "a definir". Nunca traz endereço completo,
- * coordenadas nem contato do Empregador. `publicadoEm` decide o selo "NOVO".
+ * Espelha `MuralItemResponse` — item do `GET /anuncios/mural` (ETI-73). Nunca
+ * traz endereço completo, coordenadas nem contato do Empregador; a localização
+ * é só `bairroRegiao` + `distanciaKm` (arredondada a 0,1 km). `fotoUrl` é a
+ * primeira foto (link temporário), `null` sem foto ou com o storage fora do ar.
+ * `publicadoEm` decide o selo "NOVO", mas ainda não está no contrato do back:
+ * sem ele, o selo não aparece.
  */
 export const AnuncioMuralSchema = z.object({
   id: z.string(),
   titulo: z.string(),
-  categoria: CategoriaAnuncioSchema,
+  categoria: CategoriaSchema,
   fotoUrl: z.string().nullable(),
-  nomeEmpregador: z.string(),
-  fotoEmpregadorUrl: z.string().nullable(),
+  empregador: z.object({
+    nomeExibicao: z.string(),
+    fotoUrl: z.string().nullable(),
+  }),
   dataHoraPretendida: z.string(),
-  bairro: z.string().nullable(),
+  bairroRegiao: z.string().nullable(),
   distanciaKm: z.number(),
-  publicadoEm: z.string(),
+  publicadoEm: z.string().nullish(),
 });
 
 export type AnuncioMural = z.infer<typeof AnuncioMuralSchema>;
@@ -235,27 +234,38 @@ export interface FiltrosMural {
 }
 
 /**
- * Detalhe do anúncio visto pelo Prestador (tela 30). `minhaCandidatura` vem
- * preenchida quando ele já se candidatou, e a tela troca "Candidatar-se" pela
- * situação. Contrato provisório, como o do mural.
+ * Foto no detalhe do mural (`FotoAnuncioResponse`). Diferente da tela 16,
+ * `url` e `expiraEm` podem vir `null` quando o storage não respondeu.
+ */
+export const FotoMuralSchema = z.object({
+  id: z.string(),
+  url: z.string().nullable(),
+  expiraEm: z.string().nullable(),
+});
+
+/**
+ * Espelha `MuralDetalheResponse` — `GET /anuncios/mural/{id}` (ETI-73), visto
+ * pelo Prestador na tela 30. `cidade` é `null` em anúncio antigo cujo endereço
+ * não pôde ser lido; `mediaAvaliacoes` é `null` com `qtdAvaliacoes` 0.
+ * `minhaCandidatura` vem preenchida quando ele já se candidatou, e a tela
+ * troca "Candidatar-se" pela situação; o `id` abre o chat da candidatura.
  */
 export const DetalheAnuncioMuralSchema = z.object({
   id: z.string(),
   titulo: z.string(),
   descricao: z.string(),
-  categoria: CategoriaAnuncioSchema,
-  fotos: z.array(z.string()),
+  categoria: CategoriaSchema,
+  fotos: z.array(FotoMuralSchema),
   dataHoraPretendida: z.string(),
-  bairro: z.string().nullable(),
-  cidade: z.string(),
-  uf: z.string(),
+  bairroRegiao: z.string().nullable(),
+  cidade: z.string().nullable(),
+  uf: z.enum(Uf).nullable(),
   distanciaKm: z.number(),
   empregador: z.object({
-    id: z.string(),
     nomeExibicao: z.string(),
     fotoUrl: z.string().nullable(),
     mediaAvaliacoes: z.number().nullable(),
-    totalAvaliacoes: z.number().int(),
+    qtdAvaliacoes: z.number().int(),
   }),
   minhaCandidatura: z
     .object({

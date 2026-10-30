@@ -9,7 +9,11 @@ export const StatusAnuncio = {
 
 export type StatusAnuncio = (typeof StatusAnuncio)[keyof typeof StatusAnuncio];
 
-/** Filtro "Quando" do mural (tela 28a). Nome provisório: o ETI-73 ainda não fixou o contrato. */
+/**
+ * Espelha `QuandoMural` do backend, filtro "Quando" do mural (tela 28a). A
+ * doc do ETI-73 escreve `esta-semana`, mas o `QuandoMuralConverter` também
+ * aceita o nome da constante.
+ */
 export const QuandoMural = {
   QUALQUER: "QUALQUER",
   ESTA_SEMANA: "ESTA_SEMANA",
