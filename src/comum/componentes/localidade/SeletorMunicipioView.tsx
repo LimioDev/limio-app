@@ -2,12 +2,12 @@ import { Check, Search } from "lucide-react-native";
 import { FlatList, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Botao } from "../../../comum/componentes/ui/Botao";
-import { Carregando } from "../../../comum/componentes/ui/Carregando";
-import { Chip } from "../../../comum/componentes/ui/Chip";
-import { Icone } from "../../../comum/componentes/ui/Icone";
-import type { Uf } from "../tipos/perfil.enums";
-import { CabecalhoVoltar } from "./componentes/CabecalhoVoltar";
+import { Botao } from "../ui/Botao";
+import { Carregando } from "../ui/Carregando";
+import { Chip } from "../ui/Chip";
+import { Icone } from "../ui/Icone";
+import type { Uf } from "../../tipos/localidade";
+import { CabecalhoVoltar } from "../ui/CabecalhoVoltar";
 
 interface MunicipioItem {
   id: number;

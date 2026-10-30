@@ -1,17 +1,12 @@
 import { create } from "zustand";
 
+import type { Categoria } from "../../../comum/tipos/categoria";
+import type { MunicipioEscolhido } from "../../../comum/tipos/localidade";
 import {
   RAIO_PADRAO_KM,
-  type Categoria,
   type JanelaAtendimento,
   type PerfilAtuacaoResponse,
 } from "../tipos/atuacao.types";
-import type { Uf } from "../tipos/perfil.enums";
-
-export interface MunicipioEscolhido {
-  nome: string;
-  uf: Uf;
-}
 
 export interface RascunhoAtuacao {
   especialidades: Categoria[];

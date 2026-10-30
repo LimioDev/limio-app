@@ -1,8 +1,7 @@
 import axios from "axios";
 import { z } from "zod";
 
-import { MunicipioIbgeSchema, type MunicipioIbge } from "../tipos/atuacao.types";
-import type { Uf } from "../tipos/perfil.enums";
+import { MunicipioIbgeSchema, type MunicipioIbge, type Uf } from "../tipos/localidade";
 
 /**
  * API pública de localidades do IBGE. Instância própria, fora de `comum/lib/api`:

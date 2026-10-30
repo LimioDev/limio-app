@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 
 import { useRascunhoAtuacao } from "../store/rascunhoAtuacao.store";
-import { useBuscaMunicipio } from "./useBuscaMunicipio";
+import { useBuscaMunicipio } from "../../../comum/hooks/useBuscaMunicipio";
 
 /** Seletor do município-base do Prestador: grava no rascunho da tela 10. */
 export function useMunicipioBaseViewModel() {

@@ -3,9 +3,10 @@ import { useState } from "react";
 
 import { mensagemErroApi } from "../../../comum/lib/erros";
 import { useToast } from "../../../comum/store/toast";
-import { linhaLocal, linhaLogradouro } from "../servico/endereco.helpers";
+import { linhaLogradouro } from "../../../comum/lib/endereco";
+import { useEnderecosQuery } from "../../../comum/servico/endereco.queries";
+import { linhaLocal } from "../servico/endereco.helpers";
 import {
-  useEnderecosQuery,
   useMarcarEnderecoPadraoMutation,
   useRemoverEnderecoMutation,
 } from "../servico/endereco.queries";

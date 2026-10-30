@@ -1,15 +1,17 @@
 import { format } from "date-fns";
 
 import { paraFusoLocal } from "../../../comum/lib/datas";
+import type { Estado } from "../../../comum/tipos/api";
+import { StatusAnuncio } from "../tipos/anuncio.enums";
 
-// O rótulo do protótipo ("Qua") não bate com o `EEE` do ptBR ("qua.").
+// Os rótulos do protótipo ("Qua") não batem com o `EEE` do ptBR ("qua.").
 const DIAS_SEMANA_CURTOS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 const formatoDistancia = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 1,
 });
 
-/** "Qua, 03/09". */
+/** "Qua, 03/09", no fuso do sistema. */
 export function diaComData(dataHoraUtc: string): string {
   const data = paraFusoLocal(dataHoraUtc);
   return `${DIAS_SEMANA_CURTOS[data.getDay()]}, ${format(data, "dd/MM")}`;
@@ -30,4 +32,20 @@ export function horaPretendida(dataHoraUtc: string): string {
 /** "1,8 km". */
 export function formatarDistancia(km: number): string {
   return `${formatoDistancia.format(km)} km`;
+}
+
+/** Selo do anúncio. `PUBLICADO` com prestador escolhido é o "Combinado" do protótipo. */
+export function estadoDoAnuncio(status: StatusAnuncio, temPrestadorEscolhido: boolean): Estado {
+  switch (status) {
+    case StatusAnuncio.PUBLICADO:
+      return temPrestadorEscolhido ? "combinado" : "aguardando";
+    case StatusAnuncio.EM_ANDAMENTO:
+      return "andamento";
+    case StatusAnuncio.AGUARDANDO_VALIDACAO:
+      return "validacao";
+    case StatusAnuncio.CONCLUIDO:
+      return "concluido";
+    case StatusAnuncio.ENCERRADO:
+      return "cancelado";
+  }
 }

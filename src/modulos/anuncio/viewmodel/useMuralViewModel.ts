@@ -3,7 +3,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
-import { normalizarBusca } from "../../../comum/lib/texto";
+import { normalizarBusca } from "../../../comum/lib/busca";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import {
   formatarDistancia,

@@ -13,10 +13,10 @@ import {
   COMPLEMENTO_MAX,
   NUMERO_MAX,
   RUA_MAX,
-  type EnderecoFormEntrada,
-} from "../tipos/endereco.types";
-import { CabecalhoVoltar } from "./componentes/CabecalhoVoltar";
-import { CampoSelecao } from "./componentes/CampoSelecao";
+} from "../../../comum/tipos/endereco";
+import type { EnderecoFormEntrada } from "../tipos/endereco.types";
+import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
+import { CampoSelecao } from "../../../comum/componentes/ui/CampoSelecao";
 
 interface EnderecoViewProps {
   titulo: string;

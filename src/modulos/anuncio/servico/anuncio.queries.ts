@@ -1,9 +1,17 @@
-import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+} from "@tanstack/react-query";
 
 import type { FiltrosMural } from "../tipos/anuncio.types";
 import {
+  anexarFotoAnuncio,
+  buscarAnuncio,
   buscarDetalheAnuncioMural,
   buscarPainelEmpregador,
+  criarAnuncio,
   listarMural,
 } from "./anuncio.api";
 
@@ -12,6 +20,7 @@ export const chavesAnuncio = {
   mural: (filtros: FiltrosMural) => ["anuncio", "mural", filtros] as const,
   totalMural: (filtros: FiltrosMural) => ["anuncio", "mural", "total", filtros] as const,
   detalheMural: (id: string) => ["anuncio", "mural", "detalhe", id] as const,
+  detalhe: (id: string) => ["anuncio", "detalhe", id] as const,
 };
 
 export function usePainelEmpregadorQuery() {
@@ -56,4 +65,20 @@ export function useDetalheAnuncioMuralQuery(id: string) {
     // A situação da candidatura muda fora da tela (ex.: foi escolhido).
     staleTime: 0,
   });
+}
+export function useAnuncioQuery(id: string) {
+  return useQuery({
+    queryKey: chavesAnuncio.detalhe(id),
+    queryFn: () => buscarAnuncio(id),
+    // Mesmo motivo do painel; e os links das fotos são temporários.
+    staleTime: 0,
+  });
+}
+
+export function useCriarAnuncioMutation() {
+  return useMutation({ mutationFn: criarAnuncio });
+}
+
+export function useAnexarFotoAnuncioMutation() {
+  return useMutation({ mutationFn: anexarFotoAnuncio });
 }

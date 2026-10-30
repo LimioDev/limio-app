@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
-import { useCategoriasQuery, usePerfilAtuacaoQuery } from "../servico/atuacao.queries";
+import { useCategoriasQuery } from "../../../comum/servico/categoria.queries";
+import { usePerfilAtuacaoQuery } from "../servico/atuacao.queries";
 
 export interface CategoriaDoMural {
   id: string;
