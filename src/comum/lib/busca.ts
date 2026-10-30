@@ -3,7 +3,7 @@ export function normalizarBusca(texto: string): string {
   return texto
     .normalize("NFD")
     // Remove os acentos que o NFD separou da letra (faixa dos diacríticos combinantes).
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
 }
