@@ -94,8 +94,8 @@ export async function buscarAnuncio(id: string): Promise<AnuncioDetalheResponse>
 }
 
 /**
- * Candidata o Prestador logado ao anúncio (ETI-75). Rota provisória: o card do
- * back-end ainda está "a definir". A cota é conferida pela API, não aqui.
+ * Candidata o Prestador logado ao anúncio (ETI-75, `CandidaturaController` do
+ * back). A cota é conferida pela API, não aqui.
  */
 export async function candidatarAoAnuncio(
   anuncioId: string,

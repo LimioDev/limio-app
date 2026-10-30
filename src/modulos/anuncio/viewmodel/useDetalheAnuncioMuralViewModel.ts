@@ -170,6 +170,12 @@ export function useDetalheAnuncioMuralViewModel(id: string) {
             mostrarToast("Este anúncio não aceita mais candidaturas", TipoToast.ERRO);
             router.back();
             return;
+          // Anúncio excluído entre abrir o detalhe e confirmar.
+          case CodigoErro.ANUNCIO_NAO_ENCONTRADO:
+            fecharFolha();
+            mostrarToast("Este anúncio não está mais disponível no mural.", TipoToast.ERRO);
+            router.back();
+            return;
           case CodigoErro.CANDIDATURA_DUPLICADA:
             setErroFolha({ mensagem: "Você já se candidatou a este serviço.", atalho: null });
             return;
