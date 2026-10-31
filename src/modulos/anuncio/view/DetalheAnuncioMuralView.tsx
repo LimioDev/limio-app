@@ -2,9 +2,11 @@ import { Image } from "expo-image";
 import {
   CalendarDays,
   ChevronLeft,
+  CircleCheck,
   ImageIcon,
   Lock,
   MapPin,
+  MessageSquare,
   type LucideIcon,
 } from "lucide-react-native";
 import { useState } from "react";
@@ -16,7 +18,11 @@ import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { Icone } from "../../../comum/componentes/ui/Icone";
 import { Reputacao } from "../../../comum/componentes/ui/Reputacao";
-import type { DetalheMuralExibido } from "../viewmodel/useDetalheAnuncioMuralViewModel";
+import type {
+  DetalheMuralExibido,
+  FolhaCandidatarExibida,
+} from "../viewmodel/useDetalheAnuncioMuralViewModel";
+import { FolhaCandidatar } from "./componentes/FolhaCandidatar";
 
 interface DetalheAnuncioMuralViewProps {
   anuncio: DetalheMuralExibido | null;
@@ -29,8 +35,12 @@ interface DetalheAnuncioMuralViewProps {
   aoMudarFoto: (indice: number) => void;
   aoTentarDeNovo: () => void;
   aoVoltar: () => void;
-  /** Sem handler, "Candidatar-se" fica desabilitado (ETI-75/ETI-76). */
-  aoCandidatar?: () => void;
+  aoAbrirChat: (aplicacaoId: string) => void;
+  folha: FolhaCandidatarExibida;
+  aoCandidatar: () => void;
+  aoConfirmarCandidatura: () => void;
+  aoFecharFolha: () => void;
+  aoAtalhoErroFolha: () => void;
   /** Sem handler, "Ver perfil" não aparece (ETI-106). */
   aoVerPerfilEmpregador?: () => void;
 }
@@ -149,7 +159,12 @@ export function DetalheAnuncioMuralView({
   aoMudarFoto,
   aoTentarDeNovo,
   aoVoltar,
+  aoAbrirChat,
+  folha,
   aoCandidatar,
+  aoConfirmarCandidatura,
+  aoFecharFolha,
+  aoAtalhoErroFolha,
   aoVerPerfilEmpregador,
 }: DetalheAnuncioMuralViewProps) {
   if (!anuncio) {
@@ -184,6 +199,8 @@ export function DetalheAnuncioMuralView({
       </SafeAreaView>
     );
   }
+
+  const { candidatura } = anuncio;
 
   return (
     <View className="flex-1 bg-fundo">
@@ -245,6 +262,19 @@ export function DetalheAnuncioMuralView({
             ) : null}
           </View>
 
+          {candidatura ? (
+            <View
+              className="flex-row gap-3 rounded-campo bg-sucesso-fundo p-4"
+              accessibilityRole="summary"
+            >
+              <Icone icone={CircleCheck} tamanho={20} cor="sucesso" />
+              <View className="flex-1 gap-0.5">
+                <Text className="text-corpo font-bold text-sucesso">{candidatura.titulo}</Text>
+                <Text className="text-rotulo text-sucesso">{candidatura.descricao}</Text>
+              </View>
+            </View>
+          ) : null}
+
           <View className="flex-row items-center gap-3 rounded-campo bg-marca-50 p-4">
             <Icone icone={Lock} tamanho={16} cor="marca-escura" />
             <Text className="flex-1 text-rotulo text-marca-800">
@@ -256,20 +286,14 @@ export function DetalheAnuncioMuralView({
 
       <SafeAreaView edges={["bottom"]} className="border-t border-borda bg-superficie">
         <View className="px-margem py-3">
-          {anuncio.candidatura ? (
-            <View
-              className="gap-1 rounded-campo border border-marca-100 bg-marca-50 p-4"
-              accessibilityRole="summary"
-            >
-              <Text className="text-corpo font-bold text-marca-800">
-                {anuncio.candidatura.titulo}
-              </Text>
-              <Text className="text-rotulo text-tinta-suave">
-                {anuncio.candidatura.descricao}
-              </Text>
-            </View>
+          {candidatura ? (
+            <Botao
+              rotulo="Abrir chat"
+              icone={MessageSquare}
+              onPress={() => aoAbrirChat(candidatura.aplicacaoId)}
+            />
           ) : (
-            <Botao rotulo="Candidatar-se" onPress={aoCandidatar} disabled={!aoCandidatar} />
+            <Botao rotulo="Candidatar-se" onPress={aoCandidatar} />
           )}
         </View>
       </SafeAreaView>
@@ -281,6 +305,13 @@ export function DetalheAnuncioMuralView({
       >
         <BotaoVoltar aoVoltar={aoVoltar} />
       </SafeAreaView>
+
+      <FolhaCandidatar
+        folha={folha}
+        aoConfirmar={aoConfirmarCandidatura}
+        aoFechar={aoFecharFolha}
+        aoAtalhoErro={aoAtalhoErroFolha}
+      />
     </View>
   );
 }
