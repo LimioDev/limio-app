@@ -20,6 +20,7 @@ interface AnuncioPublicadoViewProps {
   atualizando: boolean;
   aoAtualizar: () => void;
   aoVoltar: () => void;
+  aoVerCandidatos: () => void;
 }
 
 function LinhaDetalhe({ rotulo, valor }: { rotulo: string; valor: string }) {
@@ -82,6 +83,7 @@ export function AnuncioPublicadoView({
   atualizando,
   aoAtualizar,
   aoVoltar,
+  aoVerCandidatos,
 }: AnuncioPublicadoViewProps) {
   if (carregando || erro || !anuncio) {
     return (
@@ -131,13 +133,7 @@ export function AnuncioPublicadoView({
                 </View>
                 <Text className="text-corpo font-bold text-tinta">{anuncio.resumoCandidatos}</Text>
               </View>
-              {/* Lista de candidatos é a tela 18 (ETI-67/68), ainda sem rota. */}
-              <Botao
-                rotulo="Ver todos"
-                tamanho="padrao"
-                disabled
-                accessibilityHint="Disponível em breve"
-              />
+              <Botao rotulo="Ver todos" tamanho="padrao" onPress={aoVerCandidatos} />
             </Card>
           ) : (
             // Tela 16b: sem candidatos, sem "Ver todos".
