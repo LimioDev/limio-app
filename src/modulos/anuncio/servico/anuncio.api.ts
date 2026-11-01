@@ -7,6 +7,7 @@ import {
   AnuncioCriadoResponseSchema,
   AnuncioDetalheResponseSchema,
   AnuncioRequestSchema,
+  CandidatosResponseSchema,
   CandidaturaCriadaSchema,
   DetalheAnuncioMuralSchema,
   FotoAnuncioResponseSchema,
@@ -15,6 +16,7 @@ import {
   type AnuncioCriadoResponse,
   type AnuncioDetalheResponse,
   type AnuncioRequest,
+  type CandidatosResponse,
   type CandidaturaCriada,
   type DetalheAnuncioMural,
   type FiltrosMural,
@@ -102,4 +104,27 @@ export async function candidatarAoAnuncio(
 ): Promise<CandidaturaCriada> {
   const { data } = await api.post(`/anuncios/${anuncioId}/candidaturas`);
   return CandidaturaCriadaSchema.parse(data);
+}
+
+/**
+ * Candidatos `ENVIADA` do anúncio do Empregador logado (ETI-67,
+ * `CandidatoController`). Anúncio de outra pessoa responde `404`.
+ */
+export async function listarCandidatos(anuncioId: string): Promise<CandidatosResponse> {
+  const { data } = await api.get(`/anuncios/${anuncioId}/candidaturas`);
+  return CandidatosResponseSchema.parse(data);
+}
+
+/** Recusa o candidato e devolve a lista já sem ele (ETI-67). */
+export async function recusarCandidato({
+  anuncioId,
+  candidaturaId,
+}: {
+  anuncioId: string;
+  candidaturaId: string;
+}): Promise<CandidatosResponse> {
+  const { data } = await api.post(
+    `/anuncios/${anuncioId}/candidaturas/${candidaturaId}/recusar`,
+  );
+  return CandidatosResponseSchema.parse(data);
 }

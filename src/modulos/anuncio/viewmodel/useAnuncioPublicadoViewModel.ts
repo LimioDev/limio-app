@@ -64,9 +64,9 @@ function naoEncontrado(erro: unknown): boolean {
 }
 
 /**
- * Tela 16 "Anúncio publicado": o anúncio do Empregador logado. "Ver todos",
- * "Editar" e "Cancelar" ficam desligados até os cards deles chegarem
- * (ETI-67/68, ETI-61/62 e ETI-63/64).
+ * Tela 16 "Anúncio publicado": o anúncio do Empregador logado. "Ver todos"
+ * abre as telas 18/19 (ETI-68); "Editar" e "Cancelar" ficam desligados até os
+ * cards deles chegarem (ETI-61/62 e ETI-63/64).
  */
 export function useAnuncioPublicadoViewModel(id: string) {
   const router = useRouter();
@@ -93,5 +93,8 @@ export function useAnuncioPublicadoViewModel(id: string) {
     // Aberta direto pelo link (sem tela antes), volta pro Início.
     aoVoltar: () =>
       router.canGoBack() ? router.back() : router.replace("/(app)/(contratante)"),
+    // Telas 18/19 (ETI-68).
+    aoVerCandidatos: () =>
+      router.push({ pathname: "/(app)/anuncio/[id]/candidatos", params: { id } }),
   };
 }

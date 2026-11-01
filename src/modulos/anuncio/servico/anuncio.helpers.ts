@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, isToday, isTomorrow } from "date-fns";
 
 import { paraFusoLocal } from "../../../comum/lib/datas";
 import type { Estado } from "../../../comum/tipos/api";
@@ -48,4 +48,14 @@ export function estadoDoAnuncio(status: StatusAnuncio, temPrestadorEscolhido: bo
     case StatusAnuncio.ENCERRADO:
       return "cancelado";
   }
+}
+
+/** "02/09 é amanhã", "02/09 é hoje" ou só "02/09" — dica "Rever a data" da tela 19. */
+export function dataComProximidade(dataHoraUtc: string): string {
+  const data = paraFusoLocal(dataHoraUtc);
+  const dia = format(data, "dd/MM");
+  if (isToday(data)) {
+    return `${dia} é hoje`;
+  }
+  return isTomorrow(data) ? `${dia} é amanhã` : dia;
 }

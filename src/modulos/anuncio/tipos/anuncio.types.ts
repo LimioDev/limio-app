@@ -287,3 +287,34 @@ export const CandidaturaCriadaSchema = z.object({
 });
 
 export type CandidaturaCriada = z.infer<typeof CandidaturaCriadaSchema>;
+
+/**
+ * Espelha `CandidatoResponse` (ETI-67): um candidato `ENVIADA` na tela 18.
+ * `nome` vem abreviado ("Rafael S."); `fotoUrl` é link temporário, válido até
+ * `fotoExpiraEm`. `mediaAvaliacoes` é `null` sem avaliação (nunca 0,0) e
+ * `chatId` é `null` enquanto o chat da candidatura não existe. Nunca traz
+ * telefone, e-mail nem endereço do Prestador.
+ */
+export const CandidatoSchema = z.object({
+  candidaturaId: z.string(),
+  nome: z.string(),
+  fotoUrl: z.string().nullable(),
+  fotoExpiraEm: z.string().nullable(),
+  especialidades: z.array(z.string()),
+  gold: z.boolean(),
+  qtdAvaliacoes: z.number().int(),
+  mediaAvaliacoes: z.number().nullable(),
+  chatId: z.string().nullable(),
+});
+
+export type Candidato = z.infer<typeof CandidatoSchema>;
+
+/**
+ * `CandidatosResponse` — `GET /anuncios/{id}/candidaturas` e resposta do
+ * "Recusar", da candidatura mais antiga pra mais nova. Vazia é a tela 19.
+ */
+export const CandidatosResponseSchema = z.object({
+  candidatos: z.array(CandidatoSchema),
+});
+
+export type CandidatosResponse = z.infer<typeof CandidatosResponseSchema>;
