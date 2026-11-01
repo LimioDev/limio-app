@@ -6,12 +6,18 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import type { DetalheAnuncioMural, FiltrosMural } from "../tipos/anuncio.types";
+import type {
+  CandidatosResponse,
+  DetalheAnuncioMural,
+  FiltrosMural,
+} from "../tipos/anuncio.types";
 import {
   anexarFotoAnuncio,
   buscarAnuncio,
   buscarDetalheAnuncioMural,
   candidatarAoAnuncio,
+  listarCandidatos,
+  recusarCandidato,
   buscarPainelEmpregador,
   criarAnuncio,
   listarMural,
@@ -23,6 +29,7 @@ export const chavesAnuncio = {
   totalMural: (filtros: FiltrosMural) => ["anuncio", "mural", "total", filtros] as const,
   detalheMural: (id: string) => ["anuncio", "mural", "detalhe", id] as const,
   detalhe: (id: string) => ["anuncio", "detalhe", id] as const,
+  candidatos: (id: string) => ["anuncio", "candidatos", id] as const,
 };
 
 export function usePainelEmpregadorQuery() {
@@ -109,4 +116,32 @@ export function useCriarAnuncioMutation() {
 
 export function useAnexarFotoAnuncioMutation() {
   return useMutation({ mutationFn: anexarFotoAnuncio });
+}
+
+/** Tela 18 "Candidatos". Candidatos chegam e desistem fora da tela. */
+export function useCandidatosQuery(anuncioId: string) {
+  return useQuery({
+    queryKey: chavesAnuncio.candidatos(anuncioId),
+    queryFn: () => listarCandidatos(anuncioId),
+    staleTime: 0,
+  });
+}
+
+/**
+ * "Recusar candidatura" (tela 18b). A API devolve a lista já sem o recusado:
+ * ela entra direto no cache, e o card some sem esperar outra consulta. O
+ * detalhe (tela 16) e o painel contam candidatos, então são consultados de novo.
+ */
+export function useRecusarCandidatoMutation(anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (candidaturaId: string) => recusarCandidato({ anuncioId, candidaturaId }),
+    onSuccess: (lista) => {
+      queryClient.setQueryData<CandidatosResponse>(chavesAnuncio.candidatos(anuncioId), lista);
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalhe(anuncioId) });
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
+    },
+  });
 }
