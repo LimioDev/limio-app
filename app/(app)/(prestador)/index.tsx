@@ -1,18 +1,10 @@
-import { Link } from "expo-router";
-import { Text, View } from "react-native";
-
-import { SeletorPapelAtivo } from "../../../src/comum/componentes/sessao/SeletorPapelAtivo";
+import { useMuralViewModel } from "../../../src/modulos/anuncio/viewmodel/useMuralViewModel";
+import { MuralView } from "../../../src/modulos/anuncio/view/MuralView";
+import { useAtuacaoDoMuralViewModel } from "../../../src/modulos/perfil/viewmodel/useAtuacaoDoMuralViewModel";
 
 export default function Mural() {
-  return (
-    <View className="flex-1 gap-4 px-margem py-6">
-      <View className="flex-row items-center justify-between">
-        <SeletorPapelAtivo />
-        <Link href="/(app)/ajustes" className="text-rotulo font-semibold text-marca-500">
-          Ajustes
-        </Link>
-      </View>
-      <Text>(prestador)/index</Text>
-    </View>
-  );
+  // Especialidades e raio vêm do perfil; a rota junta os dois módulos.
+  const atuacao = useAtuacaoDoMuralViewModel();
+  const vm = useMuralViewModel(atuacao);
+  return <MuralView {...vm} />;
 }

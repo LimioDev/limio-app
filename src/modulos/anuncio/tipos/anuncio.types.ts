@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { respostaPaginadaSchema } from "../../../comum/tipos/api";
 import { CategoriaSchema } from "../../../comum/tipos/categoria";
 import {
   APELIDO_MAX,
@@ -7,7 +8,7 @@ import {
   CamposEnderecoRequestSchema,
 } from "../../../comum/tipos/endereco";
 import { Uf } from "../../../comum/tipos/localidade";
-import { StatusAnuncio } from "./anuncio.enums";
+import { StatusAnuncio, StatusAplicacao, type QuandoMural } from "./anuncio.enums";
 
 /**
  * Um anúncio da lista "Seus anúncios" (`AnuncioPainelResponse` do backend).
@@ -192,3 +193,97 @@ export const PassoDoisSchema = z.object({
     .regex(/^(\d+)?$/, "Use um número inteiro")
     .refine((valor) => valor === "" || Number(valor) > 0, "Use um número maior que zero"),
 });
+/**
+ * Espelha `MuralItemResponse` — item do `GET /anuncios/mural` (ETI-73). Nunca
+ * traz endereço completo, coordenadas nem contato do Empregador; a localização
+ * é só `bairroRegiao` + `distanciaKm` (arredondada a 0,1 km). `fotoUrl` é a
+ * primeira foto (link temporário), `null` sem foto ou com o storage fora do ar.
+ * `publicadoEm` decide o selo "NOVO", mas ainda não está no contrato do back:
+ * sem ele, o selo não aparece.
+ */
+export const AnuncioMuralSchema = z.object({
+  id: z.string(),
+  titulo: z.string(),
+  categoria: CategoriaSchema,
+  fotoUrl: z.string().nullable(),
+  empregador: z.object({
+    nomeExibicao: z.string(),
+    fotoUrl: z.string().nullable(),
+  }),
+  dataHoraPretendida: z.string(),
+  bairroRegiao: z.string().nullable(),
+  distanciaKm: z.number(),
+  publicadoEm: z.string().nullish(),
+});
+
+export type AnuncioMural = z.infer<typeof AnuncioMuralSchema>;
+
+/** Página do mural; `totalElementos` é o "N serviços perto de você". */
+export const MuralResponseSchema = respostaPaginadaSchema(AnuncioMuralSchema);
+
+export type MuralResponse = z.infer<typeof MuralResponseSchema>;
+
+/**
+ * Filtros da tela 28a. Só reduzem a lista compatível que a API já monta:
+ * `categorias` vazio é "todas" e `raioKm` nulo é o raio do perfil.
+ */
+export interface FiltrosMural {
+  categorias: string[];
+  raioKm: number | null;
+  quando: QuandoMural;
+}
+
+/**
+ * Foto no detalhe do mural (`FotoAnuncioResponse`). Diferente da tela 16,
+ * `url` e `expiraEm` podem vir `null` quando o storage não respondeu.
+ */
+export const FotoMuralSchema = z.object({
+  id: z.string(),
+  url: z.string().nullable(),
+  expiraEm: z.string().nullable(),
+});
+
+/**
+ * Espelha `MuralDetalheResponse` — `GET /anuncios/mural/{id}` (ETI-73), visto
+ * pelo Prestador na tela 30. `cidade` é `null` em anúncio antigo cujo endereço
+ * não pôde ser lido; `mediaAvaliacoes` é `null` com `qtdAvaliacoes` 0.
+ * `minhaCandidatura` vem preenchida quando ele já se candidatou, e a tela
+ * troca "Candidatar-se" pela situação; o `id` abre o chat da candidatura.
+ */
+export const DetalheAnuncioMuralSchema = z.object({
+  id: z.string(),
+  titulo: z.string(),
+  descricao: z.string(),
+  categoria: CategoriaSchema,
+  fotos: z.array(FotoMuralSchema),
+  dataHoraPretendida: z.string(),
+  bairroRegiao: z.string().nullable(),
+  cidade: z.string().nullable(),
+  uf: z.enum(Uf).nullable(),
+  distanciaKm: z.number(),
+  empregador: z.object({
+    nomeExibicao: z.string(),
+    fotoUrl: z.string().nullable(),
+    mediaAvaliacoes: z.number().nullable(),
+    qtdAvaliacoes: z.number().int(),
+  }),
+  minhaCandidatura: z
+    .object({
+      id: z.string(),
+      status: z.enum(StatusAplicacao),
+    })
+    .nullable(),
+});
+
+export type DetalheAnuncioMural = z.infer<typeof DetalheAnuncioMuralSchema>;
+
+/**
+ * Resposta do "Candidatar-se" (`CandidaturaResponse` do back, ETI-75): `201`
+ * com a candidatura criada em `ENVIADA`.
+ */
+export const CandidaturaCriadaSchema = z.object({
+  id: z.string(),
+  status: z.enum(StatusAplicacao),
+});
+
+export type CandidaturaCriada = z.infer<typeof CandidaturaCriadaSchema>;

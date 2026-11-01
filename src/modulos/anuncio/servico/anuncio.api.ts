@@ -7,12 +7,19 @@ import {
   AnuncioCriadoResponseSchema,
   AnuncioDetalheResponseSchema,
   AnuncioRequestSchema,
+  CandidaturaCriadaSchema,
+  DetalheAnuncioMuralSchema,
   FotoAnuncioResponseSchema,
+  MuralResponseSchema,
   PainelEmpregadorResponseSchema,
   type AnuncioCriadoResponse,
   type AnuncioDetalheResponse,
   type AnuncioRequest,
+  type CandidaturaCriada,
+  type DetalheAnuncioMural,
+  type FiltrosMural,
   type FotoAnuncioResponse,
+  type MuralResponse,
   type PainelEmpregadorResponse,
 } from "../tipos/anuncio.types";
 
@@ -20,6 +27,36 @@ import {
 export async function buscarPainelEmpregador(): Promise<PainelEmpregadorResponse> {
   const { data } = await api.get("/anuncios/painel-empregador");
   return PainelEmpregadorResponseSchema.parse(data);
+}
+
+/**
+ * Mural do Prestador logado (ETI-73, `MuralController`). A compatibilidade
+ * (especialidade, "Outros" e raio do perfil) é da API; os filtros só reduzem a
+ * lista. Sem `raio`, vale o raio do perfil; `tamanho` fica no padrão (20).
+ */
+export async function listarMural(
+  filtros: FiltrosMural,
+  pagina: number,
+): Promise<MuralResponse> {
+  const { data } = await api.get("/anuncios/mural", {
+    params: {
+      categorias: filtros.categorias.length > 0 ? filtros.categorias : undefined,
+      raio: filtros.raioKm ?? undefined,
+      quando: filtros.quando,
+      pagina,
+    },
+    // `categorias=a&categorias=b`, como o Spring lê lista, em vez de `categorias[]=a`.
+    paramsSerializer: { indexes: null },
+  });
+  return MuralResponseSchema.parse(data);
+}
+
+/** Detalhe do anúncio pro Prestador, sem endereço completo nem contato (ETI-73). */
+export async function buscarDetalheAnuncioMural(
+  id: string,
+): Promise<DetalheAnuncioMural> {
+  const { data } = await api.get(`/anuncios/mural/${id}`);
+  return DetalheAnuncioMuralSchema.parse(data);
 }
 
 /**
@@ -63,4 +100,15 @@ export async function buscarAnuncio(id: string): Promise<AnuncioDetalheResponse>
  */
 export async function cancelarAnuncio(id: string): Promise<void> {
   await api.post(`/anuncios/${id}/cancelar`);
+}
+
+/**
+ * Candidata o Prestador logado ao anúncio (ETI-75, `CandidaturaController` do
+ * back). A cota é conferida pela API, não aqui.
+ */
+export async function candidatarAoAnuncio(
+  anuncioId: string,
+): Promise<CandidaturaCriada> {
+  const { data } = await api.post(`/anuncios/${anuncioId}/candidaturas`);
+  return CandidaturaCriadaSchema.parse(data);
 }
