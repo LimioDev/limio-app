@@ -94,6 +94,15 @@ export async function buscarAnuncio(id: string): Promise<AnuncioDetalheResponse>
 }
 
 /**
+ * Cancela o anúncio do Empregador logado (ETI-63): sai do mural como
+ * `ENCERRADO` e as candidaturas `ENVIADA` são encerradas. Com candidatura
+ * escolhida ou fora de `PUBLICADO`, a API responde `409 ANUNCIO_ESTADO_INVALIDO`.
+ */
+export async function cancelarAnuncio(id: string): Promise<void> {
+  await api.post(`/anuncios/${id}/cancelar`);
+}
+
+/**
  * Candidata o Prestador logado ao anúncio (ETI-75, `CandidaturaController` do
  * back). A cota é conferida pela API, não aqui.
  */
