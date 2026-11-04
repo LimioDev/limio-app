@@ -22,8 +22,6 @@ export default function PrestadorLayout() {
         name="perfil"
         options={{ title: "Perfil", headerShown: false, tabBarIcon: iconeAba(User) }}
       />
-      {/* Ainda sem tela: fora da tab bar até o card da cota (ETI-79/ETI-80) chegar. */}
-      <Tabs.Screen name="cota" options={{ href: null }} />
     </Tabs>
   );
 }

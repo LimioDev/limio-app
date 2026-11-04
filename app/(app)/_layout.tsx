@@ -18,6 +18,8 @@ export default function AppLayout() {
       </Stack.Protected>
       <Stack.Protected guard={papelAtivo === PapelUsuario.PRESTADOR}>
         <Stack.Screen name="(prestador)" />
+        {/* Tela 33 "Cota do mês": fora das abas, com voltar (ETI-80). */}
+        <Stack.Screen name="cota" />
       </Stack.Protected>
       <Stack.Screen name="trocar-papel" options={{ presentation: "modal" }} />
     </Stack>
