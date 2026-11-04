@@ -10,6 +10,7 @@ export const CORES_ICONE = {
   perigo: "#8C2A20",
   sucesso: "#1D5A3C",
   estrela: "#C79A2E",
+  gold: "#6B4A11",
   branco: "#FFFFFF",
 } as const;
 
