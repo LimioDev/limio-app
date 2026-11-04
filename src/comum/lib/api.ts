@@ -33,6 +33,12 @@ const ROTAS_SEM_RENOVACAO = [
 // localhost da máquina host como 10.0.2.2.
 const baseURL = process.env.EXPO_PUBLIC_API_URL ?? "http://10.0.2.2:8080";
 
+/**
+ * Canal em tempo real da API (STOMP sobre WebSocket em `/ws`, ETI-101): mesmo
+ * host da API, com `ws`/`wss` no lugar de `http`/`https`.
+ */
+export const URL_TEMPO_REAL = `${baseURL.replace(/^http/, "ws").replace(/\/$/, "")}/ws`;
+
 // eslint-disable-next-line import/no-named-as-default-member -- axios expõe `create` tanto como default quanto named export
 export const api = axios.create({ baseURL });
 
@@ -81,6 +87,26 @@ async function lerSessaoSalva(): Promise<TokensSessao | null> {
 
 export async function obterTokenAcesso(): Promise<string | null> {
   return (await lerSessaoSalva())?.token ?? null;
+}
+
+/**
+ * Id do usuário logado, lido do `sub` do token de acesso (a API grava o id
+ * ali). `null` sem sessão ou com token fora do formato JWT.
+ */
+export async function obterUsuarioId(): Promise<string | null> {
+  const token = await obterTokenAcesso();
+  const carga = token?.split(".")[1];
+  if (!carga) {
+    return null;
+  }
+  try {
+    // base64url → base64, com o preenchimento que o JWT tira.
+    const base64 = carga.replace(/-/g, "+").replace(/_/g, "/");
+    const json = JSON.parse(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, "=")));
+    return typeof json.sub === "string" ? json.sub : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function obterRefreshToken(): Promise<string | null> {
