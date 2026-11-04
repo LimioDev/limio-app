@@ -36,6 +36,22 @@ export function usePainelEmpregadorQuery() {
   });
 }
 
+/**
+ * O prestador escolhido de um anúncio do Empregador, lido do painel do Início
+ * (`AnuncioPainelResponse.prestadorEscolhido`), porque o detalhe ainda não
+ * traz o campo. `undefined` enquanto o painel não carregou (ou falhou); `null`
+ * sem escolhido ou fora da lista do painel (só lista anúncios abertos).
+ */
+export function usePrestadorEscolhidoNoPainelQuery(anuncioId: string) {
+  return useQuery({
+    queryKey: chavesAnuncio.painelEmpregador,
+    queryFn: buscarPainelEmpregador,
+    staleTime: 0,
+    select: (painel) =>
+      painel.anuncios.find((a) => a.id === anuncioId)?.prestadorEscolhido ?? null,
+  });
+}
+
 /** Mural paginado: cada filtro tem a própria lista; rolar até o fim pede a próxima página. */
 export function useMuralQuery(filtros: FiltrosMural) {
   return useInfiniteQuery({

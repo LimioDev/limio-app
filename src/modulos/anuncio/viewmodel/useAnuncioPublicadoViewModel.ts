@@ -7,7 +7,11 @@ import { TipoToast, useToast } from "../../../comum/store/toast";
 import type { Estado } from "../../../comum/tipos/api";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import { estadoDoAnuncio, quandoCurto } from "../servico/anuncio.helpers";
-import { useAnuncioQuery, useCancelarAnuncioMutation } from "../servico/anuncio.queries";
+import {
+  useAnuncioQuery,
+  useCancelarAnuncioMutation,
+  usePrestadorEscolhidoNoPainelQuery,
+} from "../servico/anuncio.queries";
 import { StatusAnuncio } from "../tipos/anuncio.enums";
 import type { AnuncioDetalheResponse } from "../tipos/anuncio.types";
 
@@ -39,22 +43,34 @@ function resumoCandidatos(total: number): string {
   return total === 1 ? "1 prestador se candidatou" : `${total} prestadores se candidataram`;
 }
 
-function paraExibicao(anuncio: AnuncioDetalheResponse): AnuncioPublicadoExibido {
+/**
+ * `prestadorEscolhido`: nome abreviado, `null` sem escolhido, `undefined`
+ * enquanto não se sabe (o painel ainda não respondeu). `jaCombinado`: a API
+ * recusou o cancelamento com `ANUNCIO_ESTADO_INVALIDO` nesta tela.
+ */
+function paraExibicao(
+  anuncio: AnuncioDetalheResponse,
+  prestadorEscolhido: string | null | undefined,
+  jaCombinado: boolean,
+): AnuncioPublicadoExibido {
+  const temEscolhido = Boolean(prestadorEscolhido) || jaCombinado;
   const local = anuncio.bairroRegiao
     ? [anuncio.bairroRegiao, anuncio.uf].filter(Boolean).join(" · ")
     : null;
   return {
-    // O detalhe ainda não diz se há prestador escolhido (card de candidatos, ETI-67/68).
-    estado: estadoDoAnuncio(anuncio.status, false),
+    estado: estadoDoAnuncio(anuncio.status, temEscolhido),
     titulo: anuncio.titulo,
     quando: quandoCurto(anuncio.dataHoraPretendida),
     local,
     resumoCandidatos: resumoCandidatos(anuncio.candidatos),
     temCandidatos: anuncio.candidatos > 0,
     candidaturasPendentes: anuncio.candidatos,
-    // O detalhe ainda não diz se há escolhida; se houver, a API recusa com
-    // `ANUNCIO_ESTADO_INVALIDO` e a tela recarrega.
-    podeCancelar: anuncio.status === StatusAnuncio.PUBLICADO,
+    // Sem saber ainda se há escolhido, o botão fica escondido: a folha diz
+    // "ninguém foi escolhido" e não pode aparecer em anúncio combinado.
+    podeCancelar:
+      anuncio.status === StatusAnuncio.PUBLICADO &&
+      prestadorEscolhido === null &&
+      !jaCombinado,
     avatares: anuncio.primeirosCandidatos.slice(0, 4).map((c, i) => ({
       chave: `${i}-${c.nome}`,
       nome: c.nome,
@@ -82,10 +98,19 @@ function naoEncontrado(erro: unknown): boolean {
 export function useAnuncioPublicadoViewModel(id: string) {
   const router = useRouter();
   const query = useAnuncioQuery(id);
+  const escolhidoNoPainel = usePrestadorEscolhidoNoPainelQuery(id);
   const cancelar = useCancelarAnuncioMutation();
   const mostrarToast = useToast((estado) => estado.mostrar);
   const [folhaCancelarVisivel, setFolhaCancelarVisivel] = useState(false);
   const [erroCancelar, setErroCancelar] = useState<string | null>(null);
+  // Guarda o 409 até sair da tela: sem isso, o refetch traria o botão de volta
+  // se o painel ainda não refletisse a escolha.
+  const [jaCombinado, setJaCombinado] = useState(false);
+
+  const recarregar = () => {
+    void query.refetch();
+    void escolhidoNoPainel.refetch();
+  };
 
   const aoConfirmarCancelar = async () => {
     if (cancelar.isPending) {
@@ -101,8 +126,9 @@ export function useAnuncioPublicadoViewModel(id: string) {
     } catch (erro) {
       if (erroApi(erro)?.codigo === CodigoErro.ANUNCIO_ESTADO_INVALIDO) {
         setFolhaCancelarVisivel(false);
+        setJaCombinado(true);
         mostrarToast("Este anúncio já foi combinado", TipoToast.ERRO);
-        void query.refetch();
+        recarregar();
         return;
       }
       // Na folha, não em toast: o modal fica por cima do toast.
@@ -123,11 +149,18 @@ export function useAnuncioPublicadoViewModel(id: string) {
     aoTentarDeNovo: () => {
       void query.refetch();
     },
-    anuncio: query.data ? paraExibicao(query.data) : null,
+    anuncio: query.data
+      ? paraExibicao(
+          query.data,
+          // O detalhe manda quando o back passar a trazer o campo.
+          query.data.prestadorEscolhido !== undefined
+            ? query.data.prestadorEscolhido
+            : escolhidoNoPainel.data,
+          jaCombinado,
+        )
+      : null,
     atualizando: query.isRefetching,
-    aoAtualizar: () => {
-      void query.refetch();
-    },
+    aoAtualizar: recarregar,
     folhaCancelarVisivel,
     cancelando: cancelar.isPending,
     erroCancelar,
