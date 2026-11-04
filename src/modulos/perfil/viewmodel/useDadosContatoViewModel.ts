@@ -4,13 +4,13 @@ import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
-import { CodigoErro } from "../../../comum/tipos/erros";
 import {
   formatarTelefone,
-  mesmoEmail,
   somenteDigitos,
   telefoneNacional,
-} from "../servico/perfil.helpers";
+} from "../../../comum/lib/telefone";
+import { CodigoErro } from "../../../comum/tipos/erros";
+import { mesmoEmail } from "../servico/perfil.helpers";
 import {
   useEditarNomeExibicaoMutation,
   useMeuPerfilQuery,
