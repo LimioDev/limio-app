@@ -14,7 +14,7 @@ import {
   useCandidatarMutation,
   useDetalheAnuncioMuralQuery,
 } from "../servico/anuncio.queries";
-import { StatusAplicacao } from "../tipos/anuncio.enums";
+import { StatusAplicacao } from "../../../comum/tipos/aplicacao";
 import type { DetalheAnuncioMural } from "../tipos/anuncio.types";
 
 export interface SituacaoCandidaturaExibida {
