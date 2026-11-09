@@ -82,12 +82,24 @@ function rotuloSelo(status: StatusAnuncio): string {
   }
 }
 
-/** Linha do tempo da tela 37: escolha, início, check-out (ETI-90/91) e validação (ETI-92/93). */
+/** Serviço em curso: só aqui existe "próximo passo" na linha do tempo. */
+function servicoEmCurso(status: StatusAnuncio): boolean {
+  return status === StatusAnuncio.EM_ANDAMENTO || status === StatusAnuncio.AGUARDANDO_VALIDACAO;
+}
+
+/**
+ * Linha do tempo da tela 37: escolha, início, check-out (ETI-90/91) e validação (ETI-92/93).
+ * O que ainda não aconteceu só fica "atual" com o serviço em curso; num serviço
+ * encerrado, fica "futuro" e sem "próximo passo".
+ * TODO(ETI-90/91): pelo ETI-88 iniciar é opcional, então um serviço pode chegar
+ * em `AGUARDANDO_VALIDACAO` sem `iniciadoEm` e hoje fica sem linha do tempo.
+ */
 function passosDoServico(servico: ServicoCombinado): PassoServicoExibido[] {
   const { escolhidaEm, iniciadoEm, checkoutEm, validadoEm } = servico;
   if (!iniciadoEm) {
     return [];
   }
+  const emCurso = servicoEmCurso(servico.status);
   const passos: PassoServicoExibido[] = [];
   if (escolhidaEm) {
     passos.push({
@@ -103,13 +115,21 @@ function passosDoServico(servico: ServicoCombinado): PassoServicoExibido[] {
   });
   passos.push({
     titulo: "Check-out com foto",
-    detalhe: checkoutEm ? momentoDoPasso(checkoutEm) : "próximo passo",
-    situacao: checkoutEm ? "feito" : "atual",
+    detalhe: checkoutEm
+      ? momentoDoPasso(checkoutEm)
+      : emCurso
+        ? "próximo passo"
+        : "não realizado",
+    situacao: checkoutEm ? "feito" : emCurso ? "atual" : "futuro",
   });
   passos.push({
     titulo: "Validação do cliente",
-    detalhe: validadoEm ? momentoDoPasso(validadoEm) : "prazo de 24h após o check-out",
-    situacao: validadoEm ? "feito" : checkoutEm ? "atual" : "futuro",
+    detalhe: validadoEm
+      ? momentoDoPasso(validadoEm)
+      : emCurso
+        ? "prazo de 24h após o check-out"
+        : "não realizada",
+    situacao: validadoEm ? "feito" : emCurso && checkoutEm ? "atual" : "futuro",
   });
   return passos;
 }
@@ -129,7 +149,7 @@ function servicoParaExibicao(servico: ServicoCombinado, ehPrestador: boolean): S
     },
     endereco: servico.enderecoCompleto,
     bairro: servico.bairroRegiao,
-    emAndamento: servico.iniciadoEm !== null,
+    emAndamento: servico.status === StatusAnuncio.EM_ANDAMENTO,
     andamento: passosDoServico(servico),
     // A API só devolve o serviço pro Empregador dono e pro Prestador escolhido;
     // com o papel de Prestador ativo, quem vê a tela é o escolhido.
@@ -147,19 +167,23 @@ export function useSeuServicoViewModel(anuncioId: string) {
   const [folhaAberta, setFolhaAberta] = useState(false);
   const [erroFolha, setErroFolha] = useState<string | null>(null);
 
+  // Numa recarga com erro o React Query mantém o `data` anterior. Se o serviço
+  // deixou de ser dele, contato e endereço não podem continuar na tela (ETI-86).
+  const naoDisponivel = erroApi(query.error)?.codigo === CodigoErro.SERVICO_NAO_ENCONTRADO;
+  const dados = naoDisponivel ? undefined : query.data;
+
   let erro: string | null = null;
   // Serviço que não é (mais) dele não volta com "Tentar de novo".
-  let podeTentarDeNovo = true;
-  if (query.isError && !query.data) {
-    podeTentarDeNovo = erroApi(query.error)?.codigo !== CodigoErro.SERVICO_NAO_ENCONTRADO;
-    erro = podeTentarDeNovo
-      ? mensagemErroApi(query.error, "Não foi possível carregar o serviço.")
-      : "Este serviço não está disponível.";
+  const podeTentarDeNovo = !naoDisponivel;
+  if (naoDisponivel) {
+    erro = "Este serviço não está disponível.";
+  } else if (query.isError && !dados) {
+    erro = mensagemErroApi(query.error, "Não foi possível carregar o serviço.");
   }
 
-  const servico = query.data ? servicoParaExibicao(query.data, ehPrestador) : null;
-  const telefoneNacionalEmpregador = query.data?.outraParte.telefone
-    ? telefoneNacional(query.data.outraParte.telefone)
+  const servico = dados ? servicoParaExibicao(dados, ehPrestador) : null;
+  const telefoneNacionalEmpregador = dados?.outraParte.telefone
+    ? telefoneNacional(dados.outraParte.telefone)
     : null;
 
   function fecharFolha() {
@@ -178,10 +202,12 @@ export function useSeuServicoViewModel(anuncioId: string) {
             fecharFolha();
             mostrarToast("Este serviço não pode mais ser iniciado.", TipoToast.ERRO);
             return;
-          // Deixou de ser o escolhido entre abrir a tela e confirmar.
+          // Deixou de ser o escolhido entre abrir a tela e confirmar: mensagem e
+          // volta pra tela anterior (ETI-87). A mutation já tira o serviço do cache.
           case CodigoErro.SERVICO_NAO_ENCONTRADO:
             fecharFolha();
             mostrarToast("Este serviço não está mais disponível.", TipoToast.ERRO);
+            router.back();
             return;
           default:
             setErroFolha(mensagemErroApi(falha, "Não foi possível iniciar o serviço."));
@@ -190,11 +216,11 @@ export function useSeuServicoViewModel(anuncioId: string) {
     });
   }
 
-  const nomeEmpregador = query.data?.outraParte.nome ?? null;
+  const nomeEmpregador = dados?.outraParte.nome ?? null;
   const folha: FolhaIniciarExibida = {
-    aberta: folhaAberta,
-    resumo: query.data
-      ? `${query.data.titulo} · ${nomeEmpregador ?? EMPREGADOR_SEM_CONTA}`
+    aberta: folhaAberta && dados !== undefined,
+    resumo: dados
+      ? `${dados.titulo} · ${nomeEmpregador ?? EMPREGADOR_SEM_CONTA}`
       : "",
     empregador: primeiroNome(nomeEmpregador),
     enviando: iniciar.isPending,

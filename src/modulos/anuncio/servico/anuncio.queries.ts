@@ -6,6 +6,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
+import { erroApi } from "../../../comum/lib/erros";
+import { CodigoErro } from "../../../comum/tipos/erros";
 import type {
   DetalheAnuncioMural,
   FiltrosMural,
@@ -45,6 +47,9 @@ export function useServicoQuery(anuncioId: string) {
  * "Iniciar serviço" (ETI-88). No sucesso a tela já passa pra "em andamento"
  * com o `iniciadoEm` da resposta e a consulta confirma em seguida. Na falha
  * também recarrega: `SERVICO_ESTADO_INVALIDO` quer dizer que o estado mudou.
+ * Com `SERVICO_NAO_ENCONTRADO` o Prestador deixou de ser o escolhido: o serviço
+ * sai do cache (contato e endereço são só das partes) e o detalhe do anúncio
+ * recarrega pra tirar o "Ver seu serviço".
  */
 export function useIniciarServicoMutation(anuncioId: string) {
   const queryClient = useQueryClient();
@@ -56,7 +61,12 @@ export function useIniciarServicoMutation(anuncioId: string) {
         (atual) => (atual ? { ...atual, status, iniciadoEm } : atual),
       );
     },
-    onSettled: () => {
+    onSettled: (_dados, falha) => {
+      if (erroApi(falha)?.codigo === CodigoErro.SERVICO_NAO_ENCONTRADO) {
+        queryClient.removeQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+        void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalheMural(anuncioId) });
+        return;
+      }
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
     },
   });
