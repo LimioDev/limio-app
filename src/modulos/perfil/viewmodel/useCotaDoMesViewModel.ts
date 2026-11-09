@@ -85,7 +85,9 @@ function cotaParaExibicao(cota: CotaDoMesResponse): CotaExibida {
  */
 export function useCotaDoMesViewModel() {
   const router = useRouter();
-  const query = useCotaDoMesQuery();
+  // O card pede consultar a cota ao abrir: vindo do `COTA_ESGOTADA`, o cache
+  // do mural pode estar desatualizado.
+  const query = useCotaDoMesQuery({ sempreAoAbrir: true });
 
   return {
     carregando: query.isPending,
