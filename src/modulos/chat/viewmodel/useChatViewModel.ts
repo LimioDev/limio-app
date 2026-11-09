@@ -276,7 +276,11 @@ export function useChatViewModel(candidaturaId: string) {
     ? {
         nome: chat.outraParte.nome,
         fotoUrl: chat.outraParte.fotoUrl,
-        subtitulo: souEmpregador ? `Candidato · ${chat.anuncio.categoria}` : chat.anuncio.titulo,
+        // Na tela 22 o título do anúncio diz de qual serviço é a conversa encerrada.
+        subtitulo:
+          souEmpregador && !somenteLeitura
+            ? `Candidato · ${chat.anuncio.categoria}`
+            : chat.anuncio.titulo,
         somenteLeitura,
       }
     : null;
