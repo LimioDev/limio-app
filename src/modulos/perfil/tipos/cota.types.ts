@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-import { Plano, StatusEscolha } from "./cota.enums";
+import { StatusAplicacao } from "../../../comum/tipos/aplicacao";
+import { Plano } from "./cota.enums";
 
 /** Espelha `EscolhaDoMesResponse` do backend: um item de "Onde você usou sua cota". */
 export const EscolhaDoMesSchema = z.object({
@@ -8,7 +9,8 @@ export const EscolhaDoMesSchema = z.object({
   titulo: z.string(),
   dataHoraServico: z.iso.datetime({ offset: true }),
   escolhidaEm: z.iso.datetime({ offset: true }),
-  status: z.enum(StatusEscolha),
+  // Status novo do back não pode esconder a faixa nem derrubar a tela 33.
+  status: z.enum(StatusAplicacao).or(z.string()),
 });
 
 export type EscolhaDoMes = z.infer<typeof EscolhaDoMesSchema>;

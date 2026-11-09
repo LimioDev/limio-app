@@ -1,3 +1,5 @@
+import { StatusAplicacao } from "../../../comum/tipos/aplicacao";
+
 /** Espelha `Plano` do backend (`comum.portas.enums`). FREE tem teto mensal de escolhas; GOLD não tem. */
 export const Plano = {
   FREE: "FREE",
@@ -7,33 +9,24 @@ export const Plano = {
 export type Plano = (typeof Plano)[keyof typeof Plano];
 
 /**
- * Status da candidatura em "Onde você usou sua cota". Espelha `StatusAplicacao`
- * do backend, que chega como texto em `EscolhaDoMesResponse.status`. Fica aqui,
- * e não importado do `anuncio`, porque módulo não importa outro módulo.
- * `ENVIADA` e `RECUSADA` só aparecem se um fluxo futuro desfizer a escolha.
+ * Rótulo do status da candidatura em "Onde você usou sua cota". O status chega
+ * como texto em `EscolhaDoMesResponse.status`: um valor que o app ainda não
+ * conhece mostra "—" em vez de derrubar a tela. `ENVIADA` e `RECUSADA` só
+ * aparecem se um fluxo futuro desfizer a escolha.
  */
-export const StatusEscolha = {
-  ENVIADA: "ENVIADA",
-  ESCOLHIDA: "ESCOLHIDA",
-  RECUSADA: "RECUSADA",
-  AGUARDANDO_VALIDACAO: "AGUARDANDO_VALIDACAO",
-  CONCLUIDA: "CONCLUIDA",
-  ENCERRADA: "ENCERRADA",
-} as const;
-
-export type StatusEscolha = (typeof StatusEscolha)[keyof typeof StatusEscolha];
-
-export function rotuloStatusEscolha(status: StatusEscolha): string {
+export function rotuloStatusEscolha(status: string): string {
   switch (status) {
-    case StatusEscolha.ESCOLHIDA:
+    case StatusAplicacao.ESCOLHIDA:
       return "Combinado";
-    case StatusEscolha.AGUARDANDO_VALIDACAO:
+    case StatusAplicacao.AGUARDANDO_VALIDACAO:
       return "Aguardando validação";
-    case StatusEscolha.CONCLUIDA:
+    case StatusAplicacao.CONCLUIDA:
       return "Concluído";
-    case StatusEscolha.ENCERRADA:
-    case StatusEscolha.RECUSADA:
-    case StatusEscolha.ENVIADA:
+    case StatusAplicacao.ENCERRADA:
+    case StatusAplicacao.RECUSADA:
+    case StatusAplicacao.ENVIADA:
       return "Cancelado";
+    default:
+      return "—";
   }
 }
