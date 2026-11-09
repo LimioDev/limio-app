@@ -1,12 +1,10 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback } from "react";
 
 import { formatarEscolhasUsadas, formatarRenovacao } from "../servico/cota.helpers";
-import { useCotaDoMesQuery } from "../servico/cota.queries";
+import { chavesCota, useCotaDoMesQuery } from "../servico/cota.queries";
 import { Plano } from "../tipos/cota.enums";
-
-/** Ao voltar pra aba do mural, cota mais velha que isso é consultada de novo. */
-const IDADE_MAXIMA_MS = 30_000;
 
 export type FaixaCotaExibida =
   | {
@@ -33,23 +31,16 @@ export function useFaixaCotaViewModel() {
   const query = useCotaDoMesQuery();
 
   // A aba do mural continua montada; a escolha que consome a cota acontece
-  // do lado do Empregador. Ao voltar pra aba, consulta de novo se envelheceu.
-  const { refetch } = query;
-  const atualizadoEm = useRef(0);
-  useEffect(() => {
-    atualizadoEm.current = query.dataUpdatedAt;
-  }, [query.dataUpdatedAt]);
-  const primeiroFoco = useRef(true);
+  // do lado do Empregador. Ao voltar pra aba, consulta de novo se envelheceu
+  // (`staleTime` global). `cancelRefetch: false` não derruba a consulta da montagem.
+  const queryClient = useQueryClient();
   useFocusEffect(
     useCallback(() => {
-      if (primeiroFoco.current) {
-        primeiroFoco.current = false;
-        return;
-      }
-      if (Date.now() - atualizadoEm.current > IDADE_MAXIMA_MS) {
-        void refetch();
-      }
-    }, [refetch]),
+      void queryClient.refetchQueries(
+        { queryKey: chavesCota.mes, stale: true },
+        { cancelRefetch: false },
+      );
+    }, [queryClient]),
   );
 
   const cota = query.data;
