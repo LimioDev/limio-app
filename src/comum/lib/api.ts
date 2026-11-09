@@ -90,12 +90,11 @@ export async function obterTokenAcesso(): Promise<string | null> {
 }
 
 /**
- * Id do usuário logado, lido do `sub` do token de acesso (a API grava o id
- * ali). `null` sem sessão ou com token fora do formato JWT.
+ * Id do usuário dono do token, lido do `sub` (a API grava o id ali). `null`
+ * com token fora do formato JWT.
  */
-export async function obterUsuarioId(): Promise<string | null> {
-  const token = await obterTokenAcesso();
-  const carga = token?.split(".")[1];
+export function usuarioIdDoToken(token: string): string | null {
+  const carga = token.split(".")[1];
   if (!carga) {
     return null;
   }
@@ -107,6 +106,12 @@ export async function obterUsuarioId(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/** Id do usuário da sessão guardada no aparelho; `null` sem sessão. */
+export async function obterUsuarioId(): Promise<string | null> {
+  const token = await obterTokenAcesso();
+  return token ? usuarioIdDoToken(token) : null;
 }
 
 export async function obterRefreshToken(): Promise<string | null> {

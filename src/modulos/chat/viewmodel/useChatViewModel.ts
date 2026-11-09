@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
+import { useSessao } from "../../../comum/store/sessao";
 import { useToast } from "../../../comum/store/toast";
 import { StatusAplicacao } from "../../../comum/tipos/aplicacao";
 import { CodigoErro } from "../../../comum/tipos/erros";
@@ -21,7 +22,6 @@ import {
   useChatQuery,
   useEnviarMensagemMutation,
   useMarcarLidasMutation,
-  useUsuarioIdQuery,
 } from "../servico/chat.queries";
 import { useCanalChat } from "../servico/chat.tempoReal";
 import { PapelNoChat, SituacaoMensagem, TipoEventoChat } from "../tipos/chat.enums";
@@ -140,8 +140,7 @@ export function useChatViewModel(candidaturaId: string) {
   const appAtivo = useAppAtivo();
 
   const query = useChatQuery(candidaturaId);
-  const usuarioIdQuery = useUsuarioIdQuery();
-  const usuarioId = usuarioIdQuery.data ?? null;
+  const usuarioId = useSessao((estado) => estado.usuarioId);
 
   const chat = query.data?.pages[0] ?? null;
   const chatId = chat?.id;
@@ -293,7 +292,7 @@ export function useChatViewModel(candidaturaId: string) {
   return {
     cabecalho,
     itens,
-    carregando: query.isPending || usuarioIdQuery.isPending,
+    carregando: query.isPending,
     erro,
     podeTentarDeNovo,
     recarregando: query.isRefetching,

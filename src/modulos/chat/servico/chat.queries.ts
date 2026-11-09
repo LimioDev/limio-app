@@ -1,12 +1,10 @@
 import {
   useInfiniteQuery,
   useMutation,
-  useQuery,
   type InfiniteData,
   type QueryClient,
 } from "@tanstack/react-query";
 
-import { obterUsuarioId } from "../../../comum/lib/api";
 import { TipoEventoChat } from "../tipos/chat.enums";
 import type { Chat, Mensagem } from "../tipos/chat.types";
 import { abrirChat, enviarMensagem, marcarLidas } from "./chat.api";
@@ -16,7 +14,6 @@ type PaginasChat = InfiniteData<Chat, string | undefined>;
 export const chavesChat = {
   // Por candidatura: é por ela que o chat é aberto (a rota não conhece o id do chat).
   chat: (candidaturaId: string) => ["chat", "candidatura", candidaturaId] as const,
-  usuarioId: ["chat", "usuario-id"] as const,
 };
 
 /**
@@ -33,15 +30,6 @@ export function useChatQuery(candidaturaId: string) {
       ultima.historico.temMais ? ultima.historico.mensagens.at(-1)?.id : undefined,
     // O canal em tempo real mantém a conversa atualizada; a nova consulta vem
     // ao reconectar, não a cada foco.
-    staleTime: Infinity,
-  });
-}
-
-/** Id de quem está logado, para separar os balões. Muda só com outra sessão (o logout limpa o cache). */
-export function useUsuarioIdQuery() {
-  return useQuery({
-    queryKey: chavesChat.usuarioId,
-    queryFn: obterUsuarioId,
     staleTime: Infinity,
   });
 }
