@@ -10,6 +10,7 @@ import { Card } from "../../../comum/componentes/ui/Card";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { Icone } from "../../../comum/componentes/ui/Icone";
 import type { AnuncioPublicadoExibido } from "../viewmodel/useAnuncioPublicadoViewModel";
+import { FolhaCancelarAnuncio } from "./componentes/FolhaCancelarAnuncio";
 import { GradeFotos } from "./componentes/GradeFotos";
 
 interface AnuncioPublicadoViewProps {
@@ -20,6 +21,12 @@ interface AnuncioPublicadoViewProps {
   atualizando: boolean;
   aoAtualizar: () => void;
   aoVoltar: () => void;
+  folhaCancelarVisivel: boolean;
+  cancelando: boolean;
+  erroCancelar: string | null;
+  aoAbrirCancelar: () => void;
+  aoConfirmarCancelar: () => void;
+  aoManterNoMural: () => void;
 }
 
 function LinhaDetalhe({ rotulo, valor }: { rotulo: string; valor: string }) {
@@ -82,6 +89,12 @@ export function AnuncioPublicadoView({
   atualizando,
   aoAtualizar,
   aoVoltar,
+  folhaCancelarVisivel,
+  cancelando,
+  erroCancelar,
+  aoAbrirCancelar,
+  aoConfirmarCancelar,
+  aoManterNoMural,
 }: AnuncioPublicadoViewProps) {
   if (carregando || erro || !anuncio) {
     return (
@@ -178,21 +191,27 @@ export function AnuncioPublicadoView({
       </ScrollView>
 
       <SafeAreaView edges={["bottom"]} className="bg-fundo">
-        {/* Editar (ETI-61/62) e Cancelar (ETI-63/64) chegam nos cards deles. */}
+        {/* Editar (ETI-61/62) chega no card dele. */}
         <View className="flex-row gap-3 border-t border-borda px-margem py-4">
           <View className="flex-1">
             <Botao rotulo="Editar" variante="neutro" disabled accessibilityHint="Disponível em breve" />
           </View>
-          <View className="flex-1">
-            <Botao
-              rotulo="Cancelar"
-              variante="destrutivo"
-              disabled
-              accessibilityHint="Disponível em breve"
-            />
-          </View>
+          {anuncio.podeCancelar ? (
+            <View className="flex-1">
+              <Botao rotulo="Cancelar" variante="destrutivo" onPress={aoAbrirCancelar} />
+            </View>
+          ) : null}
         </View>
       </SafeAreaView>
+
+      <FolhaCancelarAnuncio
+        visivel={folhaCancelarVisivel}
+        candidaturasPendentes={anuncio.candidaturasPendentes}
+        cancelando={cancelando}
+        erro={erroCancelar}
+        aoConfirmar={aoConfirmarCancelar}
+        aoManter={aoManterNoMural}
+      />
     </SafeAreaView>
   );
 }

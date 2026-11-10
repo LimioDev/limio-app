@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { respostaPaginadaSchema } from "../../../comum/tipos/api";
+import { StatusAplicacao } from "../../../comum/tipos/aplicacao";
 import { CategoriaSchema } from "../../../comum/tipos/categoria";
 import {
   APELIDO_MAX,
@@ -8,7 +9,7 @@ import {
   CamposEnderecoRequestSchema,
 } from "../../../comum/tipos/endereco";
 import { Uf } from "../../../comum/tipos/localidade";
-import { StatusAnuncio, StatusAplicacao, type QuandoMural } from "./anuncio.enums";
+import { StatusAnuncio, type QuandoMural } from "./anuncio.enums";
 
 /**
  * Um anúncio da lista "Seus anúncios" (`AnuncioPainelResponse` do backend).
@@ -130,6 +131,12 @@ export const AnuncioDetalheResponseSchema = z.object({
   fotos: z.array(FotoAnuncioResponseSchema),
   candidatos: z.number().int(),
   primeirosCandidatos: z.array(CandidatoResumoSchema),
+  /**
+   * Proposto pro back (mesmo campo do `AnuncioPainelResponse`): ainda não vem
+   * no `MeuAnuncioResponse`. Enquanto faltar (`undefined`), a tela 16 pega o
+   * escolhido do painel do Início.
+   */
+  prestadorEscolhido: z.string().nullable().optional(),
 });
 
 export type AnuncioDetalheResponse = z.infer<typeof AnuncioDetalheResponseSchema>;
