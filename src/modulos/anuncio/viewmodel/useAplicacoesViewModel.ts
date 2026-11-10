@@ -238,7 +238,8 @@ export function useAplicacoesViewModel() {
     candidaturas,
     carregando: query.isPending,
     erro,
-    vazio: query.isSuccess && candidaturas.length === 0 ? VAZIOS[aba] : null,
+    // Pelo dado, não pelo `isSuccess`: recarga que falha mantém o cache (vazio ou não) na tela.
+    vazio: query.data && candidaturas.length === 0 ? VAZIOS[aba] : null,
     carregandoMais: query.isFetchingNextPage,
     atualizando: query.isRefetching && !query.isFetchingNextPage,
     folha,
