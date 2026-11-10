@@ -20,6 +20,7 @@ import {
   buscarServico,
   candidatarAoAnuncio,
   buscarPainelEmpregador,
+  cancelarAnuncio,
   criarAnuncio,
   iniciarServico,
   listarMural,
@@ -79,6 +80,22 @@ export function usePainelEmpregadorQuery() {
     // Candidatos chegam o tempo todo. A nova consulta ao voltar pra tela
     // (aba já montada) fica no `useFocusEffect` do ViewModel.
     staleTime: 0,
+  });
+}
+
+/**
+ * O prestador escolhido de um anúncio do Empregador, lido do painel do Início
+ * (`AnuncioPainelResponse.prestadorEscolhido`), porque o detalhe ainda não
+ * traz o campo. `undefined` enquanto o painel não carregou (ou falhou); `null`
+ * sem escolhido ou fora da lista do painel (só lista anúncios abertos).
+ */
+export function usePrestadorEscolhidoNoPainelQuery(anuncioId: string) {
+  return useQuery({
+    queryKey: chavesAnuncio.painelEmpregador,
+    queryFn: buscarPainelEmpregador,
+    staleTime: 0,
+    select: (painel) =>
+      painel.anuncios.find((a) => a.id === anuncioId)?.prestadorEscolhido ?? null,
   });
 }
 
@@ -156,4 +173,16 @@ export function useCriarAnuncioMutation() {
 
 export function useAnexarFotoAnuncioMutation() {
   return useMutation({ mutationFn: anexarFotoAnuncio });
+}
+
+export function useCancelarAnuncioMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: cancelarAnuncio,
+    // A tela 13 deixa de listar o anúncio. Sem `await`: a volta pro Início
+    // não espera a nova consulta do painel.
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
+    },
+  });
 }

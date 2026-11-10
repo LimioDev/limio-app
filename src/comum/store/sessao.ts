@@ -3,9 +3,11 @@ import { create } from "zustand";
 import {
   lerPapelSalvo,
   limparSessaoSalva,
+  obterUsuarioId,
   registrarEventosSessao,
   salvarPapelAtivo,
   salvarSessao,
+  usuarioIdDoToken,
 } from "../lib/api";
 import { queryClient } from "../lib/query";
 import { ehPapelDoApp, type PapelDoApp } from "../tipos/papel";
@@ -27,6 +29,8 @@ type StatusSessao = "carregando" | "autenticado" | "anonimo";
 interface EstadoSessao {
   status: StatusSessao;
   papelAtivo: PapelDoApp | null;
+  /** Id de quem está logado (`sub` do token); `null` fora de sessão. */
+  usuarioId: string | null;
   /** Motivo de uma saída que o usuário não pediu (ex.: sessão encerrada em outro aparelho). */
   avisoSaida: string | null;
   restaurar: () => Promise<void>;
@@ -42,16 +46,17 @@ interface EstadoSessao {
   limparAvisoSaida: () => void;
 }
 
-const ANONIMO = { status: "anonimo", papelAtivo: null } as const;
+const ANONIMO = { status: "anonimo", papelAtivo: null, usuarioId: null } as const;
 
 export const useSessao = create<EstadoSessao>((set) => ({
   status: "carregando",
   papelAtivo: null,
+  usuarioId: null,
   avisoSaida: null,
   restaurar: async () => {
     const papel = await lerPapelSalvo();
     if (ehPapelDoApp(papel)) {
-      set({ status: "autenticado", papelAtivo: papel });
+      set({ status: "autenticado", papelAtivo: papel, usuarioId: await obterUsuarioId() });
       return;
     }
     // Sessão salva de um papel fora do app não serve: descarta em vez de deixar
@@ -66,7 +71,12 @@ export const useSessao = create<EstadoSessao>((set) => ({
       throw new Error(`Papel ${tokens.papel} não acessa o app.`);
     }
     await salvarSessao(tokens);
-    set({ status: "autenticado", papelAtivo: tokens.papel, avisoSaida: null });
+    set({
+      status: "autenticado",
+      papelAtivo: tokens.papel,
+      usuarioId: usuarioIdDoToken(tokens.token),
+      avisoSaida: null,
+    });
   },
   sair: async () => {
     await limparSessaoSalva();
