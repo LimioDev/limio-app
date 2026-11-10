@@ -353,3 +353,27 @@ export const ServicoIniciadoSchema = z.object({
 });
 
 export type ServicoIniciado = z.infer<typeof ServicoIniciadoSchema>;
+
+/**
+ * Espelha `MinhaCandidaturaResponse` — item do `GET /candidaturas/minhas`
+ * (ETI-77), tela 32 "Aplicações". Nunca traz endereço nem contato; o nome do
+ * Empregador vem abreviado ("Marina B."). `nomeEmpregador` e
+ * `iniciaisEmpregador` saem `null` se a conta dele foi encerrada. O selo é o
+ * `status`; o texto ("Aguardando escolha") é do app.
+ */
+export const MinhaCandidaturaSchema = z.object({
+  id: z.string(),
+  anuncioId: z.string(),
+  titulo: z.string(),
+  dataHoraPretendida: z.string(),
+  nomeEmpregador: z.string().nullable(),
+  iniciaisEmpregador: z.string().nullable(),
+  status: z.enum(StatusAplicacao),
+});
+
+export type MinhaCandidatura = z.infer<typeof MinhaCandidaturaSchema>;
+
+/** Página de uma aba (20 por página), mais recentes primeiro. */
+export const MinhasCandidaturasResponseSchema = respostaPaginadaSchema(MinhaCandidaturaSchema);
+
+export type MinhasCandidaturasResponse = z.infer<typeof MinhasCandidaturasResponseSchema>;

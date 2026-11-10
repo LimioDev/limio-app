@@ -26,16 +26,21 @@ const CORES: Record<Estado, { fundo: string; texto: string }> = {
 
 interface BadgeProps {
   estado: Estado;
+  /**
+   * Texto no lugar do rótulo padrão do estado, com as mesmas cores (ex.:
+   * "Aguardando escolha" da candidatura, que usa o par de "aguardando").
+   */
+  rotulo?: string;
 }
 
 /** Badge de estado do anúncio — overline em caixa alta, um par de cores por estado. */
-export function Badge({ estado }: BadgeProps) {
+export function Badge({ estado, rotulo }: BadgeProps) {
   const cor = CORES[estado];
 
   return (
     <View className={`self-start rounded-full px-2.5 py-1.5 ${cor.fundo}`}>
       <Text className={`text-overline font-bold uppercase ${cor.texto}`}>
-        {ROTULOS[estado]}
+        {rotulo ?? ROTULOS[estado]}
       </Text>
     </View>
   );
