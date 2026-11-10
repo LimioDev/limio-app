@@ -155,6 +155,9 @@ export function useAplicacoesViewModel() {
   const [selecionada, setSelecionada] = useState<MinhaCandidatura | null>(null);
   const [folhaAberta, setFolhaAberta] = useState(false);
   const [erroFolha, setErroFolha] = useState<string | null>(null);
+  // Só o gesto de puxar (ou "Tentar de novo") gira a rodinha: `isRefetching`
+  // também vale nas recargas em segundo plano (foco, troca de aba, desistir).
+  const [puxando, setPuxando] = useState(false);
 
   // A aba da barra continua montada: ao voltar pra ela (do Mural, da tela 36),
   // consulta de novo, porque a situação muda fora da tela. O primeiro foco é
@@ -241,10 +244,13 @@ export function useAplicacoesViewModel() {
     // Pelo dado, não pelo `isSuccess`: recarga que falha mantém o cache (vazio ou não) na tela.
     vazio: query.data && candidaturas.length === 0 ? VAZIOS[aba] : null,
     carregandoMais: query.isFetchingNextPage,
-    atualizando: query.isRefetching && !query.isFetchingNextPage,
+    atualizando: puxando,
     folha,
     aoEscolherAba: setAba,
-    aoAtualizar: () => void refetch(),
+    aoAtualizar: () => {
+      setPuxando(true);
+      void refetch().finally(() => setPuxando(false));
+    },
     aoFimDaLista: () => {
       if (query.hasNextPage && !query.isFetchingNextPage) {
         void query.fetchNextPage();
