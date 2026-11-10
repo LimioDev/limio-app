@@ -1,6 +1,4 @@
-export function somenteDigitos(valor: string): string {
-  return valor.replace(/\D/g, "");
-}
+import { somenteDigitos } from "../../../comum/lib/telefone";
 
 /** Mesmo algoritmo de dígito verificador usado em `CpfValidator` no backend. */
 export function cpfValido(cpf: string): boolean {

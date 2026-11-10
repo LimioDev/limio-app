@@ -47,6 +47,9 @@ export const CodigoErro = {
   // Chat da candidatura (ETI-101), já na develop do back.
   CHAT_NAO_ENCONTRADO: "CHAT_NAO_ENCONTRADO",
   CHAT_SOMENTE_LEITURA: "CHAT_SOMENTE_LEITURA",
+  // Serviço combinado (ETI-86) e iniciar o serviço (ETI-88), PRs #29 e #26 do back.
+  SERVICO_NAO_ENCONTRADO: "SERVICO_NAO_ENCONTRADO",
+  SERVICO_ESTADO_INVALIDO: "SERVICO_ESTADO_INVALIDO",
   ERRO_INTERNO: "ERRO_INTERNO",
 } as const;
 
