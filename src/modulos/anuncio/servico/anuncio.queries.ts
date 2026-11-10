@@ -4,13 +4,16 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  type InfiniteData,
 } from "@tanstack/react-query";
 
 import { erroApi } from "../../../comum/lib/erros";
 import { CodigoErro } from "../../../comum/tipos/erros";
+import type { AbaCandidatura } from "../tipos/anuncio.enums";
 import type {
   DetalheAnuncioMural,
   FiltrosMural,
+  MinhasCandidaturasResponse,
   ServicoCombinado,
 } from "../tipos/anuncio.types";
 import {
@@ -21,7 +24,9 @@ import {
   candidatarAoAnuncio,
   buscarPainelEmpregador,
   criarAnuncio,
+  desistirCandidatura,
   iniciarServico,
+  listarMinhasCandidaturas,
   listarMural,
 } from "./anuncio.api";
 
@@ -32,6 +37,9 @@ export const chavesAnuncio = {
   detalheMural: (id: string) => ["anuncio", "mural", "detalhe", id] as const,
   detalhe: (id: string) => ["anuncio", "detalhe", id] as const,
   servico: (id: string) => ["anuncio", "servico", id] as const,
+  minhasCandidaturas: ["anuncio", "minhas-candidaturas"] as const,
+  minhasCandidaturasDaAba: (aba: AbaCandidatura) =>
+    ["anuncio", "minhas-candidaturas", aba] as const,
 };
 
 /** Tela 36/37 "Seu serviço". Os links da foto são temporários e o estado muda fora da tela. */
@@ -156,4 +164,51 @@ export function useCriarAnuncioMutation() {
 
 export function useAnexarFotoAnuncioMutation() {
   return useMutation({ mutationFn: anexarFotoAnuncio });
+}
+
+/**
+ * Tela 32 "Aplicações": uma lista paginada por aba. `staleTime: 0` faz trocar
+ * de aba consultar de novo, como pede o card; a lista já vista aparece na hora.
+ */
+export function useMinhasCandidaturasQuery(aba: AbaCandidatura) {
+  return useInfiniteQuery({
+    queryKey: chavesAnuncio.minhasCandidaturasDaAba(aba),
+    queryFn: ({ pageParam }) => listarMinhasCandidaturas(aba, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (ultima) =>
+      ultima.pagina + 1 < ultima.totalPaginas ? ultima.pagina + 1 : undefined,
+    staleTime: 0,
+  });
+}
+
+/**
+ * "Desistir da candidatura" (tela 32d). No sucesso o item sai de "Pendentes"
+ * na hora; as abas e o mural (detalhe mostra a candidatura) consultam de novo
+ * em seguida. Na falha também: o erro quer dizer que a situação mudou.
+ */
+export function useDesistirCandidaturaMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (candidaturaId: string) => desistirCandidatura(candidaturaId),
+    onSuccess: (_, candidaturaId) => {
+      queryClient.setQueriesData<InfiniteData<MinhasCandidaturasResponse>>(
+        { queryKey: chavesAnuncio.minhasCandidaturas },
+        (atual) =>
+          atual
+            ? {
+                ...atual,
+                pages: atual.pages.map((pagina) => ({
+                  ...pagina,
+                  content: pagina.content.filter((item) => item.id !== candidaturaId),
+                })),
+              }
+            : atual,
+      );
+    },
+    // Sem `return`: a folha não espera a nova consulta pra fechar.
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.minhasCandidaturas });
+      void queryClient.invalidateQueries({ queryKey: ["anuncio", "mural"] });
+    },
+  });
 }

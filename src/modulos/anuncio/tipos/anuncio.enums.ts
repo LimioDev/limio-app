@@ -51,3 +51,32 @@ export const StatusAplicacao = {
 
 export type StatusAplicacao =
   (typeof StatusAplicacao)[keyof typeof StatusAplicacao];
+
+/**
+ * Espelha `AbaCandidatura` do backend — abas da tela 32 "Aplicações" (ETI-77).
+ * Qual status cai em qual aba quem decide é a API (`AbaCandidatura.de`).
+ */
+export const AbaCandidatura = {
+  PENDENTES: "PENDENTES",
+  COMBINADAS: "COMBINADAS",
+  HISTORICO: "HISTORICO",
+} as const;
+
+export type AbaCandidatura = (typeof AbaCandidatura)[keyof typeof AbaCandidatura];
+
+export const OPCOES_ABA_CANDIDATURA: readonly AbaCandidatura[] = [
+  AbaCandidatura.PENDENTES,
+  AbaCandidatura.COMBINADAS,
+  AbaCandidatura.HISTORICO,
+];
+
+export function rotuloAbaCandidatura(aba: AbaCandidatura): string {
+  switch (aba) {
+    case AbaCandidatura.PENDENTES:
+      return "Pendentes";
+    case AbaCandidatura.COMBINADAS:
+      return "Combinadas";
+    case AbaCandidatura.HISTORICO:
+      return "Histórico";
+  }
+}

@@ -10,6 +10,7 @@ import {
   CandidaturaCriadaSchema,
   DetalheAnuncioMuralSchema,
   FotoAnuncioResponseSchema,
+  MinhasCandidaturasResponseSchema,
   MuralResponseSchema,
   PainelEmpregadorResponseSchema,
   ServicoCombinadoSchema,
@@ -21,11 +22,13 @@ import {
   type DetalheAnuncioMural,
   type FiltrosMural,
   type FotoAnuncioResponse,
+  type MinhasCandidaturasResponse,
   type MuralResponse,
   type PainelEmpregadorResponse,
   type ServicoCombinado,
   type ServicoIniciado,
 } from "../tipos/anuncio.types";
+import type { AbaCandidatura } from "../tipos/anuncio.enums";
 
 /** Resumo dos anúncios do Empregador logado — só os do perfil dele (ETI-52). */
 export async function buscarPainelEmpregador(): Promise<PainelEmpregadorResponse> {
@@ -126,4 +129,25 @@ export async function buscarServico(anuncioId: string): Promise<ServicoCombinado
 export async function iniciarServico(anuncioId: string): Promise<ServicoIniciado> {
   const { data } = await api.post(`/anuncios/${anuncioId}/iniciar`);
   return ServicoIniciadoSchema.parse(data);
+}
+
+/**
+ * Candidaturas do Prestador logado numa aba da tela 32 (ETI-77,
+ * `MinhasCandidaturasController`). `pagina` começa em 0; 20 por página.
+ */
+export async function listarMinhasCandidaturas(
+  aba: AbaCandidatura,
+  pagina: number,
+): Promise<MinhasCandidaturasResponse> {
+  const { data } = await api.get("/candidaturas/minhas", { params: { aba, pagina } });
+  return MinhasCandidaturasResponseSchema.parse(data);
+}
+
+/**
+ * Desiste de uma candidatura `ENVIADA` (ETI-77): `200` sem corpo. Já escolhida
+ * responde `409 USE_CANCELAMENTO_SERVICO`; já encerrada, `409
+ * CANDIDATURA_ESTADO_INVALIDO`; de outra pessoa, `404 CANDIDATURA_NAO_ENCONTRADA`.
+ */
+export async function desistirCandidatura(candidaturaId: string): Promise<void> {
+  await api.post(`/candidaturas/${candidaturaId}/desistir`);
 }
