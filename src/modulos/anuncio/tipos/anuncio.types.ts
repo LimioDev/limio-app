@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { respostaPaginadaSchema } from "../../../comum/tipos/api";
+import { StatusAplicacao } from "../../../comum/tipos/aplicacao";
 import { CategoriaSchema } from "../../../comum/tipos/categoria";
 import {
   APELIDO_MAX,
@@ -8,7 +9,7 @@ import {
   CamposEnderecoRequestSchema,
 } from "../../../comum/tipos/endereco";
 import { Uf } from "../../../comum/tipos/localidade";
-import { StatusAnuncio, StatusAplicacao, type QuandoMural } from "./anuncio.enums";
+import { StatusAnuncio, type QuandoMural } from "./anuncio.enums";
 
 /**
  * Um anúncio da lista "Seus anúncios" (`AnuncioPainelResponse` do backend).

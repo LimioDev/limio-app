@@ -39,15 +39,5 @@ export function rotuloQuando(quando: QuandoMural): string {
   }
 }
 
-/** Espelha `StatusAplicacao` do backend (`modulos/anuncio/enums/StatusAplicacao.java`). */
-export const StatusAplicacao = {
-  ENVIADA: "ENVIADA",
-  ESCOLHIDA: "ESCOLHIDA",
-  RECUSADA: "RECUSADA",
-  AGUARDANDO_VALIDACAO: "AGUARDANDO_VALIDACAO",
-  CONCLUIDA: "CONCLUIDA",
-  ENCERRADA: "ENCERRADA",
-} as const;
-
-export type StatusAplicacao =
-  (typeof StatusAplicacao)[keyof typeof StatusAplicacao];
+// Subiu pro `comum/` (o chat também usa); o re-export mantém os imports antigos.
+export { StatusAplicacao } from "../../../comum/tipos/aplicacao";

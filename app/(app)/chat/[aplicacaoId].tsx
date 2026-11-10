@@ -1,12 +1,11 @@
 import { useLocalSearchParams } from "expo-router";
-import { Text, View } from "react-native";
 
+import { ChatView } from "../../../src/modulos/chat/view/ChatView";
+import { useChatViewModel } from "../../../src/modulos/chat/viewmodel/useChatViewModel";
+
+/** Chat 1:1 da candidatura (telas 21 e 22). `aplicacaoId` é o id da candidatura. */
 export default function Chat() {
   const { aplicacaoId } = useLocalSearchParams<{ aplicacaoId: string }>();
-
-  return (
-    <View>
-      <Text>chat/{aplicacaoId}</Text>
-    </View>
-  );
+  const vm = useChatViewModel(aplicacaoId);
+  return <ChatView {...vm} />;
 }
