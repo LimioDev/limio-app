@@ -130,6 +130,12 @@ export const AnuncioDetalheResponseSchema = z.object({
   fotos: z.array(FotoAnuncioResponseSchema),
   candidatos: z.number().int(),
   primeirosCandidatos: z.array(CandidatoResumoSchema),
+  /**
+   * Proposto pro back (mesmo campo do `AnuncioPainelResponse`): ainda não vem
+   * no `MeuAnuncioResponse`. Enquanto faltar (`undefined`), a tela 16 pega o
+   * escolhido do painel do Início.
+   */
+  prestadorEscolhido: z.string().nullable().optional(),
 });
 
 export type AnuncioDetalheResponse = z.infer<typeof AnuncioDetalheResponseSchema>;
