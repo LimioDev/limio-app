@@ -14,7 +14,7 @@ import {
   useCandidatarMutation,
   useDetalheAnuncioMuralQuery,
 } from "../servico/anuncio.queries";
-import { StatusAplicacao } from "../tipos/anuncio.enums";
+import { StatusAplicacao } from "../../../comum/tipos/aplicacao";
 import type { DetalheAnuncioMural } from "../tipos/anuncio.types";
 
 export interface SituacaoCandidaturaExibida {
@@ -22,6 +22,8 @@ export interface SituacaoCandidaturaExibida {
   aplicacaoId: string;
   titulo: string;
   descricao: string;
+  /** Prestador escolhido: ganha o atalho pra tela "Seu serviço" (ETI-89). */
+  escolhido: boolean;
 }
 
 export interface DetalheMuralExibido {
@@ -76,6 +78,7 @@ function situacaoCandidatura(
         aplicacaoId,
         titulo: "Candidatura enviada",
         descricao: `Converse com ${empregador} no chat para combinar escopo e valor.`,
+        escolhido: false,
       };
     case StatusAplicacao.ESCOLHIDA:
     case StatusAplicacao.AGUARDANDO_VALIDACAO:
@@ -84,6 +87,7 @@ function situacaoCandidatura(
         aplicacaoId,
         titulo: "Você foi escolhido",
         descricao: `Combine os detalhes do serviço com ${empregador} pelo chat.`,
+        escolhido: true,
       };
     case StatusAplicacao.RECUSADA:
     case StatusAplicacao.ENCERRADA:
@@ -214,6 +218,8 @@ export function useDetalheAnuncioMuralViewModel(id: string) {
     aoVoltar: () => router.back(),
     aoAbrirChat: (aplicacaoId: string) =>
       router.push({ pathname: "/(app)/chat/[aplicacaoId]", params: { aplicacaoId } }),
+    // O serviço é o próprio anúncio depois da escolha: mesmo id.
+    aoVerServico: () => router.push({ pathname: "/(app)/servico/[id]", params: { id } }),
     folha,
     aoCandidatar: () => setFolhaAberta(true),
     aoConfirmarCandidatura: confirmarCandidatura,

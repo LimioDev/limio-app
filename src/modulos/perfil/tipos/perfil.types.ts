@@ -1,10 +1,7 @@
 import { z } from "zod";
 
-import {
-  CELULAR_REGEX,
-  mesmoEmail,
-  somenteDigitos,
-} from "../servico/perfil.helpers";
+import { somenteDigitos } from "../../../comum/lib/telefone";
+import { CELULAR_REGEX, mesmoEmail } from "../servico/perfil.helpers";
 
 /** `PerfilEmpregador.NOME_EXIBICAO_MAX` no backend (provisório, pendência do PO). */
 export const NOME_EXIBICAO_MAX = 80;

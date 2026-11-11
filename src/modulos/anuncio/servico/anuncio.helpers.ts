@@ -59,3 +59,13 @@ export function dataComProximidade(dataHoraUtc: string): string {
   }
   return isTomorrow(data) ? `${dia} é amanhã` : dia;
 }
+
+/**
+ * "hoje · 14:06" ou "31/08 · 14:11", no fuso do sistema — linha do tempo do
+ * serviço (tela 37). `agora` só existe pra teste.
+ */
+export function momentoDoPasso(dataHoraUtc: string, agora: Date = new Date()): string {
+  const data = paraFusoLocal(dataHoraUtc);
+  const ehHoje = format(data, "yyyy-MM-dd") === format(paraFusoLocal(agora), "yyyy-MM-dd");
+  return `${ehHoje ? "hoje" : format(data, "dd/MM")} · ${format(data, "HH:mm")}`;
+}

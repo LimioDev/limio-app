@@ -1,6 +1,8 @@
-import { Vazio } from "../../../src/comum/componentes/ui/Vazio";
+import { AplicacoesView } from "../../../src/modulos/anuncio/view/AplicacoesView";
+import { useAplicacoesViewModel } from "../../../src/modulos/anuncio/viewmodel/useAplicacoesViewModel";
 
-// Placeholder até o card desta aba entrar (Aplicações: ETI-77/ETI-78; Chats: ETI-101/ETI-102).
+/** Tela 32 "Aplicações" do Prestador (ETI-78). */
 export default function Aplicacoes() {
-  return <Vazio mensagem="Em breve" />;
+  const vm = useAplicacoesViewModel();
+  return <AplicacoesView {...vm} />;
 }

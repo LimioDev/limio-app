@@ -39,15 +39,34 @@ export function rotuloQuando(quando: QuandoMural): string {
   }
 }
 
-/** Espelha `StatusAplicacao` do backend (`modulos/anuncio/enums/StatusAplicacao.java`). */
-export const StatusAplicacao = {
-  ENVIADA: "ENVIADA",
-  ESCOLHIDA: "ESCOLHIDA",
-  RECUSADA: "RECUSADA",
-  AGUARDANDO_VALIDACAO: "AGUARDANDO_VALIDACAO",
-  CONCLUIDA: "CONCLUIDA",
-  ENCERRADA: "ENCERRADA",
+// Subiu pro `comum/` (o chat também usa); o re-export mantém os imports antigos.
+export { StatusAplicacao } from "../../../comum/tipos/aplicacao";
+
+/**
+ * Espelha `AbaCandidatura` do backend — abas da tela 32 "Aplicações" (ETI-77).
+ * Qual status cai em qual aba quem decide é a API (`AbaCandidatura.de`).
+ */
+export const AbaCandidatura = {
+  PENDENTES: "PENDENTES",
+  COMBINADAS: "COMBINADAS",
+  HISTORICO: "HISTORICO",
 } as const;
 
-export type StatusAplicacao =
-  (typeof StatusAplicacao)[keyof typeof StatusAplicacao];
+export type AbaCandidatura = (typeof AbaCandidatura)[keyof typeof AbaCandidatura];
+
+export const OPCOES_ABA_CANDIDATURA: readonly AbaCandidatura[] = [
+  AbaCandidatura.PENDENTES,
+  AbaCandidatura.COMBINADAS,
+  AbaCandidatura.HISTORICO,
+];
+
+export function rotuloAbaCandidatura(aba: AbaCandidatura): string {
+  switch (aba) {
+    case AbaCandidatura.PENDENTES:
+      return "Pendentes";
+    case AbaCandidatura.COMBINADAS:
+      return "Combinadas";
+    case AbaCandidatura.HISTORICO:
+      return "Histórico";
+  }
+}

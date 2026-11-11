@@ -3,6 +3,7 @@ import {
   CalendarDays,
   ChevronLeft,
   CircleCheck,
+  ClipboardList,
   ImageIcon,
   Lock,
   MapPin,
@@ -36,6 +37,8 @@ interface DetalheAnuncioMuralViewProps {
   aoTentarDeNovo: () => void;
   aoVoltar: () => void;
   aoAbrirChat: (aplicacaoId: string) => void;
+  /** "Ver seu serviço" do Prestador escolhido (telas 36/37). */
+  aoVerServico: () => void;
   folha: FolhaCandidatarExibida;
   aoCandidatar: () => void;
   aoConfirmarCandidatura: () => void;
@@ -160,6 +163,7 @@ export function DetalheAnuncioMuralView({
   aoTentarDeNovo,
   aoVoltar,
   aoAbrirChat,
+  aoVerServico,
   folha,
   aoCandidatar,
   aoConfirmarCandidatura,
@@ -285,11 +289,15 @@ export function DetalheAnuncioMuralView({
       </ScrollView>
 
       <SafeAreaView edges={["bottom"]} className="border-t border-borda bg-superficie">
-        <View className="px-margem py-3">
+        <View className="gap-2 px-margem py-3">
+          {candidatura?.escolhido ? (
+            <Botao rotulo="Ver seu serviço" icone={ClipboardList} onPress={aoVerServico} />
+          ) : null}
           {candidatura ? (
             <Botao
               rotulo="Abrir chat"
               icone={MessageSquare}
+              variante={candidatura.escolhido ? "contorno" : undefined}
               onPress={() => aoAbrirChat(candidatura.aplicacaoId)}
             />
           ) : (

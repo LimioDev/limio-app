@@ -4,22 +4,33 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  type InfiniteData,
 } from "@tanstack/react-query";
 
+import { erroApi } from "../../../comum/lib/erros";
+import { CodigoErro } from "../../../comum/tipos/erros";
+import type { AbaCandidatura } from "../tipos/anuncio.enums";
 import type {
   CandidatosResponse,
   DetalheAnuncioMural,
   FiltrosMural,
+  MinhasCandidaturasResponse,
+  ServicoCombinado,
 } from "../tipos/anuncio.types";
 import {
   anexarFotoAnuncio,
   buscarAnuncio,
   buscarDetalheAnuncioMural,
+  buscarServico,
   candidatarAoAnuncio,
   listarCandidatos,
   recusarCandidato,
   buscarPainelEmpregador,
+  cancelarAnuncio,
   criarAnuncio,
+  desistirCandidatura,
+  iniciarServico,
+  listarMinhasCandidaturas,
   listarMural,
 } from "./anuncio.api";
 
@@ -30,7 +41,49 @@ export const chavesAnuncio = {
   detalheMural: (id: string) => ["anuncio", "mural", "detalhe", id] as const,
   detalhe: (id: string) => ["anuncio", "detalhe", id] as const,
   candidatos: (id: string) => ["anuncio", "candidatos", id] as const,
+  servico: (id: string) => ["anuncio", "servico", id] as const,
+  minhasCandidaturas: ["anuncio", "minhas-candidaturas"] as const,
+  minhasCandidaturasDaAba: (aba: AbaCandidatura) =>
+    ["anuncio", "minhas-candidaturas", aba] as const,
 };
+
+/** Tela 36/37 "Seu serviço". Os links da foto são temporários e o estado muda fora da tela. */
+export function useServicoQuery(anuncioId: string) {
+  return useQuery({
+    queryKey: chavesAnuncio.servico(anuncioId),
+    queryFn: () => buscarServico(anuncioId),
+    staleTime: 0,
+  });
+}
+
+/**
+ * "Iniciar serviço" (ETI-88). No sucesso a tela já passa pra "em andamento"
+ * com o `iniciadoEm` da resposta e a consulta confirma em seguida. Na falha
+ * também recarrega: `SERVICO_ESTADO_INVALIDO` quer dizer que o estado mudou.
+ * Com `SERVICO_NAO_ENCONTRADO` o Prestador deixou de ser o escolhido: o serviço
+ * sai do cache (contato e endereço são só das partes) e o detalhe do anúncio
+ * recarrega pra tirar o "Ver seu serviço".
+ */
+export function useIniciarServicoMutation(anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => iniciarServico(anuncioId),
+    onSuccess: ({ status, iniciadoEm }) => {
+      queryClient.setQueryData<ServicoCombinado>(
+        chavesAnuncio.servico(anuncioId),
+        (atual) => (atual ? { ...atual, status, iniciadoEm } : atual),
+      );
+    },
+    onSettled: (_dados, falha) => {
+      if (erroApi(falha)?.codigo === CodigoErro.SERVICO_NAO_ENCONTRADO) {
+        queryClient.removeQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+        void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalheMural(anuncioId) });
+        return;
+      }
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+    },
+  });
+}
 
 export function usePainelEmpregadorQuery() {
   return useQuery({
@@ -39,6 +92,22 @@ export function usePainelEmpregadorQuery() {
     // Candidatos chegam o tempo todo. A nova consulta ao voltar pra tela
     // (aba já montada) fica no `useFocusEffect` do ViewModel.
     staleTime: 0,
+  });
+}
+
+/**
+ * O prestador escolhido de um anúncio do Empregador, lido do painel do Início
+ * (`AnuncioPainelResponse.prestadorEscolhido`), porque o detalhe ainda não
+ * traz o campo. `undefined` enquanto o painel não carregou (ou falhou); `null`
+ * sem escolhido ou fora da lista do painel (só lista anúncios abertos).
+ */
+export function usePrestadorEscolhidoNoPainelQuery(anuncioId: string) {
+  return useQuery({
+    queryKey: chavesAnuncio.painelEmpregador,
+    queryFn: buscarPainelEmpregador,
+    staleTime: 0,
+    select: (painel) =>
+      painel.anuncios.find((a) => a.id === anuncioId)?.prestadorEscolhido ?? null,
   });
 }
 
@@ -127,6 +196,33 @@ export function useCandidatosQuery(anuncioId: string) {
   });
 }
 
+export function useCancelarAnuncioMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: cancelarAnuncio,
+    // A tela 13 deixa de listar o anúncio. Sem `await`: a volta pro Início
+    // não espera a nova consulta do painel.
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
+    },
+  });
+}
+
+/**
+ * Tela 32 "Aplicações": uma lista paginada por aba. `staleTime: 0` faz trocar
+ * de aba consultar de novo, como pede o card; a lista já vista aparece na hora.
+ */
+export function useMinhasCandidaturasQuery(aba: AbaCandidatura) {
+  return useInfiniteQuery({
+    queryKey: chavesAnuncio.minhasCandidaturasDaAba(aba),
+    queryFn: ({ pageParam }) => listarMinhasCandidaturas(aba, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (ultima) =>
+      ultima.pagina + 1 < ultima.totalPaginas ? ultima.pagina + 1 : undefined,
+    staleTime: 0,
+  });
+}
+
 /**
  * "Recusar candidatura" (tela 18b). A API devolve a lista já sem o recusado:
  * ela entra direto no cache, e o card some sem esperar outra consulta. O
@@ -142,6 +238,38 @@ export function useRecusarCandidatoMutation(anuncioId: string) {
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalhe(anuncioId) });
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
+    },
+  });
+}
+
+/**
+ * "Desistir da candidatura" (tela 32d). No sucesso o item sai de "Pendentes"
+ * na hora; as abas e o mural (detalhe mostra a candidatura) consultam de novo
+ * em seguida. Na falha também: o erro quer dizer que a situação mudou.
+ */
+export function useDesistirCandidaturaMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (candidaturaId: string) => desistirCandidatura(candidaturaId),
+    onSuccess: (_, candidaturaId) => {
+      queryClient.setQueriesData<InfiniteData<MinhasCandidaturasResponse>>(
+        { queryKey: chavesAnuncio.minhasCandidaturas },
+        (atual) =>
+          atual
+            ? {
+                ...atual,
+                pages: atual.pages.map((pagina) => ({
+                  ...pagina,
+                  content: pagina.content.filter((item) => item.id !== candidaturaId),
+                })),
+              }
+            : atual,
+      );
+    },
+    // Sem `return`: a folha não espera a nova consulta pra fechar.
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.minhasCandidaturas });
+      void queryClient.invalidateQueries({ queryKey: ["anuncio", "mural"] });
     },
   });
 }
