@@ -25,6 +25,7 @@ interface EnderecoViewProps {
   aoTentarDeNovo: () => void;
   control: Control<EnderecoFormEntrada>;
   erros: FieldErrors<EnderecoFormEntrada>;
+  erroCep: string | null;
   /** "São Paulo · SP"; `null` antes de escolher. */
   cidadeUf: string | null;
   aoEscolherCidade: () => void;
@@ -41,6 +42,7 @@ export function EnderecoView({
   aoTentarDeNovo,
   control,
   erros,
+  erroCep,
   cidadeUf,
   aoEscolherCidade,
   aoSalvar,
@@ -122,6 +124,9 @@ export function EnderecoView({
                 />
               </View>
             </View>
+            {erroCep ? (
+              <Text className="text-rotulo text-tinta-suave">{erroCep}</Text>
+            ) : null}
 
             <Controller
               control={control}

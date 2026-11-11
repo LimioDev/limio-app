@@ -22,16 +22,13 @@ export interface PerfilExibido {
   /** `null` = sem avaliações: a tela mostra "sem avaliações", nunca 0,0. */
   avaliacoes: { nota: number; total: number } | null;
   email: string;
-  /** Já com "· verificado" quando a API diz que está confirmado. */
+  /** Telefone não tem confirmação (ETI-134) — nunca mostra "· verificado". */
   telefone: string;
 }
 
 function paraExibicao(perfil: PerfilEmpregadorResponse): PerfilExibido {
   const temAvaliacoes =
     perfil.qtdAvaliacoes > 0 && perfil.mediaAvaliacoes !== null;
-  const telefone = perfil.telefone
-    ? formatarTelefone(telefoneNacional(perfil.telefone))
-    : "Não informado";
 
   return {
     nomeExibicao: perfil.nomeExibicao,
@@ -39,10 +36,9 @@ function paraExibicao(perfil: PerfilEmpregadorResponse): PerfilExibido {
       ? { nota: perfil.mediaAvaliacoes!, total: perfil.qtdAvaliacoes }
       : null,
     email: perfil.email,
-    telefone:
-      perfil.telefone && perfil.telefoneConfirmadoEm
-        ? `${telefone} · verificado`
-        : telefone,
+    telefone: perfil.telefone
+      ? formatarTelefone(telefoneNacional(perfil.telefone))
+      : "Não informado",
   };
 }
 

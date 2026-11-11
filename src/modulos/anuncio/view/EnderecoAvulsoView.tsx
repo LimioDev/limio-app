@@ -20,6 +20,7 @@ import type { EnderecoAnuncioFormEntrada } from "../tipos/anuncio.types";
 interface EnderecoAvulsoViewProps {
   control: Control<EnderecoAnuncioFormEntrada>;
   erros: FieldErrors<EnderecoAnuncioFormEntrada>;
+  erroCep: string | null;
   /** "São Paulo · SP"; `null` antes de escolher. */
   cidadeUf: string | null;
   aoEscolherCidade: () => void;
@@ -32,6 +33,7 @@ interface EnderecoAvulsoViewProps {
 export function EnderecoAvulsoView({
   control,
   erros,
+  erroCep,
   cidadeUf,
   aoEscolherCidade,
   aoUsar,
@@ -98,6 +100,9 @@ export function EnderecoAvulsoView({
               />
             </View>
           </View>
+          {erroCep ? (
+            <Text className="text-rotulo text-tinta-suave">{erroCep}</Text>
+          ) : null}
 
           <Controller
             control={control}
