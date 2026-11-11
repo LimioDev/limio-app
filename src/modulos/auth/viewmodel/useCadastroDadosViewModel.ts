@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { mensagemErroApi } from "../../../comum/lib/erros";
+import { somenteDigitos } from "../../../comum/lib/telefone";
 import { useCadastroEmAndamento } from "../store/cadastroEmAndamento.store";
-import { dataBrParaIso, somenteDigitos } from "../servico/auth.helpers";
+import { dataBrParaIso } from "../servico/auth.helpers";
 import { useCadastrarUsuarioMutation } from "../servico/auth.queries";
 import {
   DadosPessoaisFormSchema,

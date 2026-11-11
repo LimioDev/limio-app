@@ -1,7 +1,8 @@
 import { z } from "zod";
 
+import { somenteDigitos } from "../../../comum/lib/telefone";
 import { PapelUsuario } from "../../../comum/tipos/papel";
-import { cpfValido, dataBrValida, maiorDeIdade, somenteDigitos } from "../servico/auth.helpers";
+import { cpfValido, dataBrValida, maiorDeIdade } from "../servico/auth.helpers";
 
 /** Espelha `CadastroRequest` do backend — o que vai no corpo de `POST /auth/cadastro`. */
 export const CadastroRequestSchema = z.object({

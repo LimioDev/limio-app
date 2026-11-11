@@ -1,13 +1,13 @@
 import { useRouter } from "expo-router";
 
 import { mensagemErroApi } from "../../../comum/lib/erros";
+import { formatarTelefone, telefoneNacional } from "../../../comum/lib/telefone";
 import { useSessao } from "../../../comum/store/sessao";
 import { PapelUsuario, rotuloPapel, type PapelDoApp } from "../../../comum/tipos/papel";
 import { resumoAtuacao } from "../servico/atuacao.helpers";
 import { usePerfilAtuacaoQuery } from "../servico/atuacao.queries";
 import { resumoEnderecos } from "../servico/endereco.helpers";
 import { useEnderecosQuery } from "../../../comum/servico/endereco.queries";
-import { formatarTelefone, telefoneNacional } from "../servico/perfil.helpers";
 import { useMeuPerfilQuery } from "../servico/perfil.queries";
 import type { PerfilEmpregadorResponse } from "../tipos/perfil.types";
 import { useTrocarFotoPerfilViewModel } from "./useTrocarFotoPerfilViewModel";

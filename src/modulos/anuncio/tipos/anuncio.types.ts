@@ -131,6 +131,12 @@ export const AnuncioDetalheResponseSchema = z.object({
   fotos: z.array(FotoAnuncioResponseSchema),
   candidatos: z.number().int(),
   primeirosCandidatos: z.array(CandidatoResumoSchema),
+  /**
+   * Proposto pro back (mesmo campo do `AnuncioPainelResponse`): ainda não vem
+   * no `MeuAnuncioResponse`. Enquanto faltar (`undefined`), a tela 16 pega o
+   * escolhido do painel do Início.
+   */
+  prestadorEscolhido: z.string().nullable().optional(),
 });
 
 export type AnuncioDetalheResponse = z.infer<typeof AnuncioDetalheResponseSchema>;
@@ -288,3 +294,86 @@ export const CandidaturaCriadaSchema = z.object({
 });
 
 export type CandidaturaCriada = z.infer<typeof CandidaturaCriadaSchema>;
+
+/**
+ * A outra parte do serviço combinado (`OutraParteServicoResponse`, ETI-86):
+ * nome e telefone completos, porque o contato já foi liberado. `gold` é `null`
+ * quando quem consulta é o Prestador. Tudo `null` se a conta foi encerrada.
+ */
+export const OutraParteServicoSchema = z.object({
+  nome: z.string().nullable(),
+  fotoUrl: z.string().nullable(),
+  fotoExpiraEm: z.string().nullable(),
+  telefone: z.string().nullable(),
+  gold: z.boolean().nullable(),
+});
+
+export type OutraParteServico = z.infer<typeof OutraParteServicoSchema>;
+
+/** Proposta de reagendamento pendente (ETI-86). Nenhum card cria propostas ainda (ETI-99). */
+export const PropostaReagendamentoSchema = z.object({
+  dataProposta: z.string(),
+  justificativa: z.string().nullable(),
+});
+
+/**
+ * Espelha `ServicoCombinadoResponse` — `GET /anuncios/{anuncioId}/servico`
+ * (ETI-86), só pro Empregador dono e pro Prestador escolhido; qualquer outro
+ * recebe `404 SERVICO_NAO_ENCONTRADO`. O serviço é o próprio anúncio depois
+ * da escolha. `iniciadoEm` sai preenchido depois do "Iniciar serviço" (ETI-88).
+ */
+export const ServicoCombinadoSchema = z.object({
+  anuncioId: z.string(),
+  status: z.enum(StatusAnuncio),
+  titulo: z.string(),
+  descricao: z.string(),
+  categoria: CategoriaSchema,
+  dataHoraPretendida: z.string(),
+  bairroRegiao: z.string().nullable(),
+  enderecoCompleto: z.string().nullable(),
+  outraParte: OutraParteServicoSchema,
+  escolhidaEm: z.string().nullable(),
+  iniciadoEm: z.string().nullable(),
+  checkoutEm: z.string().nullable(),
+  validadoEm: z.string().nullable(),
+  prazoCancelamentoEm: z.string().nullable(),
+  reagendamentosAceitos: z.number().int(),
+  limiteReagendamentos: z.number().int(),
+  propostaPendente: PropostaReagendamentoSchema.nullable(),
+  chatId: z.string().nullable(),
+  mensagensNaoLidas: z.number().int(),
+});
+
+export type ServicoCombinado = z.infer<typeof ServicoCombinadoSchema>;
+
+/** Resposta do "Iniciar serviço" (`ServicoIniciadoResponse`, ETI-88): `200` já em `EM_ANDAMENTO`. */
+export const ServicoIniciadoSchema = z.object({
+  status: z.enum(StatusAnuncio),
+  iniciadoEm: z.string(),
+});
+
+export type ServicoIniciado = z.infer<typeof ServicoIniciadoSchema>;
+
+/**
+ * Espelha `MinhaCandidaturaResponse` — item do `GET /candidaturas/minhas`
+ * (ETI-77), tela 32 "Aplicações". Nunca traz endereço nem contato; o nome do
+ * Empregador vem abreviado ("Marina B."). `nomeEmpregador` e
+ * `iniciaisEmpregador` saem `null` se a conta dele foi encerrada. O selo é o
+ * `status`; o texto ("Aguardando escolha") é do app.
+ */
+export const MinhaCandidaturaSchema = z.object({
+  id: z.string(),
+  anuncioId: z.string(),
+  titulo: z.string(),
+  dataHoraPretendida: z.string(),
+  nomeEmpregador: z.string().nullable(),
+  iniciaisEmpregador: z.string().nullable(),
+  status: z.enum(StatusAplicacao),
+});
+
+export type MinhaCandidatura = z.infer<typeof MinhaCandidaturaSchema>;
+
+/** Página de uma aba (20 por página), mais recentes primeiro. */
+export const MinhasCandidaturasResponseSchema = respostaPaginadaSchema(MinhaCandidaturaSchema);
+
+export type MinhasCandidaturasResponse = z.infer<typeof MinhasCandidaturasResponseSchema>;

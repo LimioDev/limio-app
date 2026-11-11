@@ -12,7 +12,7 @@ export default function PrestadorLayout() {
       />
       <Tabs.Screen
         name="aplicacoes"
-        options={{ title: "Aplicações", tabBarIcon: iconeAba(FileText) }}
+        options={{ title: "Aplicações", headerShown: false, tabBarIcon: iconeAba(FileText) }}
       />
       <Tabs.Screen
         name="chats"
