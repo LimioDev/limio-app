@@ -1,7 +1,7 @@
 /**
  * Espelha `StatusAplicacao` do backend (`modulos/anuncio/enums/StatusAplicacao.java`).
- * Fica em `comum/` porque o `anuncio` (candidatura) e o `chat` (cabeçalho e
- * "Escolher") leem o status da candidatura.
+ * Fica em `comum/` porque o `anuncio` (candidatura), o `chat` (cabeçalho e
+ * "Escolher") e o `perfil` (itens da cota do mês) leem o status da candidatura.
  */
 export const StatusAplicacao = {
   ENVIADA: "ENVIADA",

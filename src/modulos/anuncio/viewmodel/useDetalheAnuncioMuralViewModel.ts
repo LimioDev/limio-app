@@ -167,7 +167,7 @@ export function useDetalheAnuncioMuralViewModel(id: string) {
         switch (erroApi(falha)?.codigo) {
           case CodigoErro.COTA_ESGOTADA:
             fecharFolha();
-            router.push("/(app)/(prestador)/cota");
+            router.push("/(app)/cota");
             return;
           case CodigoErro.ANUNCIO_ESTADO_INVALIDO:
             fecharFolha();
