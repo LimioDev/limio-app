@@ -29,9 +29,11 @@ import {
   cancelarAnuncio,
   criarAnuncio,
   desistirCandidatura,
+  editarAnuncio,
   iniciarServico,
   listarMinhasCandidaturas,
   listarMural,
+  removerFotoAnuncio,
 } from "./anuncio.api";
 
 export const chavesAnuncio = {
@@ -185,6 +187,24 @@ export function useCriarAnuncioMutation() {
 
 export function useAnexarFotoAnuncioMutation() {
   return useMutation({ mutationFn: anexarFotoAnuncio });
+}
+
+/**
+ * "Salvar alterações" da tela 16a (ETI-62). A resposta já é o anúncio novo:
+ * entra direto no cache da tela 16, que aparece atualizada ao voltar.
+ */
+export function useEditarAnuncioMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: editarAnuncio,
+    onSuccess: (anuncio) => {
+      queryClient.setQueryData(chavesAnuncio.detalhe(anuncio.id), anuncio);
+    },
+  });
+}
+
+export function useRemoverFotoAnuncioMutation() {
+  return useMutation({ mutationFn: removerFotoAnuncio });
 }
 
 /** Tela 18 "Candidatos". Candidatos chegam e desistem fora da tela. */

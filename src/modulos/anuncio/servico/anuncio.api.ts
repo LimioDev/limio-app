@@ -10,6 +10,7 @@ import {
   CandidatosResponseSchema,
   CandidaturaCriadaSchema,
   DetalheAnuncioMuralSchema,
+  EditarAnuncioRequestSchema,
   FotoAnuncioResponseSchema,
   MinhasCandidaturasResponseSchema,
   MuralResponseSchema,
@@ -22,6 +23,7 @@ import {
   type CandidatosResponse,
   type CandidaturaCriada,
   type DetalheAnuncioMural,
+  type EditarAnuncioRequest,
   type FiltrosMural,
   type FotoAnuncioResponse,
   type MinhasCandidaturasResponse,
@@ -100,6 +102,37 @@ export async function anexarFotoAnuncio({
 export async function buscarAnuncio(id: string): Promise<AnuncioDetalheResponse> {
   const { data } = await api.get(`/anuncios/${id}`);
   return AnuncioDetalheResponseSchema.parse(data);
+}
+
+/**
+ * Edita o anúncio do Empregador logado (ETI-61, `PUT /anuncios/{id}`) e
+ * devolve o anúncio atualizado, igual ao `GET`. Só vale em `PUBLICADO` sem
+ * candidatura escolhida; fora disso a API responde `409 ANUNCIO_ESTADO_INVALIDO`.
+ */
+export async function editarAnuncio({
+  id,
+  request,
+}: {
+  id: string;
+  request: EditarAnuncioRequest;
+}): Promise<AnuncioDetalheResponse> {
+  const corpo = EditarAnuncioRequestSchema.parse(request);
+  const { data } = await api.put(`/anuncios/${id}`, corpo);
+  return AnuncioDetalheResponseSchema.parse(data);
+}
+
+/**
+ * Remove uma foto do anúncio (ETI-61): `204` sem corpo. Foto que já saiu
+ * responde `404 ENTIDADE_NAO_ENCONTRADA`; anúncio já combinado, `409`.
+ */
+export async function removerFotoAnuncio({
+  anuncioId,
+  fotoId,
+}: {
+  anuncioId: string;
+  fotoId: string;
+}): Promise<void> {
+  await api.delete(`/anuncios/${anuncioId}/fotos/${fotoId}`);
 }
 
 /**
