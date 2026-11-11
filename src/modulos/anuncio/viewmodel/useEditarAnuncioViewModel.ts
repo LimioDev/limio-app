@@ -153,7 +153,10 @@ export function useEditarAnuncioViewModel(id: string) {
       return;
     }
     mostrarToast("Este anúncio já foi combinado", TipoToast.ERRO);
-    router.replace({ pathname: "/(app)/servico/[id]", params: { id } });
+    // Fecha a 16a antes: o serviço é outra pilha, e um `replace` daqui levaria
+    // a tela 16 junto, deixando o voltar do serviço sem destino.
+    voltarPraTela16();
+    router.push({ pathname: "/(app)/servico/[id]", params: { id } });
   };
 
   const tratarErroEdicao = async (erro: unknown) => {
