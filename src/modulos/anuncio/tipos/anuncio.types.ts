@@ -327,6 +327,16 @@ export const CandidatosResponseSchema = z.object({
 export type CandidatosResponse = z.infer<typeof CandidatosResponseSchema>;
 
 /**
+ * `EscolhaResponse` (ETI-69): resposta do "Escolher prestador". O anúncio
+ * continua `PUBLICADO`; a partir daqui ele é o serviço combinado.
+ */
+export const EscolhaResponseSchema = z.object({
+  anuncioId: z.string(),
+});
+
+export type EscolhaResponse = z.infer<typeof EscolhaResponseSchema>;
+
+/**
  * A outra parte do serviço combinado (`OutraParteServicoResponse`, ETI-86):
  * nome e telefone completos, porque o contato já foi liberado. `gold` é `null`
  * quando quem consulta é o Prestador. Tudo `null` se a conta foi encerrada.

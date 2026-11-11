@@ -10,6 +10,7 @@ import {
   CandidatosResponseSchema,
   CandidaturaCriadaSchema,
   DetalheAnuncioMuralSchema,
+  EscolhaResponseSchema,
   FotoAnuncioResponseSchema,
   MinhasCandidaturasResponseSchema,
   MuralResponseSchema,
@@ -22,6 +23,7 @@ import {
   type CandidatosResponse,
   type CandidaturaCriada,
   type DetalheAnuncioMural,
+  type EscolhaResponse,
   type FiltrosMural,
   type FotoAnuncioResponse,
   type MinhasCandidaturasResponse,
@@ -143,6 +145,26 @@ export async function recusarCandidato({
     `/anuncios/${anuncioId}/candidaturas/${candidaturaId}/recusar`,
   );
   return CandidatosResponseSchema.parse(data);
+}
+
+/**
+ * "Escolher prestador" (ETI-69, `CandidatoController`): numa só transação a
+ * candidatura vira `ESCOLHIDA`, as outras `ENVIADA` encerram e a cota do
+ * Prestador FREE é consumida. Falhas são `409`: `COTA_ESGOTADA_CANDIDATO`
+ * (nada muda), `ESCOLHA_CONFLITO`, `ANUNCIO_ESTADO_INVALIDO` e
+ * `CANDIDATURA_ESTADO_INVALIDO`.
+ */
+export async function escolherPrestador({
+  anuncioId,
+  candidaturaId,
+}: {
+  anuncioId: string;
+  candidaturaId: string;
+}): Promise<EscolhaResponse> {
+  const { data } = await api.post(
+    `/anuncios/${anuncioId}/candidaturas/${candidaturaId}/escolher`,
+  );
+  return EscolhaResponseSchema.parse(data);
 }
 
 /**
