@@ -70,3 +70,13 @@ export function rotuloAbaCandidatura(aba: AbaCandidatura): string {
       return "Histórico";
   }
 }
+
+/** Qual folha da escolha do prestador está na tela (ETI-70). */
+export const EtapaEscolha = {
+  /** Tela 23 "Escolher (nome)?". */
+  CONFIRMAR: "CONFIRMAR",
+  /** Tela 24 "Não foi possível escolher (nome)": cota do candidato esgotada. */
+  COTA_ESGOTADA: "COTA_ESGOTADA",
+} as const;
+
+export type EtapaEscolha = (typeof EtapaEscolha)[keyof typeof EtapaEscolha];
