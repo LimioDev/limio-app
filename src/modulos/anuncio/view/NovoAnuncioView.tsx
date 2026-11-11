@@ -1,13 +1,12 @@
-import { ChevronRight, Wrench } from "lucide-react-native";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Botao } from "../../../comum/componentes/ui/Botao";
-import { Icone } from "../../../comum/componentes/ui/Icone";
 import type { ErrosAnuncio } from "../store/rascunhoAnuncio.store";
 import type { FotoExibida } from "../viewmodel/useNovoAnuncioViewModel";
 import { CabecalhoPasso } from "./componentes/CabecalhoPasso";
 import { CampoContador } from "./componentes/CampoContador";
+import { CartaoCategoria } from "./componentes/CartaoCategoria";
 import { FolhaAdicionarFoto } from "./componentes/FolhaAdicionarFoto";
 import { GradeFotos } from "./componentes/GradeFotos";
 
@@ -42,49 +41,6 @@ function Overline({ children }: { children: string }) {
     <Text className="text-overline font-bold uppercase tracking-[0.8px] text-tinta-fraco">
       {children}
     </Text>
-  );
-}
-
-function CartaoCategoria({
-  categoria,
-  aoTrocar,
-  erro,
-}: {
-  categoria: string | null;
-  aoTrocar: () => void;
-  erro?: string;
-}) {
-  if (!categoria) {
-    return (
-      <Pressable
-        onPress={aoTrocar}
-        accessibilityRole="button"
-        accessibilityLabel="Escolher categoria"
-        className={`h-[62px] flex-row items-center gap-3 rounded-campo border bg-superficie px-3 active:opacity-80 ${erro ? "border-perigo" : "border-borda-campo"}`}
-      >
-        <View className="h-9 w-9 items-center justify-center rounded-chip bg-marca-50">
-          <Icone icone={Wrench} tamanho={16} cor="marca" />
-        </View>
-        <Text className="flex-1 text-corpo text-tinta-fraco">Escolher categoria</Text>
-        <Icone icone={ChevronRight} tamanho={18} cor="fraco" />
-      </Pressable>
-    );
-  }
-  return (
-    <Pressable
-      onPress={aoTrocar}
-      accessibilityRole="button"
-      accessibilityLabel={`Categoria: ${categoria}. Trocar`}
-      className="h-[62px] flex-row items-center gap-3 rounded-campo border-[1.5px] border-marca-500 bg-marca-50 px-3 active:opacity-80"
-    >
-      <View className="h-9 w-9 items-center justify-center rounded-chip bg-marca-500">
-        <Icone icone={Wrench} tamanho={16} cor="branco" />
-      </View>
-      <Text className="flex-1 text-corpo font-bold text-marca-500" numberOfLines={1}>
-        {categoria}
-      </Text>
-      <Text className="text-corpo font-bold text-marca-500">Trocar</Text>
-    </Pressable>
   );
 }
 
