@@ -166,10 +166,21 @@ export function useCheckoutViewModel(anuncioId: string) {
   const podeEnviar =
     arquivos.length > 0 && !temRecusada && !preparandoFotos && !checkout.isPending;
 
-  /** Fim da tela: avisa e volta pra "Seu serviço" (a mutation já recarrega). */
+  /**
+   * Volta pra "Seu serviço" (a mutation já recarrega). Aberta sem a tela 37
+   * embaixo (link direto), troca por ela em vez de ficar parada.
+   */
+  const voltarAoServico = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace({ pathname: "/(app)/servico/[id]", params: { id: anuncioId } });
+    }
+  };
+
   const sairComAviso = (mensagem: string) => {
     mostrarToast(mensagem, TipoToast.ERRO);
-    router.back();
+    voltarAoServico();
   };
 
   const aoEnviar = () => {
@@ -185,7 +196,7 @@ export function useCheckoutViewModel(anuncioId: string) {
         onSuccess: () => {
           // A trava fica: a tela está saindo.
           mostrarToast("Check-out enviado. Agora é só aguardar a validação.", TipoToast.SUCESSO);
-          router.back();
+          voltarAoServico();
         },
         onError: (falha) => {
           enviando.current = false;
@@ -253,6 +264,6 @@ export function useCheckoutViewModel(anuncioId: string) {
     enviando: checkout.isPending,
     erroEnvio,
     aoEnviar,
-    aoVoltar: () => router.back(),
+    aoVoltar: voltarAoServico,
   };
 }
