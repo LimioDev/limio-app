@@ -6,6 +6,7 @@ import { useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import {
   MENSAGEM_JA_AVALIADO,
+  MENSAGEM_NAO_CONCLUIDO,
   MENSAGEM_PRAZO_ENCERRADO,
   motivoSemAvaliacao,
   primeiroNome,
@@ -15,13 +16,22 @@ import {
 import { useAvaliacaoPendenteQuery, useAvaliarMutation } from "../servico/avaliacao.queries";
 import { COMENTARIO_MAX } from "../tipos/avaliacao.types";
 
-/** Mensagem dos dois casos em que a avaliação não abre; `null` pros outros erros. */
+/**
+ * Mensagem dos erros em que a avaliação não abre (tentar de novo não
+ * adianta); `null` pros outros. `SERVICO_NAO_ENCONTRADO` é o 404 de quem não
+ * é parte do serviço.
+ */
 function mensagemSemAvaliacao(erro: unknown): string | null {
-  switch (erroApi(erro)?.codigo) {
+  const resposta = erroApi(erro);
+  switch (resposta?.codigo) {
     case CodigoErro.AVALIACAO_DUPLICADA:
       return MENSAGEM_JA_AVALIADO;
     case CodigoErro.JANELA_AVALIACAO_ENCERRADA:
       return MENSAGEM_PRAZO_ENCERRADO;
+    case CodigoErro.SERVICO_NAO_CONCLUIDO:
+      return MENSAGEM_NAO_CONCLUIDO;
+    case CodigoErro.SERVICO_NAO_ENCONTRADO:
+      return resposta.mensagem;
     default:
       return null;
   }
@@ -62,7 +72,7 @@ export function useAvaliacaoViewModel(anuncioId: string) {
       );
     }
   } else if (!semAvaliacao && pendente && !pendente.podeAvaliar) {
-    semAvaliacao = motivoSemAvaliacao(pendente.concluidoEm);
+    semAvaliacao = motivoSemAvaliacao(pendente);
   }
 
   const aoEnviar = async () => {
@@ -83,7 +93,7 @@ export function useAvaliacaoViewModel(anuncioId: string) {
         setRecusadaNoEnvio(recusada);
         return;
       }
-      // COMENTARIO_SEM_NOTA, SERVICO_NAO_CONCLUIDO, ACESSO_NEGADO: a mensagem da API já explica.
+      // COMENTARIO_SEM_NOTA, VALIDACAO_FALHOU: a mensagem da API já explica.
       setErroEnvio(
         mensagemErroApi(erro, "Não foi possível enviar a avaliação. Tente novamente."),
       );
@@ -97,12 +107,12 @@ export function useAvaliacaoViewModel(anuncioId: string) {
       void query.refetch();
     },
     semAvaliacao,
-    nome: pendente ? primeiroNome(pendente.nomeOutraParte) : "",
-    fotoUrl: pendente?.fotoUrl ?? null,
+    nome: pendente?.outraParte ? primeiroNome(pendente.outraParte.nome) : "",
+    fotoUrl: pendente?.outraParte?.fotoUrl ?? null,
     /** "Instalar 3 tomadas · concluído hoje". */
-    subtitulo: pendente
-      ? `${pendente.tituloServico} · ${textoConcluido(pendente.concluidoEm)}`
-      : "",
+    subtitulo: pendente?.servico.concluidoEm
+      ? `${pendente.servico.titulo} · ${textoConcluido(pendente.servico.concluidoEm)}`
+      : (pendente?.servico.titulo ?? ""),
     nota,
     rotuloNota: nota === null ? "Toque para dar a nota" : rotuloNota(nota),
     aoEscolherNota: (valor: number) => setNota(valor),

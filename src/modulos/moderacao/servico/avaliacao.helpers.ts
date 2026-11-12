@@ -1,10 +1,11 @@
-import { addDays, isSameDay } from "date-fns";
+import { isSameDay } from "date-fns";
 
 import { formatarDataHora, paraFusoLocal } from "../../../comum/lib/datas";
-import { JANELA_AVALIACAO_DIAS } from "../tipos/avaliacao.types";
+import type { AvaliacaoPendenteResponse } from "../tipos/avaliacao.types";
 
 export const MENSAGEM_JA_AVALIADO = "Você já avaliou este serviço.";
 export const MENSAGEM_PRAZO_ENCERRADO = "O prazo para avaliar terminou.";
+export const MENSAGEM_NAO_CONCLUIDO = "O serviço ainda não foi concluído.";
 
 const ROTULOS_NOTA = ["Péssimo", "Ruim", "Regular", "Bom", "Excelente"] as const;
 
@@ -26,10 +27,16 @@ export function textoConcluido(concluidoEm: string, agora = new Date()): string 
 }
 
 /**
- * Por que `podeAvaliar` veio `false`. A consulta não diz o motivo; como só
- * existem dois (janela de 7 dias ou já avaliado), a data de conclusão decide.
+ * Por que `podeAvaliar` veio `false`. A consulta não diz o motivo, mas
+ * `avaliarAte` decide: `null` é serviço não concluído; já passado é prazo
+ * encerrado; senão, quem consulta já avaliou.
  */
-export function motivoSemAvaliacao(concluidoEm: string, agora = new Date()): string {
-  const fimJanela = addDays(new Date(concluidoEm), JANELA_AVALIACAO_DIAS);
-  return agora >= fimJanela ? MENSAGEM_PRAZO_ENCERRADO : MENSAGEM_JA_AVALIADO;
+export function motivoSemAvaliacao(
+  { avaliarAte }: Pick<AvaliacaoPendenteResponse, "avaliarAte">,
+  agora = new Date(),
+): string {
+  if (avaliarAte === null) {
+    return MENSAGEM_NAO_CONCLUIDO;
+  }
+  return agora >= new Date(avaliarAte) ? MENSAGEM_PRAZO_ENCERRADO : MENSAGEM_JA_AVALIADO;
 }

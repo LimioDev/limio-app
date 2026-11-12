@@ -1,26 +1,41 @@
 import { z } from "zod";
 
+import { PapelUsuario } from "../../../comum/tipos/papel";
+
 /** Limites da `Avaliacao` no backend (ETI-107). */
 export const NOTA_MIN = 1;
 export const NOTA_MAX = 5;
 export const COMENTARIO_MAX = 400;
 
-/** Janela pra avaliar, contada a partir do `CONCLUIDO` (UC "Avaliar a outra parte"). */
-export const JANELA_AVALIACAO_DIAS = 7;
-
 /**
- * "Consultar avaliação pendente" de um serviço (ETI-107). `fotoUrl` é link
- * temporário, válido até `fotoExpiraEm`. `podeAvaliar` sai `false` quando o
- * usuário já avaliou ou a janela fechou.
+ * Quem vai ser avaliado. `fotoUrl` é link temporário, válido até
+ * `fotoExpiraEm`. Conta encerrada vem como "Usuário excluído", sem foto.
  */
-export const AvaliacaoPendenteResponseSchema = z.object({
-  anuncioId: z.string(),
-  nomeOutraParte: z.string(),
+export const OutraParteSchema = z.object({
+  nome: z.string(),
   fotoUrl: z.string().nullable(),
   fotoExpiraEm: z.string().nullable(),
-  tituloServico: z.string(),
-  concluidoEm: z.string(),
+  papel: z.enum([PapelUsuario.EMPREGADOR, PapelUsuario.PRESTADOR]),
+});
+
+export type OutraParte = z.infer<typeof OutraParteSchema>;
+
+/**
+ * "Consultar avaliação pendente" (`GET /anuncios/{anuncioId}/avaliacao-pendente`).
+ * `servico.concluidoEm` e `avaliarAte` são `null` enquanto o serviço não foi
+ * concluído; `outraParte` é `null` enquanto nenhum Prestador foi escolhido.
+ * `podeAvaliar` só é `true` com o serviço concluído, antes de `avaliarAte`
+ * (exclusivo) e sem avaliação de quem consulta.
+ */
+export const AvaliacaoPendenteResponseSchema = z.object({
+  servico: z.object({
+    id: z.string(),
+    titulo: z.string(),
+    concluidoEm: z.string().nullable(),
+  }),
+  outraParte: OutraParteSchema.nullable(),
   podeAvaliar: z.boolean(),
+  avaliarAte: z.string().nullable(),
 });
 
 export type AvaliacaoPendenteResponse = z.infer<
@@ -34,3 +49,14 @@ export const AvaliarRequestSchema = z.object({
 });
 
 export type AvaliarRequest = z.infer<typeof AvaliarRequestSchema>;
+
+/** `201` do "Avaliar" (`POST /anuncios/{anuncioId}/avaliacoes`). */
+export const AvaliacaoResponseSchema = z.object({
+  id: z.string(),
+  anuncioId: z.string(),
+  nota: z.number().int(),
+  comentario: z.string().nullable(),
+  publicadaEm: z.string(),
+});
+
+export type AvaliacaoResponse = z.infer<typeof AvaliacaoResponseSchema>;
