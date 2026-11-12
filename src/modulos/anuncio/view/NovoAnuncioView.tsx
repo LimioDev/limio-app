@@ -3,7 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import type { ErrosAnuncio } from "../store/rascunhoAnuncio.store";
-import type { FotoExibida } from "../viewmodel/useNovoAnuncioViewModel";
+import type { FotoExibida } from "../viewmodel/useEscolhaDeFotos";
 import { CabecalhoPasso } from "./componentes/CabecalhoPasso";
 import { CampoContador } from "./componentes/CampoContador";
 import { CartaoCategoria } from "./componentes/CartaoCategoria";

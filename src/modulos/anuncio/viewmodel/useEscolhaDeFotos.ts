@@ -7,6 +7,14 @@ import { prepararFoto } from "../../../comum/lib/foto";
 import { TipoToast, useToast } from "../../../comum/store/toast";
 import type { FotoRascunho } from "../store/rascunhoAnuncio.store";
 
+/** Miniatura nas telas 14 e 16a. */
+export interface FotoExibida {
+  chave: string;
+  uri: string;
+  /** Motivo da recusa; a foto recusada não é enviada. */
+  erro: string | null;
+}
+
 const MENSAGEM_FALHA_GALERIA = "Não foi possível abrir suas fotos. Tente de novo.";
 const MENSAGEM_FALHA_PREPARO = "Não foi possível ler essa imagem. Escolha outra.";
 

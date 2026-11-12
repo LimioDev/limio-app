@@ -8,7 +8,7 @@ import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
 import { Campo } from "../../../comum/componentes/ui/Campo";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import type { ErrosEdicao } from "../store/edicaoAnuncio.store";
-import type { FotoExibida } from "../viewmodel/useNovoAnuncioViewModel";
+import type { FotoExibida } from "../viewmodel/useEscolhaDeFotos";
 import { CampoContador } from "./componentes/CampoContador";
 import { CartaoCategoria } from "./componentes/CartaoCategoria";
 import { FolhaAdicionarFoto } from "./componentes/FolhaAdicionarFoto";

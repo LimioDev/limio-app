@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import { format, isToday, isTomorrow } from "date-fns";
 
 import { paraFusoLocal } from "../../../comum/lib/datas";
@@ -83,4 +84,12 @@ export function mensagemFalhaFoto(erro: unknown): string {
     default:
       return resposta?.mensagem ?? "Não foi possível enviar a foto.";
   }
+}
+
+/** O anúncio não existe ou é de outra pessoa (a API responde 404 nos dois casos). */
+export function anuncioNaoEncontrado(erro: unknown): boolean {
+  return (
+    erroApi(erro)?.codigo === CodigoErro.ANUNCIO_NAO_ENCONTRADO ||
+    (isAxiosError(erro) && erro.response?.status === 404)
+  );
 }

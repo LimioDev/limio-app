@@ -1,5 +1,4 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { isAxiosError } from "axios";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 
@@ -8,7 +7,7 @@ import { erroApi, errosPorCampo, mensagemErroApi } from "../../../comum/lib/erro
 import { chavesCategoria } from "../../../comum/servico/categoria.queries";
 import { TipoToast, useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
-import { mensagemFalhaFoto } from "../servico/anuncio.helpers";
+import { anuncioNaoEncontrado, mensagemFalhaFoto } from "../servico/anuncio.helpers";
 import {
   chavesAnuncio,
   useAnexarFotoAnuncioMutation,
@@ -33,8 +32,7 @@ import {
   type AnuncioDetalheResponse,
   type EditarAnuncioRequest,
 } from "../tipos/anuncio.types";
-import type { FotoExibida } from "./useNovoAnuncioViewModel";
-import { useEscolhaDeFotos } from "./useEscolhaDeFotos";
+import { useEscolhaDeFotos, type FotoExibida } from "./useEscolhaDeFotos";
 
 type CampoErro = keyof ErrosEdicao;
 
@@ -77,13 +75,6 @@ function paraRequest(formulario: FormularioEdicao, instante: Date): EditarAnunci
     numeroPessoas: formulario.numeroPessoas.trim() ? Number(formulario.numeroPessoas) : null,
     observacoes: formulario.observacoes.trim() || null,
   };
-}
-
-function naoEncontrado(erro: unknown): boolean {
-  return (
-    erroApi(erro)?.codigo === CodigoErro.ANUNCIO_NAO_ENCONTRADO ||
-    (isAxiosError(erro) && erro.response?.status === 404)
-  );
 }
 
 /**
@@ -329,7 +320,7 @@ export function useEditarAnuncioViewModel(id: string) {
 
   let erro: string | null = null;
   if (!pronto && query.isError && !query.data) {
-    erro = naoEncontrado(query.error)
+    erro = anuncioNaoEncontrado(query.error)
       ? "Este anúncio não existe ou não é seu."
       : mensagemErroApi(query.error, "Não foi possível carregar o anúncio.");
   }

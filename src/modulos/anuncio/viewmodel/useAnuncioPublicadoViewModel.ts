@@ -1,4 +1,3 @@
-import { isAxiosError } from "axios";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 
@@ -6,7 +5,7 @@ import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { TipoToast, useToast } from "../../../comum/store/toast";
 import type { Estado } from "../../../comum/tipos/api";
 import { CodigoErro } from "../../../comum/tipos/erros";
-import { estadoDoAnuncio, quandoCurto } from "../servico/anuncio.helpers";
+import { anuncioNaoEncontrado, estadoDoAnuncio, quandoCurto } from "../servico/anuncio.helpers";
 import {
   useAnuncioQuery,
   useCancelarAnuncioMutation,
@@ -83,13 +82,6 @@ function paraExibicao(
   };
 }
 
-function naoEncontrado(erro: unknown): boolean {
-  return (
-    erroApi(erro)?.codigo === CodigoErro.ANUNCIO_NAO_ENCONTRADO ||
-    (isAxiosError(erro) && erro.response?.status === 404)
-  );
-}
-
 /**
  * Tela 16 "Anúncio publicado": o anúncio do Empregador logado, com a folha de
  * cancelar (tela 17, ETI-64). "Ver todos" abre as telas 18/19 (ETI-68) e
@@ -138,7 +130,7 @@ export function useAnuncioPublicadoViewModel(id: string) {
 
   let erro: string | null = null;
   if (query.isError && !query.data) {
-    erro = naoEncontrado(query.error)
+    erro = anuncioNaoEncontrado(query.error)
       ? "Este anúncio não existe ou não é seu."
       : mensagemErroApi(query.error, "Não foi possível carregar o anúncio.");
   }

@@ -9,14 +9,7 @@ import {
   TITULO_MAX,
   TITULO_MIN,
 } from "../tipos/anuncio.types";
-import { useEscolhaDeFotos } from "./useEscolhaDeFotos";
-
-export interface FotoExibida {
-  chave: string;
-  uri: string;
-  /** Motivo da recusa; a foto recusada não é enviada. */
-  erro: string | null;
-}
+import { useEscolhaDeFotos, type FotoExibida } from "./useEscolhaDeFotos";
 
 /** Tela 14 "Novo anúncio" (1 de 2): categoria, título, descrição e fotos. */
 export function useNovoAnuncioViewModel() {
