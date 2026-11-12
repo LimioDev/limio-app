@@ -126,8 +126,17 @@ export function useEditarAnuncioViewModel(id: string) {
     }
   }, [query.data, anuncioDoFormulario, id, iniciar]);
 
+  // O voltar segue ativo durante o "Salvando...": se a 16a já saiu quando o
+  // salvar termina, navegar de novo tiraria a tela 16 também.
+  const montada = useRef(true);
   // Sair da tela descarta. Ir pra 14a não desmonta esta tela.
-  useEffect(() => () => descartar(), [descartar]);
+  useEffect(() => {
+    montada.current = true;
+    return () => {
+      montada.current = false;
+      descartar();
+    };
+  }, [descartar]);
 
   const pronto = anuncioDoFormulario === id;
   const vagas = FOTOS_MAX - formulario.fotos.length;
@@ -138,25 +147,29 @@ export function useEditarAnuncioViewModel(id: string) {
       ? router.back()
       : router.replace({ pathname: "/(app)/anuncio/[id]", params: { id } });
 
+  /** Fim do salvar: só navega se o usuário ainda está na 16a. */
+  const sairSeAindaAberta = () => {
+    if (montada.current) {
+      voltarPraTela16();
+    }
+  };
+
   /**
-   * `409 ANUNCIO_ESTADO_INVALIDO`: alguém foi escolhido antes de salvar. Vai
-   * pro serviço combinado, onde fica o "Reagendar" (ETI-100). Se o anúncio na
-   * verdade foi encerrado (cancelado em outro aparelho), não há serviço:
-   * volta pra tela 16, que mostra a situação.
+   * `409 ANUNCIO_ESTADO_INVALIDO`: alguém foi escolhido (ou o anúncio foi
+   * cancelado em outro aparelho) antes de salvar. Volta pra tela 16, que
+   * mostra a situação (igual ao ETI-70).
+   * TODO(ETI-87): no combinado, abrir a tela 25 do serviço, onde fica o "Reagendar".
    */
   const aoAnuncioFechado = async () => {
     void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
     const { data } = await query.refetch();
-    if (data?.status === StatusAnuncio.ENCERRADO || data?.status === StatusAnuncio.CONCLUIDO) {
-      mostrarToast("Este anúncio não pode mais ser editado", TipoToast.ERRO);
-      voltarPraTela16();
-      return;
-    }
-    mostrarToast("Este anúncio já foi combinado", TipoToast.ERRO);
-    // Fecha a 16a antes: o serviço é outra pilha, e um `replace` daqui levaria
-    // a tela 16 junto, deixando o voltar do serviço sem destino.
-    voltarPraTela16();
-    router.push({ pathname: "/(app)/servico/[id]", params: { id } });
+    const encerrado =
+      data?.status === StatusAnuncio.ENCERRADO || data?.status === StatusAnuncio.CONCLUIDO;
+    mostrarToast(
+      encerrado ? "Este anúncio não pode mais ser editado" : "Este anúncio já foi combinado",
+      TipoToast.ERRO,
+    );
+    sairSeAindaAberta();
   };
 
   const tratarErroEdicao = async (erro: unknown) => {
@@ -306,7 +319,8 @@ export function useEditarAnuncioViewModel(id: string) {
             : `${falhas.length} fotos não foram atualizadas`;
         mostrarToast(`Anúncio atualizado, mas ${quantas}. ${falhas[0]}`, TipoToast.ERRO);
       }
-      voltarPraTela16();
+      // O toast aparece mesmo se ele já saiu: a edição foi salva.
+      sairSeAindaAberta();
     } finally {
       emAndamento.current = false;
       setSalvando(false);
