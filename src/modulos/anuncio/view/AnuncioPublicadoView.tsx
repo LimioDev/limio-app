@@ -131,7 +131,7 @@ export function AnuncioPublicadoView({
         <Cabecalho anuncio={anuncio} aoVoltar={aoVoltar} />
 
         <View className="gap-5 px-margem pt-5">
-          {anuncio.temCandidatos ? (
+          {!anuncio.aguardandoCandidatos ? null : anuncio.temCandidatos ? (
             <Card className="flex-row items-center gap-3">
               <View className="flex-1 gap-2.5">
                 <View className="flex-row">
@@ -187,17 +187,26 @@ export function AnuncioPublicadoView({
       </ScrollView>
 
       <SafeAreaView edges={["bottom"]} className="bg-fundo">
-        {/* Editar (ETI-61/62) chega no card dele. */}
-        <View className="flex-row gap-3 border-t border-borda px-margem py-4">
-          <View className="flex-1">
-            <Botao rotulo="Editar" variante="neutro" disabled accessibilityHint="Disponível em breve" />
+        {/* Editar (ETI-61/62) chega no card dele; combinado, não há o que editar. */}
+        {anuncio.aguardandoCandidatos || anuncio.podeCancelar ? (
+          <View className="flex-row gap-3 border-t border-borda px-margem py-4">
+            {anuncio.aguardandoCandidatos ? (
+              <View className="flex-1">
+                <Botao
+                  rotulo="Editar"
+                  variante="neutro"
+                  disabled
+                  accessibilityHint="Disponível em breve"
+                />
+              </View>
+            ) : null}
+            {anuncio.podeCancelar ? (
+              <View className="flex-1">
+                <Botao rotulo="Cancelar" variante="destrutivo" onPress={aoAbrirCancelar} />
+              </View>
+            ) : null}
           </View>
-          {anuncio.podeCancelar ? (
-            <View className="flex-1">
-              <Botao rotulo="Cancelar" variante="destrutivo" onPress={aoAbrirCancelar} />
-            </View>
-          ) : null}
-        </View>
+        ) : null}
       </SafeAreaView>
 
       <FolhaCancelarAnuncio

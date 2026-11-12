@@ -27,6 +27,12 @@ export interface AnuncioPublicadoExibido {
   temCandidatos: boolean;
   /** Candidaturas `ENVIADA`, pro texto da folha de cancelar (tela 17). */
   candidaturasPendentes: number;
+  /**
+   * Só aguardando candidatos. Combinado, os outros já foram encerrados e o card
+   * diria "Nenhum prestador se candidatou ainda" logo depois da escolha (tela 23,
+   * ETI-70), que abre esta tela até a tela 25 chegar (ETI-87).
+   */
+  aguardandoCandidatos: boolean;
   /** Botão "Cancelar" (ETI-64): só em `PUBLICADO` sem candidatura escolhida. */
   podeCancelar: boolean;
   avatares: { chave: string; nome: string; fotoUrl: string | null }[];
@@ -57,8 +63,10 @@ function paraExibicao(
   const local = anuncio.bairroRegiao
     ? [anuncio.bairroRegiao, anuncio.uf].filter(Boolean).join(" · ")
     : null;
+  const estado = estadoDoAnuncio(anuncio.status, temEscolhido);
   return {
-    estado: estadoDoAnuncio(anuncio.status, temEscolhido),
+    estado,
+    aguardandoCandidatos: estado === "aguardando",
     titulo: anuncio.titulo,
     quando: quandoCurto(anuncio.dataHoraPretendida),
     local,
