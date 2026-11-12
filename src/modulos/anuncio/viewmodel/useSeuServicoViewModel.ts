@@ -47,6 +47,11 @@ export interface ServicoExibido {
   andamento: PassoServicoExibido[];
   /** "Iniciar serviço": só pro Prestador escolhido, com o serviço em `PUBLICADO`. */
   podeIniciar: boolean;
+  /**
+   * "Finalizar com foto" (tela 37 → 38): só com o serviço em `EM_ANDAMENTO`. A
+   * API também aceita check-out de `PUBLICADO`, mas pelo card o acesso é só a 37.
+   */
+  podeFinalizar: boolean;
 }
 
 export interface FolhaIniciarExibida {
@@ -154,6 +159,7 @@ function servicoParaExibicao(servico: ServicoCombinado, ehPrestador: boolean): S
     // A API só devolve o serviço pro Empregador dono e pro Prestador escolhido;
     // com o papel de Prestador ativo, quem vê a tela é o escolhido.
     podeIniciar: ehPrestador && servico.status === StatusAnuncio.PUBLICADO,
+    podeFinalizar: ehPrestador && servico.status === StatusAnuncio.EM_ANDAMENTO,
   };
 }
 
@@ -243,6 +249,8 @@ export function useSeuServicoViewModel(anuncioId: string) {
       : undefined,
     folha,
     aoIniciar: () => setFolhaAberta(true),
+    aoFinalizarComFoto: () =>
+      router.push({ pathname: "/(app)/servico/checkout/[id]", params: { id: anuncioId } }),
     aoConfirmarInicio: confirmarInicio,
     aoFecharFolha: fecharFolha,
   };
