@@ -9,7 +9,11 @@ import { useCandidatosQuery, useEscolherPrestadorMutation } from "../servico/anu
 import { EtapaEscolha } from "../tipos/anuncio.enums";
 import type { Candidato } from "../tipos/anuncio.types";
 
-/** Escolhas do mês do plano FREE (`perfil.cota.teto-free` no back). */
+/**
+ * Escolhas do mês do plano FREE. Tem que acompanhar o `perfil.cota.teto-free`
+ * do back (configurável, padrão 4): a lista de candidatos não traz o teto, então
+ * os textos das telas 23 e 24 usam este valor. Se o teto mudar lá, mudar aqui.
+ */
 const ESCOLHAS_DO_MES_FREE = 4;
 
 const NAO_DISPONIVEL = "Este candidato não está mais disponível";
@@ -101,6 +105,12 @@ export function useEscolherPrestadorViewModel(anuncioId: string, candidaturaId: 
   // Depois de mandar a escolha, a folha só fecha pelo resultado dela.
   const encerrada = useRef(false);
 
+  // Trava síncrona do "Confirmar escolha": `isPending` e o `disabled` do botão
+  // só mudam no próximo render, e um clique duplo chega antes dele. Sem ela
+  // saem 2 chamadas, a segunda volta `ESCOLHA_CONFLITO` e, como só rodam os
+  // callbacks do último `mutate`, o Empregador veria erro numa escolha que deu certo.
+  const enviandoRef = useRef(false);
+
   const fechar = useCallback(() => {
     encerrada.current = true;
     if (router.canGoBack()) {
@@ -135,11 +145,15 @@ export function useEscolherPrestadorViewModel(anuncioId: string, candidaturaId: 
   }, [semCandidato, mostrarToast, fechar]);
 
   function confirmar() {
-    if (!candidato || escolher.isPending) {
+    if (!candidato || enviandoRef.current) {
       return;
     }
+    enviandoRef.current = true;
     setErro(null);
     escolher.mutate(candidato.candidaturaId, {
+      onSettled: () => {
+        enviandoRef.current = false;
+      },
       onSuccess: () => {
         mostrarToast(`Serviço combinado com ${candidato.nome}`);
         abrirServicoCombinado();
