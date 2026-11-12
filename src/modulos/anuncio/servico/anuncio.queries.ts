@@ -9,6 +9,7 @@ import {
 
 import { erroApi } from "../../../comum/lib/erros";
 import { CodigoErro } from "../../../comum/tipos/erros";
+import type { ArquivoFoto } from "../../../comum/tipos/foto";
 import type { AbaCandidatura } from "../tipos/anuncio.enums";
 import type {
   CandidatosResponse,
@@ -29,6 +30,7 @@ import {
   cancelarAnuncio,
   criarAnuncio,
   desistirCandidatura,
+  enviarCheckout,
   iniciarServico,
   listarMinhasCandidaturas,
   listarMural,
@@ -270,6 +272,35 @@ export function useDesistirCandidaturaMutation() {
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.minhasCandidaturas });
       void queryClient.invalidateQueries({ queryKey: ["anuncio", "mural"] });
+    },
+  });
+}
+
+/**
+ * "Enviar check-out" (tela 38, ETI-90). No sucesso "Seu serviço" já volta em
+ * "Aguardando validação" com o `checkoutEm` da resposta, e a consulta confirma
+ * em seguida; a candidatura também muda de status, então "Aplicações" recarrega.
+ * Na falha, o mesmo tratamento do "Iniciar serviço".
+ */
+export function useCheckoutMutation(anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ arquivos, observacao }: { arquivos: ArquivoFoto[]; observacao: string }) =>
+      enviarCheckout({ anuncioId, arquivos, observacao }),
+    onSuccess: ({ status, checkoutEm }) => {
+      queryClient.setQueryData<ServicoCombinado>(
+        chavesAnuncio.servico(anuncioId),
+        (atual) => (atual ? { ...atual, status, checkoutEm } : atual),
+      );
+    },
+    onSettled: (_dados, falha) => {
+      if (erroApi(falha)?.codigo === CodigoErro.SERVICO_NAO_ENCONTRADO) {
+        queryClient.removeQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+        void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalheMural(anuncioId) });
+        return;
+      }
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.minhasCandidaturas });
     },
   });
 }

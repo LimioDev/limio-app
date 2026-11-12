@@ -408,3 +408,22 @@ export type MinhaCandidatura = z.infer<typeof MinhaCandidaturaSchema>;
 export const MinhasCandidaturasResponseSchema = respostaPaginadaSchema(MinhaCandidaturaSchema);
 
 export type MinhasCandidaturasResponse = z.infer<typeof MinhasCandidaturasResponseSchema>;
+
+/**
+ * Fotos do check-out (ETI-90): a API usa os mesmos limites das fotos do
+ * anúncio (`anuncio.foto.*`), então o teto é o mesmo.
+ */
+export const FOTOS_CHECKOUT_MAX = FOTOS_MAX;
+
+/**
+ * Espelha `CheckoutResponse` — `POST /anuncios/{anuncioId}/checkout` (ETI-90):
+ * `200` já em `AGUARDANDO_VALIDACAO`. `prazoValidacaoEm` é `checkoutEm` mais o
+ * prazo gravado no anúncio; sai `null` em anúncio antigo, sem prazo gravado.
+ */
+export const CheckoutSchema = z.object({
+  status: z.enum(StatusAnuncio),
+  checkoutEm: z.string(),
+  prazoValidacaoEm: z.string().nullable(),
+});
+
+export type Checkout = z.infer<typeof CheckoutSchema>;
