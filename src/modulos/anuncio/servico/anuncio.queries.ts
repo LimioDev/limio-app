@@ -30,6 +30,7 @@ import {
   criarAnuncio,
   desistirCandidatura,
   editarAnuncio,
+  escolherPrestador,
   iniciarServico,
   listarMinhasCandidaturas,
   listarMural,
@@ -258,6 +259,26 @@ export function useRecusarCandidatoMutation(anuncioId: string) {
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalhe(anuncioId) });
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
+    },
+  });
+}
+
+/**
+ * "Confirmar escolha" (tela 23, ETI-70). Com sucesso ou falha, o que a tela
+ * mostra pode ter mudado: na escolha, os candidatos encerram e o anúncio vira
+ * "Combinado" no detalhe e no painel; num `409`, a lista é a que vale
+ * (cota esgotada pede a lista recarregada, conflito quer dizer que outro
+ * aparelho escolheu).
+ */
+export function useEscolherPrestadorMutation(anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (candidaturaId: string) => escolherPrestador({ anuncioId, candidaturaId }),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.candidatos(anuncioId) });
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalhe(anuncioId) });
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
     },
   });
 }

@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { useIsFocused, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 
@@ -132,12 +132,21 @@ function useAppAtivo(): boolean {
  * Telas 21 "Chat" e 22 "Chat somente leitura" da candidatura. Ao abrir,
  * carrega o chat, liga o canal em tempo real e marca as recebidas como lidas;
  * ao sair (ou com o app em segundo plano), desliga o canal.
+ *
+ * Com outra tela por cima (a folha "Escolher", tela 23), o chat continua
+ * montado mas ninguém está lendo: canal e "lidas" só valem com a tela em foco,
+ * senão a outra parte veria ✓✓ em mensagens que ninguém viu.
+ *
+ * `anuncioId` só chega quando o Empregador abre pela tela 18; sem ele, o
+ * "Escolher" não aparece (a API do chat não traz o id do anúncio).
  */
-export function useChatViewModel(candidaturaId: string) {
+export function useChatViewModel(candidaturaId: string, anuncioId?: string) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const mostrarToast = useToast((estado) => estado.mostrar);
   const appAtivo = useAppAtivo();
+  const emFoco = useIsFocused();
+  const lendo = appAtivo && emFoco;
 
   const query = useChatQuery(candidaturaId);
   const usuarioId = useSessao((estado) => estado.usuarioId);
@@ -157,7 +166,7 @@ export function useChatViewModel(candidaturaId: string) {
     [query.data],
   );
 
-  useCanalChat(appAtivo && chatId !== undefined, {
+  useCanalChat(lendo && chatId !== undefined, {
     aoEvento: (evento) => {
       if (evento.chatId !== chatId) {
         // Mensagem de outra conversa chegou ao aparelho.
@@ -195,7 +204,7 @@ export function useChatViewModel(candidaturaId: string) {
     [mensagens, usuarioId],
   );
   useEffect(() => {
-    if (!appAtivo || !chatId || naoLidasRecebidas.length === 0) {
+    if (!lendo || !chatId || naoLidasRecebidas.length === 0) {
       return;
     }
     // Marca no cache antes: o efeito não repete a chamada enquanto ela não volta.
@@ -207,7 +216,7 @@ export function useChatViewModel(candidaturaId: string) {
       new Date().toISOString(),
     );
     marcarLidas(chatId);
-  }, [appAtivo, chatId, naoLidasRecebidas, queryClient, candidaturaId, marcarLidas]);
+  }, [lendo, chatId, naoLidasRecebidas, queryClient, candidaturaId, marcarLidas]);
 
   function enviarPendente(pendente: MensagemPendente) {
     setPendentes((atuais) =>
@@ -322,12 +331,20 @@ export function useChatViewModel(candidaturaId: string) {
     // Foto no chat ainda não existe na API.
     aoCamera: () => mostrarToast(EM_BREVE),
 
-    // "Escolher" abre a tela 23 (ETI-70); até lá, "Em breve".
+    // "Escolher" abre a folha da tela 23 (ETI-70) por cima do chat.
     escolher:
-      chat && souEmpregador && !somenteLeitura && chat.statusCandidatura === StatusAplicacao.ENVIADA
+      chat &&
+      anuncioId &&
+      souEmpregador &&
+      !somenteLeitura &&
+      chat.statusCandidatura === StatusAplicacao.ENVIADA
         ? { rotulo: `Escolher ${primeiroNome(chat.outraParte.nome)} para este serviço` }
         : null,
-    aoEscolher: () => mostrarToast(EM_BREVE),
+    aoEscolher: () => {
+      if (anuncioId) {
+        router.push({ pathname: "/(app)/escolher-prestador", params: { anuncioId, candidaturaId } });
+      }
+    },
 
     // Menu "⋮" (tela 21b): perfil (ETI-106) e denúncia (ETI-115) ainda não existem.
     menuAberto,

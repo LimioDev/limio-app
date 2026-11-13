@@ -54,6 +54,11 @@ export function estadoDoAnuncio(status: StatusAnuncio, temPrestadorEscolhido: bo
   }
 }
 
+/** "Rafael" de "Rafael S.": nome usado nos textos corridos das folhas. */
+export function primeiroNome(nome: string): string {
+  return nome.trim().split(/\s+/)[0] || nome;
+}
+
 /** "02/09 é amanhã", "02/09 é hoje" ou só "02/09" — dica "Rever a data" da tela 19. */
 export function dataComProximidade(dataHoraUtc: string): string {
   const data = paraFusoLocal(dataHoraUtc);
