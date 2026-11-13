@@ -7,6 +7,9 @@ export const NOTA_MIN = 1;
 export const NOTA_MAX = 5;
 export const COMENTARIO_MAX = 400;
 
+/** Nome da outra parte com a conta encerrada (`OutraParte.NOME_CONTA_ENCERRADA` no back). */
+export const NOME_CONTA_ENCERRADA = "Usuário excluído";
+
 /**
  * Quem vai ser avaliado. `fotoUrl` é link temporário, válido até
  * `fotoExpiraEm`. Conta encerrada vem como "Usuário excluído", sem foto.

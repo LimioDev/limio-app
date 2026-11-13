@@ -1,7 +1,7 @@
 import { isSameDay } from "date-fns";
 
 import { formatarDataHora, paraFusoLocal } from "../../../comum/lib/datas";
-import type { AvaliacaoPendenteResponse } from "../tipos/avaliacao.types";
+import { NOME_CONTA_ENCERRADA, type AvaliacaoPendenteResponse } from "../tipos/avaliacao.types";
 
 export const MENSAGEM_JA_AVALIADO = "Você já avaliou este serviço.";
 export const MENSAGEM_PRAZO_ENCERRADO = "O prazo para avaliar terminou.";
@@ -17,6 +17,14 @@ export function rotuloNota(nota: number): string {
 /** "Rafael Souza" → "Rafael". */
 export function primeiroNome(nome: string): string {
   return nome.trim().split(/\s+/)[0] ?? nome;
+}
+
+/**
+ * Nome da outra parte na tela: só o primeiro, menos na conta encerrada, que
+ * fica inteiro ("Como foi com Usuário excluído?", não "com Usuário?").
+ */
+export function nomeExibido(nome: string): string {
+  return nome === NOME_CONTA_ENCERRADA ? nome : primeiroNome(nome);
 }
 
 /** "concluído hoje" ou "concluído em 06/09". */

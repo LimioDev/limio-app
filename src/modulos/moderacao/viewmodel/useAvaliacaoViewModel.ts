@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { BackHandler } from "react-native";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { useToast } from "../../../comum/store/toast";
@@ -9,7 +10,7 @@ import {
   MENSAGEM_NAO_CONCLUIDO,
   MENSAGEM_PRAZO_ENCERRADO,
   motivoSemAvaliacao,
-  primeiroNome,
+  nomeExibido,
   rotuloNota,
   textoConcluido,
 } from "../servico/avaliacao.helpers";
@@ -51,7 +52,26 @@ export function useAvaliacaoViewModel(anuncioId: string) {
   const [erroEnvio, setErroEnvio] = useState<string | null>(null);
   const [recusadaNoEnvio, setRecusadaNoEnvio] = useState<string | null>(null);
 
+  // Trava síncrona do "Enviar avaliação": `isPending` e o `disabled` do botão
+  // só mudam no próximo render, e um toque duplo chega antes dele (2 POSTs, o
+  // segundo volta `AVALIACAO_DUPLICADA`).
+  const enviandoRef = useRef(false);
+
+  // A tela já saiu (voltar ou desmontou): o fim do envio não navega de novo,
+  // senão tiraria também a tela de onde o usuário veio.
+  const encerrada = useRef(false);
+  useEffect(() => {
+    encerrada.current = false;
+    return () => {
+      encerrada.current = true;
+    };
+  }, []);
+
   const voltar = () => {
+    if (encerrada.current) {
+      return;
+    }
+    encerrada.current = true;
     if (router.canGoBack()) {
       router.back();
     } else {
@@ -59,11 +79,25 @@ export function useAvaliacaoViewModel(anuncioId: string) {
     }
   };
 
+  const enviando = avaliar.isPending;
+
+  // Durante o envio o voltar do Android não fecha a tela, como o "Pular":
+  // a nota já foi mandada e o resultado ainda decide pra onde ir.
+  useEffect(() => {
+    if (!enviando) {
+      return;
+    }
+    const assinatura = BackHandler.addEventListener("hardwareBackPress", () => true);
+    return () => assinatura.remove();
+  }, [enviando]);
+
   const pendente = query.data;
 
   let semAvaliacao = recusadaNoEnvio;
   let erroCarregamento: string | null = null;
-  if (!semAvaliacao && query.isError) {
+  // Só é erro de carregamento sem dado: se a recarga depois de um envio sem
+  // rede falha, o formulário continua e o erro fica no `erroEnvio`.
+  if (!semAvaliacao && query.isError && !pendente) {
     semAvaliacao = mensagemSemAvaliacao(query.error);
     if (!semAvaliacao) {
       erroCarregamento = mensagemErroApi(
@@ -76,18 +110,23 @@ export function useAvaliacaoViewModel(anuncioId: string) {
   }
 
   const aoEnviar = async () => {
-    if (nota === null) {
+    if (nota === null || enviandoRef.current || encerrada.current) {
       return;
     }
+    enviandoRef.current = true;
     setErroEnvio(null);
     try {
       await avaliar.mutateAsync({
         anuncioId,
         request: { nota, comentario: comentario.trim() || null },
       });
+      // O toast aparece mesmo se a tela já saiu: a nota foi gravada.
       mostrarToast("Avaliação enviada");
       voltar();
     } catch (erro) {
+      if (encerrada.current) {
+        return;
+      }
       const recusada = mensagemSemAvaliacao(erro);
       if (recusada) {
         setRecusadaNoEnvio(recusada);
@@ -97,6 +136,8 @@ export function useAvaliacaoViewModel(anuncioId: string) {
       setErroEnvio(
         mensagemErroApi(erro, "Não foi possível enviar a avaliação. Tente novamente."),
       );
+    } finally {
+      enviandoRef.current = false;
     }
   };
 
@@ -107,7 +148,7 @@ export function useAvaliacaoViewModel(anuncioId: string) {
       void query.refetch();
     },
     semAvaliacao,
-    nome: pendente?.outraParte ? primeiroNome(pendente.outraParte.nome) : "",
+    nome: pendente?.outraParte ? nomeExibido(pendente.outraParte.nome) : "",
     fotoUrl: pendente?.outraParte?.fotoUrl ?? null,
     /** "Instalar 3 tomadas · concluído hoje". */
     subtitulo: pendente?.servico.concluidoEm
@@ -121,12 +162,18 @@ export function useAvaliacaoViewModel(anuncioId: string) {
     comentarioMax: COMENTARIO_MAX,
     contador: `${comentario.length} / ${COMENTARIO_MAX}`,
     podeEnviar: nota !== null,
-    enviando: avaliar.isPending,
+    enviando,
     erroEnvio,
     aoEnviar: () => {
       void aoEnviar();
     },
-    aoPular: voltar,
+    // Durante o envio, pular não vale: a nota já foi mandada (o aviso diz que
+    // pular não gera nota).
+    aoPular: () => {
+      if (!enviando) {
+        voltar();
+      }
+    },
     aoVoltar: voltar,
   };
 }

@@ -23,7 +23,7 @@ interface AvaliacaoViewProps {
   aoTentarDeNovo: () => void;
   /** Já avaliado ou fora da janela: a avaliação não abre e a tela só mostra isto. */
   semAvaliacao: string | null;
-  /** Primeiro nome da outra parte. */
+  /** Primeiro nome da outra parte ("Usuário excluído" inteiro, conta encerrada). */
   nome: string;
   fotoUrl: string | null;
   subtitulo: string;
@@ -127,9 +127,11 @@ function FormularioAvaliacao({
               <View className="flex-row justify-end px-margem pt-2">
                 <Pressable
                   onPress={aoPular}
+                  disabled={enviando}
                   hitSlop={12}
                   accessibilityRole="button"
-                  className="h-toque justify-center"
+                  accessibilityState={{ disabled: enviando }}
+                  className={`h-toque justify-center ${enviando ? "opacity-40" : ""}`}
                 >
                   <Text className="text-corpo font-semibold text-marca-300">Pular</Text>
                 </Pressable>
@@ -201,13 +203,16 @@ function FormularioAvaliacao({
           </View>
         </ScrollView>
 
-        <SafeAreaView edges={["bottom"]} className="px-margem pb-2 pt-3">
-          <Botao
-            rotulo={enviando ? "Enviando..." : "Enviar avaliação"}
-            onPress={aoEnviar}
-            disabled={!podeEnviar}
-            carregando={enviando}
-          />
+        {/* O padding fica na View: o do SafeAreaView é sobrescrito pela área segura. */}
+        <SafeAreaView edges={["bottom"]}>
+          <View className="px-margem pb-2 pt-3">
+            <Botao
+              rotulo={enviando ? "Enviando..." : "Enviar avaliação"}
+              onPress={aoEnviar}
+              disabled={!podeEnviar}
+              carregando={enviando}
+            />
+          </View>
         </SafeAreaView>
       </KeyboardAvoidingView>
     </View>
