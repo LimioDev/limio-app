@@ -1,20 +1,22 @@
 import { useState } from "react";
 import { Controller } from "react-hook-form";
 import type { Control, FieldErrors } from "react-hook-form";
-import { ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Masks } from "react-native-mask-input";
 import { Lock, Mail, MapPin, Smartphone } from "lucide-react-native";
 
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { Campo } from "../../../comum/componentes/ui/Campo";
-import type { DadosPessoaisForm } from "../tipos/auth.types";
+import type { DadosPessoaisFormEntrada } from "../tipos/auth.types";
 import { BotaoMostrarSenha } from "../../../comum/componentes/ui/BotaoMostrarSenha";
 import { PassoCadastro } from "./componentes/PassoCadastro";
 
 interface CadastroDadosViewProps {
-  control: Control<DadosPessoaisForm>;
-  erros: FieldErrors<DadosPessoaisForm>;
+  control: Control<DadosPessoaisFormEntrada>;
+  erros: FieldErrors<DadosPessoaisFormEntrada>;
+  buscandoCep: boolean;
+  erroCep: string | null;
   aoContinuar: () => void;
   carregando: boolean;
   erroServidor: string | null;
@@ -24,6 +26,8 @@ interface CadastroDadosViewProps {
 export function CadastroDadosView({
   control,
   erros,
+  buscandoCep,
+  erroCep,
   aoContinuar,
   carregando,
   erroServidor,
@@ -98,6 +102,27 @@ export function CadastroDadosView({
             />
           </View>
         </View>
+
+        <Controller
+          control={control}
+          name="cep"
+          render={({ field }) => (
+            <Campo
+              rotulo="CEP"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              erro={erros.cep?.message}
+              mask={Masks.ZIP_CODE}
+              keyboardType="number-pad"
+              placeholder="00000-000"
+              acaoDireita={buscandoCep ? <ActivityIndicator color="#2159CC" /> : undefined}
+            />
+          )}
+        />
+        {erroCep ? (
+          <Text className="text-rotulo text-tinta-suave">{erroCep}</Text>
+        ) : null}
 
         <Controller
           control={control}

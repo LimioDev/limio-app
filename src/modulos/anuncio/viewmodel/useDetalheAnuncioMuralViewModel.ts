@@ -185,8 +185,8 @@ export function useDetalheAnuncioMuralViewModel(id: string) {
             return;
           case CodigoErro.CONTATOS_NAO_CONFIRMADOS:
             setErroFolha({
-              mensagem: "Confirme seu telefone e e-mail para se candidatar.",
-              atalho: "Confirmar telefone e e-mail",
+              mensagem: "Confirme seu e-mail para se candidatar.",
+              atalho: "Confirmar e-mail",
             });
             return;
           default:

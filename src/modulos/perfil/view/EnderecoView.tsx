@@ -1,5 +1,5 @@
 import { Controller, type Control, type FieldErrors } from "react-hook-form";
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Masks } from "react-native-mask-input";
 
@@ -25,6 +25,8 @@ interface EnderecoViewProps {
   aoTentarDeNovo: () => void;
   control: Control<EnderecoFormEntrada>;
   erros: FieldErrors<EnderecoFormEntrada>;
+  buscandoCep: boolean;
+  erroCep: string | null;
   /** "São Paulo · SP"; `null` antes de escolher. */
   cidadeUf: string | null;
   aoEscolherCidade: () => void;
@@ -41,6 +43,8 @@ export function EnderecoView({
   aoTentarDeNovo,
   control,
   erros,
+  buscandoCep,
+  erroCep,
   cidadeUf,
   aoEscolherCidade,
   aoSalvar,
@@ -108,6 +112,7 @@ export function EnderecoView({
                       mask={Masks.ZIP_CODE}
                       keyboardType="number-pad"
                       placeholder="00000-000"
+                      acaoDireita={buscandoCep ? <ActivityIndicator color="#2159CC" /> : undefined}
                     />
                   )}
                 />
@@ -122,6 +127,9 @@ export function EnderecoView({
                 />
               </View>
             </View>
+            {erroCep ? (
+              <Text className="text-rotulo text-tinta-suave">{erroCep}</Text>
+            ) : null}
 
             <Controller
               control={control}

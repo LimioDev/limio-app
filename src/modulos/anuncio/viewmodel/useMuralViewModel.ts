@@ -182,7 +182,7 @@ export function useMuralViewModel(atuacao: AtuacaoMural) {
     } else if (codigo === CodigoErro.CONTATOS_NAO_CONFIRMADOS) {
       bloqueio = {
         mensagem,
-        rotuloAcao: "Confirmar telefone e e-mail",
+        rotuloAcao: "Confirmar e-mail",
         aoAcao: () => router.push("/(app)/conta/dados-contato"),
       };
     } else {
