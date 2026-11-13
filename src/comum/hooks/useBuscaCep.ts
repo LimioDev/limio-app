@@ -8,6 +8,12 @@ import type { EnderecoPorCep } from "../servico/cep.api";
  * "Novo endereço" e endereço avulso do anúncio. Nunca bloqueia o formulário:
  * só informa `carregando`/`erro`, quem usa decide como mostrar.
  *
+ * Quem chama (edição de endereço, avulso reaberto) deve conferir se o campo
+ * `cep` está de fato `dirty` dentro de `aoEncontrar` antes de sobrescrever
+ * rua/bairro: o CEP que o formulário carrega da API (hidratação assíncrona)
+ * não é "o usuário completou o CEP", e aplicar nesse caso sobrescreveria em
+ * silêncio o que já estava gravado.
+ *
  * @param cep valor digitado no campo, com ou sem máscara
  * @param aoEncontrar chamado uma vez por CEP de 8 dígitos que o ViaCEP resolveu
  */

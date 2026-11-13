@@ -60,7 +60,6 @@ export function useCadastroDadosViewModel() {
       iniciar({
         nomeCompleto: resposta.nomeCompleto,
         email: resposta.email,
-        celular: dados.celular,
         papelAtivo: resposta.papelAtivo,
       });
       router.push("/(auth)/confirmar-email");

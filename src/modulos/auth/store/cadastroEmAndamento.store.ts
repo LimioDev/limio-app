@@ -12,14 +12,8 @@ import type { PapelUsuario } from "../../../comum/tipos/papel";
 interface CadastroEmAndamento {
   nomeCompleto: string | null;
   email: string | null;
-  celular: string | null;
   papelAtivo: PapelUsuario | null;
-  iniciar: (dados: {
-    nomeCompleto: string;
-    email: string;
-    celular: string;
-    papelAtivo: PapelUsuario;
-  }) => void;
+  iniciar: (dados: { nomeCompleto: string; email: string; papelAtivo: PapelUsuario }) => void;
   trocarEmail: (email: string) => void;
   limpar: () => void;
 }
@@ -27,7 +21,6 @@ interface CadastroEmAndamento {
 export const useCadastroEmAndamento = create<CadastroEmAndamento>((set) => ({
   nomeCompleto: null,
   email: null,
-  celular: null,
   papelAtivo: null,
   iniciar: (dados) => set(dados),
   trocarEmail: (email) => set({ email }),
@@ -35,7 +28,6 @@ export const useCadastroEmAndamento = create<CadastroEmAndamento>((set) => ({
     set({
       nomeCompleto: null,
       email: null,
-      celular: null,
       papelAtivo: null,
     }),
 }));

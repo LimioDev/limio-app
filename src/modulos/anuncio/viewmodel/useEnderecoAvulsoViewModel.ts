@@ -62,10 +62,19 @@ export function useEnderecoAvulsoViewModel() {
     name: ["cidade", "uf", "cep", "salvar"],
   });
 
-  const { erro: erroCep } = useBuscaCep(cep ?? "", (endereco) => {
+  const { carregando: buscandoCep, erro: erroCep } = useBuscaCep(cep ?? "", (endereco) => {
+    // CEP que já veio do rascunho (avulso reaberto pra editar) não conta como o
+    // usuário completando o campo — só aplica se ele de fato editou o CEP.
+    if (!form.getFieldState("cep").isDirty) {
+      return;
+    }
     const opcoes = { shouldDirty: true, shouldValidate: true } as const;
-    form.setValue("rua", endereco.rua, opcoes);
-    form.setValue("bairro", endereco.bairro, opcoes);
+    if (endereco.rua !== null) {
+      form.setValue("rua", endereco.rua, opcoes);
+    }
+    if (endereco.bairro !== null) {
+      form.setValue("bairro", endereco.bairro, opcoes);
+    }
     definirCidade({ nome: endereco.cidade, uf: endereco.uf });
   });
 
@@ -132,6 +141,7 @@ export function useEnderecoAvulsoViewModel() {
   return {
     control: form.control,
     erros: form.formState.errors,
+    buscandoCep,
     erroCep,
     cidadeUf: cidade && uf ? rotuloMunicipio(cidade, uf) : null,
     aoEscolherCidade: () => {

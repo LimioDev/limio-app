@@ -15,8 +15,8 @@ const viaCep = axios.create({
 });
 
 export interface EnderecoPorCep {
-  rua: string;
-  bairro: string;
+  rua: string | null;
+  bairro: string | null;
   cidade: string;
   uf: Uf;
 }
@@ -25,8 +25,13 @@ const UFS_VALIDAS = new Set<string>(Object.values(Uf));
 
 /**
  * `cep` precisa ter exatamente 8 dígitos (sem máscara) — quem chama garante isso
- * antes de consultar. Devolve `null` quando o CEP não existe (`erro: true`) ou
+ * antes de consultar. Devolve `null` quando o CEP não existe (`erro` truthy) ou
  * quando a UF devolvida não é uma UF válida (resposta fora do formato esperado).
+ *
+ * `rua`/`bairro` saem `null` (não `""`) quando o ViaCEP não devolve esses campos —
+ * caso de CEP de cidade pequena com CEP único, onde só cidade/UF vêm preenchidos.
+ * Quem consome deve só `setValue` quando o valor não for `null`, pra não apagar o
+ * que o usuário já tinha digitado.
  */
 export async function buscarEnderecoPorCep(cep: string): Promise<EnderecoPorCep | null> {
   const { data } = await viaCep.get(`/${cep}/json/`);
@@ -35,8 +40,8 @@ export async function buscarEnderecoPorCep(cep: string): Promise<EnderecoPorCep 
     return null;
   }
   return {
-    rua: resposta.logradouro ?? "",
-    bairro: resposta.bairro ?? "",
+    rua: resposta.logradouro || null,
+    bairro: resposta.bairro || null,
     cidade: resposta.localidade ?? "",
     uf: resposta.uf as Uf,
   };
