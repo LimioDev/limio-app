@@ -96,6 +96,24 @@ export const AnuncioCriadoResponseSchema = z.object({
 
 export type AnuncioCriadoResponse = z.infer<typeof AnuncioCriadoResponseSchema>;
 
+/**
+ * Espelha `EditarAnuncioRequest` — corpo do `PUT /anuncios/{id}` (ETI-61).
+ * Substitui os campos, não é patch: opcional mandado `null` é apagado. O
+ * endereço não muda na edição.
+ */
+export const EditarAnuncioRequestSchema = z.object({
+  categoriaId: z.uuid(),
+  titulo: z.string().trim().min(TITULO_MIN).max(TITULO_MAX),
+  descricao: z.string().trim().min(1).max(DESCRICAO_MAX),
+  /** Instante em UTC (ISO-8601), no futuro mesmo se não mudou. */
+  dataHoraPretendida: z.iso.datetime(),
+  tamanhoLocal: z.string().trim().max(TAMANHO_LOCAL_MAX).nullable(),
+  numeroPessoas: z.number().int().positive().nullable(),
+  observacoes: z.string().trim().nullable(),
+});
+
+export type EditarAnuncioRequest = z.infer<typeof EditarAnuncioRequestSchema>;
+
 /** Uma foto do anúncio. `url` é link temporário (bucket privado), válido até `expiraEm`. */
 export const FotoAnuncioResponseSchema = z.object({
   id: z.uuid(),
@@ -128,6 +146,8 @@ export const AnuncioDetalheResponseSchema = z.object({
   uf: z.enum(Uf).nullable(),
   tamanhoLocal: z.string().nullable(),
   numeroPessoas: z.number().int().nullable(),
+  /** Lido pela tela 16a: o `PUT` substitui tudo, então a observação precisa voltar no corpo. */
+  observacoes: z.string().nullable(),
   fotos: z.array(FotoAnuncioResponseSchema),
   candidatos: z.number().int(),
   primeirosCandidatos: z.array(CandidatoResumoSchema),

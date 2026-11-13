@@ -22,6 +22,7 @@ interface AnuncioPublicadoViewProps {
   aoAtualizar: () => void;
   aoVoltar: () => void;
   aoVerCandidatos: () => void;
+  aoEditar: () => void;
   folhaCancelarVisivel: boolean;
   cancelando: boolean;
   erroCancelar: string | null;
@@ -91,6 +92,7 @@ export function AnuncioPublicadoView({
   aoAtualizar,
   aoVoltar,
   aoVerCandidatos,
+  aoEditar,
   folhaCancelarVisivel,
   cancelando,
   erroCancelar,
@@ -187,24 +189,14 @@ export function AnuncioPublicadoView({
       </ScrollView>
 
       <SafeAreaView edges={["bottom"]} className="bg-fundo">
-        {/* Editar (ETI-61/62) chega no card dele; combinado, não há o que editar. */}
-        {anuncio.aguardandoCandidatos || anuncio.podeCancelar ? (
+        {anuncio.podeAlterar ? (
           <View className="flex-row gap-3 border-t border-borda px-margem py-4">
-            {anuncio.aguardandoCandidatos ? (
-              <View className="flex-1">
-                <Botao
-                  rotulo="Editar"
-                  variante="neutro"
-                  disabled
-                  accessibilityHint="Disponível em breve"
-                />
-              </View>
-            ) : null}
-            {anuncio.podeCancelar ? (
-              <View className="flex-1">
-                <Botao rotulo="Cancelar" variante="destrutivo" onPress={aoAbrirCancelar} />
-              </View>
-            ) : null}
+            <View className="flex-1">
+              <Botao rotulo="Editar" variante="neutro" onPress={aoEditar} />
+            </View>
+            <View className="flex-1">
+              <Botao rotulo="Cancelar" variante="destrutivo" onPress={aoAbrirCancelar} />
+            </View>
           </View>
         ) : null}
       </SafeAreaView>

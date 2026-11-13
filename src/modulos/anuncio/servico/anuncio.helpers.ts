@@ -1,7 +1,11 @@
+import { isAxiosError } from "axios";
 import { format, isToday, isTomorrow } from "date-fns";
 
 import { paraFusoLocal } from "../../../comum/lib/datas";
+import { erroApi } from "../../../comum/lib/erros";
 import type { Estado } from "../../../comum/tipos/api";
+import { CodigoErro } from "../../../comum/tipos/erros";
+import { MENSAGEM_FOTO_INVALIDA } from "../../../comum/tipos/foto";
 import { StatusAnuncio } from "../tipos/anuncio.enums";
 
 // Os rótulos do protótipo ("Qua") não batem com o `EEE` do ptBR ("qua.").
@@ -73,4 +77,24 @@ export function momentoDoPasso(dataHoraUtc: string, agora: Date = new Date()): s
   const data = paraFusoLocal(dataHoraUtc);
   const ehHoje = format(data, "yyyy-MM-dd") === format(paraFusoLocal(agora), "yyyy-MM-dd");
   return `${ehHoje ? "hoje" : format(data, "dd/MM")} · ${format(data, "HH:mm")}`;
+}
+
+/** Motivo de uma foto do anúncio não ter subido, pro aviso depois de publicar ou salvar. */
+export function mensagemFalhaFoto(erro: unknown): string {
+  const resposta = erroApi(erro);
+  switch (resposta?.codigo) {
+    case CodigoErro.FOTO_INVALIDA:
+    case CodigoErro.ARQUIVO_GRANDE_DEMAIS:
+      return MENSAGEM_FOTO_INVALIDA;
+    default:
+      return resposta?.mensagem ?? "Não foi possível enviar a foto.";
+  }
+}
+
+/** O anúncio não existe ou é de outra pessoa (a API responde 404 nos dois casos). */
+export function anuncioNaoEncontrado(erro: unknown): boolean {
+  return (
+    erroApi(erro)?.codigo === CodigoErro.ANUNCIO_NAO_ENCONTRADO ||
+    (isAxiosError(erro) && erro.response?.status === 404)
+  );
 }
