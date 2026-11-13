@@ -1,4 +1,3 @@
-import { isAxiosError } from "axios";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 
@@ -6,7 +5,7 @@ import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { TipoToast, useToast } from "../../../comum/store/toast";
 import type { Estado } from "../../../comum/tipos/api";
 import { CodigoErro } from "../../../comum/tipos/erros";
-import { estadoDoAnuncio, quandoCurto } from "../servico/anuncio.helpers";
+import { anuncioNaoEncontrado, estadoDoAnuncio, quandoCurto } from "../servico/anuncio.helpers";
 import {
   useAnuncioQuery,
   useCancelarAnuncioMutation,
@@ -27,8 +26,8 @@ export interface AnuncioPublicadoExibido {
   temCandidatos: boolean;
   /** Candidaturas `ENVIADA`, pro texto da folha de cancelar (tela 17). */
   candidaturasPendentes: number;
-  /** Botão "Cancelar" (ETI-64): só em `PUBLICADO` sem candidatura escolhida. */
-  podeCancelar: boolean;
+  /** Botões "Editar" (ETI-62) e "Cancelar" (ETI-64): só em `PUBLICADO` sem candidatura escolhida. */
+  podeAlterar: boolean;
   avatares: { chave: string; nome: string; fotoUrl: string | null }[];
   descricao: string;
   fotos: { chave: string; uri: string }[];
@@ -65,9 +64,9 @@ function paraExibicao(
     resumoCandidatos: resumoCandidatos(anuncio.candidatos),
     temCandidatos: anuncio.candidatos > 0,
     candidaturasPendentes: anuncio.candidatos,
-    // Sem saber ainda se há escolhido, o botão fica escondido: a folha diz
+    // Sem saber ainda se há escolhido, os botões ficam escondidos: a folha diz
     // "ninguém foi escolhido" e não pode aparecer em anúncio combinado.
-    podeCancelar:
+    podeAlterar:
       anuncio.status === StatusAnuncio.PUBLICADO &&
       prestadorEscolhido === null &&
       !jaCombinado,
@@ -83,17 +82,10 @@ function paraExibicao(
   };
 }
 
-function naoEncontrado(erro: unknown): boolean {
-  return (
-    erroApi(erro)?.codigo === CodigoErro.ANUNCIO_NAO_ENCONTRADO ||
-    (isAxiosError(erro) && erro.response?.status === 404)
-  );
-}
-
 /**
  * Tela 16 "Anúncio publicado": o anúncio do Empregador logado, com a folha de
- * cancelar (tela 17, ETI-64). "Ver todos" abre as telas 18/19 (ETI-68);
- * "Editar" fica desligado até o card dele chegar (ETI-61/62).
+ * cancelar (tela 17, ETI-64). "Ver todos" abre as telas 18/19 (ETI-68) e
+ * "Editar", a tela 16a (ETI-62).
  */
 export function useAnuncioPublicadoViewModel(id: string) {
   const router = useRouter();
@@ -138,7 +130,7 @@ export function useAnuncioPublicadoViewModel(id: string) {
 
   let erro: string | null = null;
   if (query.isError && !query.data) {
-    erro = naoEncontrado(query.error)
+    erro = anuncioNaoEncontrado(query.error)
       ? "Este anúncio não existe ou não é seu."
       : mensagemErroApi(query.error, "Não foi possível carregar o anúncio.");
   }
@@ -174,6 +166,8 @@ export function useAnuncioPublicadoViewModel(id: string) {
     // Aberta direto pelo link (sem tela antes), volta pro Início.
     aoVoltar: () =>
       router.canGoBack() ? router.back() : router.replace("/(app)/(contratante)"),
+    // Tela 16a (ETI-62). Se ainda dá pra editar quem decide é a API, ao salvar.
+    aoEditar: () => router.push({ pathname: "/(app)/anuncio/[id]/editar", params: { id } }),
     // Telas 18/19 (ETI-68).
     aoVerCandidatos: () =>
       router.push({ pathname: "/(app)/anuncio/[id]/candidatos", params: { id } }),
