@@ -1,8 +1,8 @@
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AneisDecorativos } from "../../../comum/componentes/ui/AneisDecorativos";
 import { Botao } from "../../../comum/componentes/ui/Botao";
-import { AneisDecorativos } from "./componentes/AneisDecorativos";
 
 interface BoasVindasViewProps {
   aoCriarConta: () => void;

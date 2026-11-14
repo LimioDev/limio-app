@@ -12,6 +12,8 @@ export const CORES_ICONE = {
   alerta: "#7A4A11",
   estrela: "#C79A2E",
   gold: "#6B4A11",
+  /** Estrela ainda não marcada (mesmo tom de `borda-campo`). */
+  apagado: "#D3DBEC",
   branco: "#FFFFFF",
 } as const;
 

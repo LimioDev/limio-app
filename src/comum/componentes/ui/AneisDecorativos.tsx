@@ -2,7 +2,7 @@ import { View } from "react-native";
 
 const DIAMETROS = [260, 420, 580, 740];
 
-/** Anéis concêntricos de fundo, puramente decorativos (tela de boas-vindas). */
+/** Anéis concêntricos de fundo, puramente decorativos (Boas-vindas, topo da Avaliação). */
 export function AneisDecorativos() {
   return (
     <View
