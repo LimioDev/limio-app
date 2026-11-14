@@ -29,9 +29,12 @@ import {
   cancelarAnuncio,
   criarAnuncio,
   desistirCandidatura,
+  editarAnuncio,
+  escolherPrestador,
   iniciarServico,
   listarMinhasCandidaturas,
   listarMural,
+  removerFotoAnuncio,
 } from "./anuncio.api";
 
 export const chavesAnuncio = {
@@ -187,6 +190,24 @@ export function useAnexarFotoAnuncioMutation() {
   return useMutation({ mutationFn: anexarFotoAnuncio });
 }
 
+/**
+ * "Salvar alterações" da tela 16a (ETI-62). A resposta já é o anúncio novo:
+ * entra direto no cache da tela 16, que aparece atualizada ao voltar.
+ */
+export function useEditarAnuncioMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: editarAnuncio,
+    onSuccess: (anuncio) => {
+      queryClient.setQueryData(chavesAnuncio.detalhe(anuncio.id), anuncio);
+    },
+  });
+}
+
+export function useRemoverFotoAnuncioMutation() {
+  return useMutation({ mutationFn: removerFotoAnuncio });
+}
+
 /** Tela 18 "Candidatos". Candidatos chegam e desistem fora da tela. */
 export function useCandidatosQuery(anuncioId: string) {
   return useQuery({
@@ -238,6 +259,26 @@ export function useRecusarCandidatoMutation(anuncioId: string) {
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalhe(anuncioId) });
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
+    },
+  });
+}
+
+/**
+ * "Confirmar escolha" (tela 23, ETI-70). Com sucesso ou falha, o que a tela
+ * mostra pode ter mudado: na escolha, os candidatos encerram e o anúncio vira
+ * "Combinado" no detalhe e no painel; num `409`, a lista é a que vale
+ * (cota esgotada pede a lista recarregada, conflito quer dizer que outro
+ * aparelho escolheu).
+ */
+export function useEscolherPrestadorMutation(anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (candidaturaId: string) => escolherPrestador({ anuncioId, candidaturaId }),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.candidatos(anuncioId) });
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalhe(anuncioId) });
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
     },
   });
 }

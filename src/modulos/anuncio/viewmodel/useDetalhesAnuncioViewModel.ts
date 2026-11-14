@@ -13,7 +13,7 @@ import { chavesCategoria } from "../../../comum/servico/categoria.queries";
 import { useEnderecosQuery } from "../../../comum/servico/endereco.queries";
 import { TipoToast, useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
-import { MENSAGEM_FOTO_INVALIDA } from "../../../comum/tipos/foto";
+import { mensagemFalhaFoto } from "../servico/anuncio.helpers";
 import {
   chavesAnuncio,
   useAnexarFotoAnuncioMutation,
@@ -62,17 +62,6 @@ export interface OpcaoEndereco {
   /** "R. Cardeal Arcoverde, 1424 · Pinheiros". */
   linha: string;
   selecionado: boolean;
-}
-
-function mensagemFalhaFoto(erro: unknown): string {
-  const resposta = erroApi(erro);
-  switch (resposta?.codigo) {
-    case CodigoErro.FOTO_INVALIDA:
-    case CodigoErro.ARQUIVO_GRANDE_DEMAIS:
-      return MENSAGEM_FOTO_INVALIDA;
-    default:
-      return resposta?.mensagem ?? "Não foi possível enviar a foto.";
-  }
 }
 
 function paraRequest(

@@ -10,6 +10,8 @@ import {
   CandidatosResponseSchema,
   CandidaturaCriadaSchema,
   DetalheAnuncioMuralSchema,
+  EditarAnuncioRequestSchema,
+  EscolhaResponseSchema,
   FotoAnuncioResponseSchema,
   MinhasCandidaturasResponseSchema,
   MuralResponseSchema,
@@ -22,6 +24,8 @@ import {
   type CandidatosResponse,
   type CandidaturaCriada,
   type DetalheAnuncioMural,
+  type EditarAnuncioRequest,
+  type EscolhaResponse,
   type FiltrosMural,
   type FotoAnuncioResponse,
   type MinhasCandidaturasResponse,
@@ -103,6 +107,37 @@ export async function buscarAnuncio(id: string): Promise<AnuncioDetalheResponse>
 }
 
 /**
+ * Edita o anúncio do Empregador logado (ETI-61, `PUT /anuncios/{id}`) e
+ * devolve o anúncio atualizado, igual ao `GET`. Só vale em `PUBLICADO` sem
+ * candidatura escolhida; fora disso a API responde `409 ANUNCIO_ESTADO_INVALIDO`.
+ */
+export async function editarAnuncio({
+  id,
+  request,
+}: {
+  id: string;
+  request: EditarAnuncioRequest;
+}): Promise<AnuncioDetalheResponse> {
+  const corpo = EditarAnuncioRequestSchema.parse(request);
+  const { data } = await api.put(`/anuncios/${id}`, corpo);
+  return AnuncioDetalheResponseSchema.parse(data);
+}
+
+/**
+ * Remove uma foto do anúncio (ETI-61): `204` sem corpo. Foto que já saiu
+ * responde `404 ENTIDADE_NAO_ENCONTRADA`; anúncio já combinado, `409`.
+ */
+export async function removerFotoAnuncio({
+  anuncioId,
+  fotoId,
+}: {
+  anuncioId: string;
+  fotoId: string;
+}): Promise<void> {
+  await api.delete(`/anuncios/${anuncioId}/fotos/${fotoId}`);
+}
+
+/**
  * Cancela o anúncio do Empregador logado (ETI-63): sai do mural como
  * `ENCERRADO` e as candidaturas `ENVIADA` são encerradas. Com candidatura
  * escolhida ou fora de `PUBLICADO`, a API responde `409 ANUNCIO_ESTADO_INVALIDO`.
@@ -143,6 +178,26 @@ export async function recusarCandidato({
     `/anuncios/${anuncioId}/candidaturas/${candidaturaId}/recusar`,
   );
   return CandidatosResponseSchema.parse(data);
+}
+
+/**
+ * "Escolher prestador" (ETI-69, `CandidatoController`): numa só transação a
+ * candidatura vira `ESCOLHIDA`, as outras `ENVIADA` encerram e a cota do
+ * Prestador FREE é consumida. Falhas são `409`: `COTA_ESGOTADA_CANDIDATO`
+ * (nada muda), `ESCOLHA_CONFLITO`, `ANUNCIO_ESTADO_INVALIDO` e
+ * `CANDIDATURA_ESTADO_INVALIDO`.
+ */
+export async function escolherPrestador({
+  anuncioId,
+  candidaturaId,
+}: {
+  anuncioId: string;
+  candidaturaId: string;
+}): Promise<EscolhaResponse> {
+  const { data } = await api.post(
+    `/anuncios/${anuncioId}/candidaturas/${candidaturaId}/escolher`,
+  );
+  return EscolhaResponseSchema.parse(data);
 }
 
 /**
