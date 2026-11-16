@@ -289,6 +289,8 @@ export const DetalheAnuncioMuralSchema = z.object({
   uf: z.enum(Uf).nullable(),
   distanciaKm: z.number(),
   empregador: z.object({
+    // Dono do anúncio: abre o perfil público (tela 20b, ETI-106), limio-api#44.
+    usuarioId: z.string(),
     nomeExibicao: z.string(),
     fotoUrl: z.string().nullable(),
     mediaAvaliacoes: z.number().nullable(),
@@ -320,10 +322,12 @@ export type CandidaturaCriada = z.infer<typeof CandidaturaCriadaSchema>;
  * `nome` vem abreviado ("Rafael S."); `fotoUrl` é link temporário, válido até
  * `fotoExpiraEm`. `mediaAvaliacoes` é `null` sem avaliação (nunca 0,0) e
  * `chatId` é `null` enquanto o chat da candidatura não existe. Nunca traz
- * telefone, e-mail nem endereço do Prestador.
+ * telefone, e-mail nem endereço do Prestador. `usuarioId` (id do usuário do
+ * Prestador, limio-api#44) abre o perfil público (tela 20a, ETI-106).
  */
 export const CandidatoSchema = z.object({
   candidaturaId: z.string(),
+  usuarioId: z.string(),
   nome: z.string(),
   fotoUrl: z.string().nullable(),
   fotoExpiraEm: z.string().nullable(),

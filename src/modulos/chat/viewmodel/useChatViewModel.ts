@@ -8,6 +8,7 @@ import { useSessao } from "../../../comum/store/sessao";
 import { useToast } from "../../../comum/store/toast";
 import { StatusAplicacao } from "../../../comum/tipos/aplicacao";
 import { CodigoErro } from "../../../comum/tipos/erros";
+import { PapelUsuario } from "../../../comum/tipos/papel";
 import { marcarEntregues } from "../servico/chat.api";
 import {
   avisoSomenteLeitura,
@@ -346,13 +347,25 @@ export function useChatViewModel(candidaturaId: string, anuncioId?: string) {
       }
     },
 
-    // Menu "⋮" (tela 21b): perfil (ETI-106) e denúncia (ETI-115) ainda não existem.
+    // Menu "⋮" (tela 21b): o perfil abre a tela 20b (ETI-106); a denúncia (ETI-115) ainda não existe.
     menuAberto,
     aoAbrirMenu: () => setMenuAberto(true),
     aoFecharMenu: () => setMenuAberto(false),
     aoVerPerfil: () => {
       setMenuAberto(false);
-      mostrarToast(EM_BREVE);
+      if (!chat) {
+        return;
+      }
+      router.push({
+        pathname: "/(app)/perfil/[usuarioId]",
+        params: {
+          usuarioId: chat.outraParte.usuarioId,
+          papel:
+            chat.outraParte.papel === PapelNoChat.CANDIDATO
+              ? PapelUsuario.PRESTADOR
+              : PapelUsuario.EMPREGADOR,
+        },
+      });
     },
     aoDenunciar: () => {
       setMenuAberto(false);

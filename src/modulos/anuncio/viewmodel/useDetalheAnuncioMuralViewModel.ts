@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { TipoToast, useToast } from "../../../comum/store/toast";
+import { PapelUsuario } from "../../../comum/tipos/papel";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import { rotuloMunicipio } from "../../../comum/tipos/localidade";
 import {
@@ -199,6 +200,8 @@ export function useDetalheAnuncioMuralViewModel(id: string) {
     });
   }
 
+  const empregadorId = query.data?.empregador.usuarioId;
+
   const folha: FolhaCandidatarExibida = {
     aberta: folhaAberta,
     empregador: query.data ? primeiroNome(query.data.empregador.nomeExibicao) : "",
@@ -229,7 +232,13 @@ export function useDetalheAnuncioMuralViewModel(id: string) {
       fecharFolha();
       router.push("/(app)/conta/dados-contato");
     },
-    // "Ver perfil" chega com o ETI-106; até lá, o link fica escondido.
-    aoVerPerfilEmpregador: undefined as (() => void) | undefined,
+    // Tela 20b: o perfil de quem publicou. Escondido só enquanto o detalhe carrega.
+    aoVerPerfilEmpregador: empregadorId
+      ? () =>
+          router.push({
+            pathname: "/(app)/perfil/[usuarioId]",
+            params: { usuarioId: empregadorId, papel: PapelUsuario.EMPREGADOR },
+          })
+      : undefined,
   };
 }

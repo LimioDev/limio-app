@@ -1,12 +1,15 @@
 import { useLocalSearchParams } from "expo-router";
-import { Text, View } from "react-native";
 
-export default function Perfil() {
-  const { usuarioId } = useLocalSearchParams<{ usuarioId: string }>();
+import { usePerfilPublicoViewModel } from "../../../src/modulos/perfil/viewmodel/usePerfilPublicoViewModel";
+import { PerfilPublicoView } from "../../../src/modulos/perfil/view/PerfilPublicoView";
 
-  return (
-    <View>
-      <Text>perfil/{usuarioId}</Text>
-    </View>
-  );
+export default function PerfilPublico() {
+  const { usuarioId, papel, candidaturaId, anuncioId } = useLocalSearchParams<{
+    usuarioId: string;
+    papel?: string;
+    candidaturaId?: string;
+    anuncioId?: string;
+  }>();
+  const vm = usePerfilPublicoViewModel({ usuarioId, papel, candidaturaId, anuncioId });
+  return <PerfilPublicoView {...vm} />;
 }
