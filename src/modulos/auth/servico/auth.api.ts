@@ -7,6 +7,7 @@ import {
   renovarSessao,
 } from "../../../comum/lib/api";
 import { erroApi } from "../../../comum/lib/erros";
+import { removerEsteAparelho } from "../../../comum/servico/aparelhoPush";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import { TokensSessaoSchema, type TokensSessao } from "../../../comum/tipos/sessao";
 import {
@@ -44,9 +45,14 @@ export async function autenticar(
   return TokensSessaoSchema.parse(data);
 }
 
-/** Revoga só a sessão deste aparelho. Idempotente no backend (204 sempre). */
+/**
+ * Revoga só a sessão deste aparelho. Idempotente no backend (204 sempre).
+ * Antes, tira o aparelho do push (ETI-113): depois do logout não há mais token
+ * de acesso pra isso.
+ */
 export async function encerrarSessao(): Promise<void> {
   await garantirTokenAcessoValido();
+  await removerEsteAparelho();
   const refreshToken = await obterRefreshToken();
   if (!refreshToken) {
     return;

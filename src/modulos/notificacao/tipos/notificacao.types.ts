@@ -34,3 +34,18 @@ export const NaoLidasResponseSchema = z.object({
 });
 
 export type NaoLidasResponse = z.infer<typeof NaoLidasResponseSchema>;
+
+/**
+ * `data` do push (ETI-112): o que o app precisa pra abrir a mesma tela que o
+ * item da tela 43 abriria. `anuncioId` só vem quando há anúncio ligado.
+ */
+export const DadosPushSchema = z.object({
+  notificacaoId: z.string(),
+  tipo: z.enum(TipoNotificacao).nullable().catch(null),
+  anuncioId: z
+    .string()
+    .nullish()
+    .transform((valor) => valor ?? null),
+});
+
+export type DadosPush = z.infer<typeof DadosPushSchema>;
