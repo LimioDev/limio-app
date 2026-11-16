@@ -1,4 +1,4 @@
-import { Bell, LayoutGrid, Plus, User, type LucideIcon } from "lucide-react-native";
+import { LayoutGrid, Plus, User, type LucideIcon } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,7 +19,8 @@ interface PainelEmpregadorViewProps {
   erro: string | null;
   atualizando: boolean;
   aoAtualizar: () => void;
-  aoAbrirNotificacoes: () => void;
+  /** Sino com o total de não lidas: vem pronto da rota (módulo `notificacao`). */
+  sino: ReactNode;
   aoPublicar: () => void;
   aoVerHistorico: () => void;
   aoAbrirAnuncio: (id: string) => void;
@@ -52,7 +53,7 @@ export function PainelEmpregadorView({
   erro,
   atualizando,
   aoAtualizar,
-  aoAbrirNotificacoes,
+  sino,
   aoPublicar,
   aoVerHistorico,
   aoAbrirAnuncio,
@@ -101,15 +102,7 @@ export function PainelEmpregadorView({
             {cabecalho}
             <SeletorPapelAtivo />
           </View>
-          <Pressable
-            onPress={aoAbrirNotificacoes}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Notificações"
-            className="h-toque w-toque items-center justify-center rounded-campo border border-borda bg-superficie active:opacity-70"
-          >
-            <Icone icone={Bell} tamanho={20} cor="tinta" />
-          </Pressable>
+          {sino}
         </View>
 
         <Pressable

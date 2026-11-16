@@ -1,5 +1,4 @@
-import { differenceInCalendarDays, format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { format } from "date-fns";
 
 import { paraFusoLocal } from "../../../comum/lib/datas";
 import { MotivoSomenteLeitura, PapelNoChat } from "../tipos/chat.enums";
@@ -14,26 +13,6 @@ export function primeiroNome(nome: string): string {
 /** "14:02", no fuso do sistema. */
 export function horaMensagem(dataUtc: string): string {
   return format(paraFusoLocal(dataUtc), "HH:mm");
-}
-
-/** Chave do dia da mensagem no fuso do sistema, para agrupar os balões. */
-export function chaveDia(dataUtc: string): string {
-  return format(paraFusoLocal(dataUtc), "yyyy-MM-dd");
-}
-
-/** Separador de dia: "Hoje", "Ontem", "2 de novembro" ou "2 de novembro de 2025" em outro ano. */
-export function rotuloDia(dataUtc: string, agora: Date = new Date()): string {
-  const dia = paraFusoLocal(dataUtc);
-  const hoje = paraFusoLocal(agora);
-  const diferenca = differenceInCalendarDays(hoje, dia);
-  if (diferenca === 0) {
-    return "Hoje";
-  }
-  if (diferenca === 1) {
-    return "Ontem";
-  }
-  const padrao = dia.getFullYear() === hoje.getFullYear() ? "d 'de' MMMM" : "d 'de' MMMM 'de' yyyy";
-  return format(dia, padrao, { locale: ptBR });
 }
 
 /**
