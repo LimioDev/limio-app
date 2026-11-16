@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { CEP_REGEX } from "../../../comum/tipos/endereco";
 import { somenteDigitos } from "../../../comum/lib/telefone";
 import { PapelUsuario } from "../../../comum/tipos/papel";
 import { cpfValido, dataBrValida, maiorDeIdade } from "../servico/auth.helpers";
@@ -61,6 +62,15 @@ export const RecuperarSenhaRequestSchema = z.object({
 });
 
 export type RecuperarSenhaRequest = z.infer<typeof RecuperarSenhaRequestSchema>;
+
+/** Espelha `ReenviarConfirmacaoEmailRequest` — corpo de `POST /auth/reenviar-confirmacao-email`. */
+export const ReenviarConfirmacaoEmailRequestSchema = z.object({
+  email: z.email().max(255),
+});
+
+export type ReenviarConfirmacaoEmailRequest = z.infer<
+  typeof ReenviarConfirmacaoEmailRequestSchema
+>;
 
 /** Mesma regra do `@Pattern` dos records de senha no backend (72 é o limite do BCrypt). */
 export const SENHA_TAMANHO_MINIMO = 8;
@@ -147,6 +157,18 @@ export const LoginFormSchema = z.object({
 
 export type LoginForm = z.infer<typeof LoginFormSchema>;
 
+/**
+ * CEP é só atalho de preenchimento (busca ViaCEP preenche "Cidade e UF") — opcional,
+ * e nunca vai no payload de `POST /auth/cadastro` (`CadastroRequestSchema` não tem o campo).
+ */
+const CepOpcionalSchema = z
+  .string()
+  .optional()
+  .transform((v) => (v ? v.replace(/\D/g, "") : v))
+  .refine((v) => v === undefined || v === "" || CEP_REGEX.test(v), {
+    message: "CEP inválido — use 00000-000",
+  });
+
 /** Valores do formulário do passo 1 — texto mascarado como o usuário digita. */
 export const DadosPessoaisFormSchema = z.object({
   nomeCompleto: z.string().trim().min(1, "Informe seu nome completo"),
@@ -158,6 +180,7 @@ export const DadosPessoaisFormSchema = z.object({
     .string()
     .refine((v) => dataBrValida(v), "Data de nascimento inválida")
     .refine((v) => maiorDeIdade(v), "Você precisa ter 18 anos ou mais"),
+  cep: CepOpcionalSchema,
   cidadeUf: z.string().trim().min(1, "Informe cidade e UF"),
   email: z.email("E-mail inválido"),
   celular: z
@@ -169,4 +192,7 @@ export const DadosPessoaisFormSchema = z.object({
   senha: z.string().min(8, "Senha deve ter ao menos 8 caracteres"),
 });
 
-export type DadosPessoaisForm = z.infer<typeof DadosPessoaisFormSchema>;
+/** Valores digitados (antes do `transform` do CEP). */
+export type DadosPessoaisFormEntrada = z.input<typeof DadosPessoaisFormSchema>;
+/** Valores já validados. */
+export type DadosPessoaisForm = z.output<typeof DadosPessoaisFormSchema>;

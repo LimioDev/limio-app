@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
+import { useBuscaCep } from "../../../comum/hooks/useBuscaCep";
 import {
   CAMPO_ENDERECO_DA_API,
   CAMPOS_ENDERECO_VAZIOS,
@@ -56,9 +57,25 @@ export function useEnderecoAvulsoViewModel() {
     defaultValues: valoresIniciais(useRascunhoAnuncio.getState().rascunho.avulso),
   });
 
-  const [cidade, uf, salvar] = useWatch({
+  const [cidade, uf, cep, salvar] = useWatch({
     control: form.control,
-    name: ["cidade", "uf", "salvar"],
+    name: ["cidade", "uf", "cep", "salvar"],
+  });
+
+  const { carregando: buscandoCep, erro: erroCep } = useBuscaCep(cep ?? "", (endereco) => {
+    // CEP que já veio do rascunho (avulso reaberto pra editar) não conta como o
+    // usuário completando o campo — só aplica se ele de fato editou o CEP.
+    if (!form.getFieldState("cep").isDirty) {
+      return;
+    }
+    const opcoes = { shouldDirty: true, shouldValidate: true } as const;
+    if (endereco.rua !== null) {
+      form.setValue("rua", endereco.rua, opcoes);
+    }
+    if (endereco.bairro !== null) {
+      form.setValue("bairro", endereco.bairro, opcoes);
+    }
+    definirCidade({ nome: endereco.cidade, uf: endereco.uf });
   });
 
   // Desligar "salvar" torna o apelido opcional: some o erro de um envio anterior.
@@ -124,6 +141,8 @@ export function useEnderecoAvulsoViewModel() {
   return {
     control: form.control,
     erros: form.formState.errors,
+    buscandoCep,
+    erroCep,
     cidadeUf: cidade && uf ? rotuloMunicipio(cidade, uf) : null,
     aoEscolherCidade: () => {
       definirCidade(cidade && uf ? { nome: cidade, uf } : null);

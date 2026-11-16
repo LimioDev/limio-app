@@ -163,8 +163,9 @@ export function DadosContatoView({
 
             <View className="rounded-card bg-marca-50 p-4">
               <Text className="text-rotulo text-tinta-suave">
-                Trocar o e-mail ou o telefone pede uma nova confirmação antes de
-                você publicar um anúncio ou se candidatar.
+                Trocar o e-mail pede uma nova confirmação antes de você
+                publicar um anúncio ou se candidatar. O telefone não precisa
+                de confirmação.
               </Text>
             </View>
 

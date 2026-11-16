@@ -255,7 +255,7 @@ export function DetalhesAnuncioView({
                 <Text className="flex-1 text-rotulo text-perigo">{avisoContatos}</Text>
               </View>
               <Botao
-                rotulo="Confirmar telefone e e-mail"
+                rotulo="Confirmar e-mail"
                 variante="destrutivo"
                 tamanho="padrao"
                 onPress={aoConfirmarContatos}

@@ -4,7 +4,7 @@ import { ChevronLeft } from "lucide-react-native";
 import { Icone } from "../../../../comum/componentes/ui/Icone";
 interface PassoCadastroProps {
   titulo?: string;
-  passoAtual: 1 | 2 | 3;
+  passoAtual: 1 | 2;
   totalPassos?: number;
   aoVoltar: () => void;
 }
@@ -12,7 +12,7 @@ interface PassoCadastroProps {
 export function PassoCadastro({
   titulo,
   passoAtual,
-  totalPassos = 3,
+  totalPassos = 2,
   aoVoltar,
 }: PassoCadastroProps) {
   return (
