@@ -15,6 +15,12 @@ export default function AppLayout() {
         <Stack.Screen name="(contratante)" />
         {/* Criar e acompanhar o próprio anúncio (telas 14 a 16). */}
         <Stack.Screen name="anuncio" />
+        {/* Telas 23/24: folha por cima da tela 18 ou do chat, que continuam
+            aparecendo atrás. Fica neste nível pra abrir de qualquer uma das duas. */}
+        <Stack.Screen
+          name="escolher-prestador"
+          options={{ presentation: "transparentModal", animation: "fade" }}
+        />
       </Stack.Protected>
       <Stack.Protected guard={papelAtivo === PapelUsuario.PRESTADOR}>
         <Stack.Screen name="(prestador)" />

@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { TipoToast, useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
-import { dataComProximidade } from "../servico/anuncio.helpers";
+import { dataComProximidade, primeiroNome } from "../servico/anuncio.helpers";
 import {
   useAnuncioQuery,
   useCandidatosQuery,
@@ -42,10 +42,6 @@ export interface FolhaRecusarExibida {
   enviando: boolean;
 }
 
-function primeiroNome(nome: string): string {
-  return nome.trim().split(/\s+/)[0] ?? nome;
-}
-
 function candidatoParaExibicao(candidato: Candidato): CandidatoExibido {
   return {
     candidaturaId: candidato.candidaturaId,
@@ -64,8 +60,9 @@ function candidatoParaExibicao(candidato: Candidato): CandidatoExibido {
 /**
  * Telas 18 "Candidatos" e 19 "Candidatos vazio", abertas pelo "Ver todos" da
  * tela 16. O título e a categoria vêm do detalhe do anúncio, já em cache.
- * "Escolher" (ETI-69/70), o perfil do candidato (ETI-106) e as dicas que
- * levam a "Editar anúncio" (ETI-61/62) ficam desligados até os cards deles.
+ * "Escolher" abre a tela 23 (ETI-70). O perfil do candidato (ETI-106) e as
+ * dicas que levam a "Editar anúncio" (ETI-61/62) ficam desligados até os
+ * cards deles.
  */
 export function useCandidatosViewModel(anuncioId: string) {
   const router = useRouter();
@@ -180,10 +177,15 @@ export function useCandidatosViewModel(anuncioId: string) {
       }
     },
     // O chat da tela 21 é aberto pela candidatura, como no lado do Prestador.
+    // O anúncio vai junto: o "Escolher" do chat abre a tela 23 com ele.
     aoConversar: (candidaturaId: string) =>
-      router.push({ pathname: "/(app)/chat/[aplicacaoId]", params: { aplicacaoId: candidaturaId } }),
-    // Confirmação da tela 23 chega com o ETI-69/70.
-    aoEscolher: undefined as ((candidaturaId: string) => void) | undefined,
+      router.push({
+        pathname: "/(app)/chat/[aplicacaoId]",
+        params: { aplicacaoId: candidaturaId, anuncioId },
+      }),
+    // Tela 23 "Escolher (nome)?" (ETI-70), por cima desta tela.
+    aoEscolher: (candidaturaId: string) =>
+      router.push({ pathname: "/(app)/escolher-prestador", params: { anuncioId, candidaturaId } }),
     // Perfil público (tela 20a) chega com o ETI-106; a API ainda não manda o id do Prestador.
     aoVerPerfil: undefined as ((candidaturaId: string) => void) | undefined,
     // "Editar anúncio" (tela 16a) chega com o ETI-61/62.

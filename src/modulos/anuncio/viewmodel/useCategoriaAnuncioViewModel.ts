@@ -4,7 +4,16 @@ import { useState } from "react";
 import { normalizarBusca } from "../../../comum/lib/busca";
 import { mensagemErroApi } from "../../../comum/lib/erros";
 import { useCategoriasQuery } from "../../../comum/servico/categoria.queries";
+import { useEdicaoAnuncio } from "../store/edicaoAnuncio.store";
 import { useRascunhoAnuncio } from "../store/rascunhoAnuncio.store";
+
+/** De onde a tela 14a foi aberta: o anúncio novo (tela 14) ou a edição (tela 16a). */
+export const FluxoCategoria = {
+  CRIACAO: "CRIACAO",
+  EDICAO: "EDICAO",
+} as const;
+
+export type FluxoCategoria = (typeof FluxoCategoria)[keyof typeof FluxoCategoria];
 
 export interface ItemCategoria {
   id: string;
@@ -19,14 +28,17 @@ export interface GrupoCategorias {
 
 /**
  * Tela 14a "Categoria": uma só por anúncio. A escolha fica local até
- * "Confirmar categoria", que grava no rascunho e volta pra tela 14.
+ * "Confirmar categoria", que grava no rascunho (ou na edição) e volta.
  */
-export function useCategoriaAnuncioViewModel() {
+export function useCategoriaAnuncioViewModel(fluxo: FluxoCategoria = FluxoCategoria.CRIACAO) {
   const router = useRouter();
   const query = useCategoriasQuery();
-  const alterar = useRascunhoAnuncio((estado) => estado.alterar);
-  const [selecionada, setSelecionada] = useState<string | null>(
-    () => useRascunhoAnuncio.getState().rascunho.categoria?.id ?? null,
+  const alterarRascunho = useRascunhoAnuncio((estado) => estado.alterar);
+  const alterarEdicao = useEdicaoAnuncio((estado) => estado.alterar);
+  const [selecionada, setSelecionada] = useState<string | null>(() =>
+    fluxo === FluxoCategoria.EDICAO
+      ? (useEdicaoAnuncio.getState().formulario.categoria?.id ?? null)
+      : (useRascunhoAnuncio.getState().rascunho.categoria?.id ?? null),
   );
   const [busca, setBusca] = useState("");
 
@@ -68,7 +80,11 @@ export function useCategoriaAnuncioViewModel() {
     podeConfirmar: escolhida !== null,
     aoConfirmar: () => {
       if (escolhida) {
-        alterar("categoria", escolhida);
+        if (fluxo === FluxoCategoria.EDICAO) {
+          alterarEdicao("categoria", escolhida);
+        } else {
+          alterarRascunho("categoria", escolhida);
+        }
         router.back();
       }
     },

@@ -12,7 +12,7 @@ interface CartaoCandidatoProps {
   travado: boolean;
   aoRecusar: () => void;
   aoConversar: () => void;
-  /** Sem função, "Escolher" fica desligado (ETI-69/70). */
+  /** Abre a tela 23 (ETI-70); sem função, "Escolher" fica desligado. */
   aoEscolher?: () => void;
   /** Sem função, nome e foto não abrem o perfil (ETI-106). */
   aoVerPerfil?: () => void;
