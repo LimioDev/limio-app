@@ -7,10 +7,12 @@ import { formatarTelefone, telefoneNacional } from "../../../comum/lib/telefone"
 import type { Estado } from "../../../comum/tipos/api";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import {
+  avisoPropostaPendente,
   dataEHora,
   emQuantosDias,
   estadoDoAnuncio,
   horaPretendida,
+  mensagensNovas,
   primeiroNome,
 } from "../servico/anuncio.helpers";
 import { useServicoQuery } from "../servico/anuncio.queries";
@@ -84,13 +86,6 @@ const PRESTADOR_SEM_CONTA = "Conta encerrada";
 
 /** Ordem do andamento; cada status marca até onde o serviço já chegou. */
 const ETAPAS = ["Combinado", "Iniciado", "Check-out", "Validado"] as const;
-
-function rotuloMensagens(naoLidas: number): string {
-  if (naoLidas === 0) {
-    return "Nenhuma mensagem nova";
-  }
-  return naoLidas === 1 ? "1 mensagem nova" : `${naoLidas} mensagens novas`;
-}
 
 /**
  * Índice da última etapa feita. Iniciar é opcional (ETI-88): um check-out
@@ -205,13 +200,13 @@ function servicoParaExibicao(
       titulo: `Conversar com ${nome}`,
       detalhe: encerrado
         ? "Conversa em somente leitura"
-        : rotuloMensagens(servico.mensagensNaoLidas),
+        : mensagensNovas(servico.mensagensNaoLidas),
     },
     encerrado,
     etapas: etapasDoServico(servico),
     propostaPendente:
       servico.propostaPendente && !encerrado
-        ? `Há uma proposta de reagendamento para ${dataEHora(servico.propostaPendente.dataProposta)}.`
+        ? avisoPropostaPendente(servico.propostaPendente.dataProposta)
         : null,
     rodape: rodape(servico, nome),
     acoes: acoesDoEmpregador(servico, agora),

@@ -100,6 +100,22 @@ export function dataEHora(dataHoraUtc: string): string {
   return format(paraFusoLocal(dataHoraUtc), "dd/MM, HH:mm");
 }
 
+/** "2 mensagens novas", "1 mensagem nova" ou "Nenhuma mensagem nova" — card "Conversar com". */
+export function mensagensNovas(naoLidas: number): string {
+  if (naoLidas === 0) {
+    return "Nenhuma mensagem nova";
+  }
+  return naoLidas === 1 ? "1 mensagem nova" : `${naoLidas} mensagens novas`;
+}
+
+/**
+ * Aviso de proposta de reagendamento pendente (telas 25, 36 e 37). O atalho
+ * pra responder entra com o ETI-100.
+ */
+export function avisoPropostaPendente(dataPropostaUtc: string): string {
+  return `Há uma proposta de reagendamento para ${dataEHora(dataPropostaUtc)}.`;
+}
+
 /** Motivo de uma foto do anúncio não ter subido, pro aviso depois de publicar ou salvar. */
 export function mensagemFalhaFoto(erro: unknown): string {
   const resposta = erroApi(erro);

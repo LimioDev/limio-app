@@ -19,6 +19,7 @@ import type {
   PassoServicoExibido,
   ServicoExibido,
 } from "../viewmodel/useSeuServicoViewModel";
+import { CartaoConversa } from "./componentes/CartaoConversa";
 import { FolhaIniciarServico } from "./componentes/FolhaIniciarServico";
 
 interface SeuServicoViewProps {
@@ -33,6 +34,8 @@ interface SeuServicoViewProps {
   /** Sem telefone (conta encerrada), os atalhos não aparecem. */
   aoLigar?: () => void;
   aoAbrirWhatsApp?: () => void;
+  /** Sem função, o card "Conversar com" aparece sem abrir o chat. */
+  aoConversar?: () => void;
   folha: FolhaIniciarExibida;
   aoIniciar: () => void;
   aoConfirmarInicio: () => void;
@@ -103,6 +106,7 @@ export function SeuServicoView({
   aoVoltar,
   aoLigar,
   aoAbrirWhatsApp,
+  aoConversar,
   folha,
   aoIniciar,
   aoConfirmarInicio,
@@ -193,6 +197,14 @@ export function SeuServicoView({
             </View>
           ) : null}
         </View>
+
+        <CartaoConversa
+          titulo={servico.conversa.titulo}
+          detalhe={servico.conversa.detalhe}
+          aoConversar={aoConversar}
+        />
+
+        {servico.propostaPendente ? <Aviso titulo={servico.propostaPendente} /> : null}
 
         {servico.andamento.length > 0 ? (
           <View className="gap-3">
