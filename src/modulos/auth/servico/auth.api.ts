@@ -13,6 +13,7 @@ import {
   AlterarSenhaRequestSchema,
   CadastroRequestSchema,
   LoginRequestSchema,
+  ReenviarConfirmacaoEmailRequestSchema,
   RecuperarSenhaRequestSchema,
   RedefinirSenhaRequestSchema,
   PapelAtivoResponseSchema,
@@ -75,6 +76,16 @@ export async function revogarSessaoNaoSalva(tokens: TokensSessao): Promise<void>
 export async function solicitarRecuperacaoSenha(email: string): Promise<void> {
   const corpo = RecuperarSenhaRequestSchema.parse({ email });
   await api.post("/auth/recuperar-senha", corpo);
+}
+
+/**
+ * Reenvia o link de confirmação de e-mail. O backend responde 200 exista o
+ * e-mail ou não e mesmo com o limite de pedidos excedido (anti-enumeração),
+ * então não há nada a devolver — o app mostra sempre a mesma mensagem.
+ */
+export async function reenviarConfirmacaoEmail(email: string): Promise<void> {
+  const corpo = ReenviarConfirmacaoEmailRequestSchema.parse({ email });
+  await api.post("/auth/reenviar-confirmacao-email", corpo);
 }
 
 /**

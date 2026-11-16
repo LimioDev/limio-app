@@ -1,6 +1,6 @@
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CircleCheck, Mail, ShieldCheck } from "lucide-react-native";
+import { Mail, ShieldCheck } from "lucide-react-native";
 
 import { Icone } from "../../../comum/componentes/ui/Icone";
 import { Botao } from "../../../comum/componentes/ui/Botao";
@@ -11,6 +11,7 @@ interface ConfirmarEmailViewProps {
   email: string | null;
   rotuloPapelAtivo: string;
   linkReenviado: boolean;
+  reenviando: boolean;
   aoReenviarLink: () => void;
   aoUsarOutroEmail: () => void;
   aoIrParaApp: () => void;
@@ -21,6 +22,7 @@ export function ConfirmarEmailView({
   email,
   rotuloPapelAtivo,
   linkReenviado,
+  reenviando,
   aoReenviarLink,
   aoUsarOutroEmail,
   aoIrParaApp,
@@ -29,7 +31,7 @@ export function ConfirmarEmailView({
   return (
     <SafeAreaView className="flex-1 bg-fundo" edges={["top", "bottom"]}>
       <View className="flex-1 gap-5 px-margem pt-2">
-        <PassoCadastro passoAtual={3} aoVoltar={aoVoltar} />
+        <PassoCadastro passoAtual={2} aoVoltar={aoVoltar} />
 
         <View className="h-12 w-12 items-center justify-center rounded-card bg-marca-50">
           <Icone icone={Mail} tamanho={24} cor="marca" />
@@ -47,12 +49,8 @@ export function ConfirmarEmailView({
         <AvisoInfo icone={ShieldCheck}>
           Sua conta já existe{"\n"}Você pode entrar agora. Publicar um anúncio
           ou se candidatar a um serviço só libera depois que o e-mail estiver
-          confirmado.
-        </AvisoInfo>
-
-        <AvisoInfo icone={CircleCheck}>
-          O telefone já está verificado. Seu papel inicial é{" "}
-          {rotuloPapelAtivo} — dá pra trocar a qualquer momento.
+          confirmado. Seu papel inicial é {rotuloPapelAtivo} — dá pra trocar a
+          qualquer momento.
         </AvisoInfo>
 
         {linkReenviado ? (
@@ -64,9 +62,10 @@ export function ConfirmarEmailView({
 
       <View className="gap-3 border-t border-borda px-margem py-4">
         <Botao
-          rotulo="Reenviar link"
+          rotulo={reenviando ? "Reenviando..." : "Reenviar link"}
           variante="contorno"
           onPress={aoReenviarLink}
+          carregando={reenviando}
         />
         <Botao rotulo="Ir para o app" onPress={aoIrParaApp} />
         <Text

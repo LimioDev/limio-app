@@ -18,7 +18,6 @@ export const PerfilEmpregadorResponseSchema = z.object({
   email: z.string(),
   telefone: z.string().nullable(),
   emailConfirmadoEm: z.string().nullable(),
-  telefoneConfirmadoEm: z.string().nullable(),
 });
 
 export type PerfilEmpregadorResponse = z.infer<
@@ -30,7 +29,6 @@ export const ContatoResponseSchema = z.object({
   email: z.string(),
   telefone: z.string().nullable(),
   emailConfirmadoEm: z.string().nullable(),
-  telefoneConfirmadoEm: z.string().nullable(),
 });
 
 export type ContatoResponse = z.infer<typeof ContatoResponseSchema>;

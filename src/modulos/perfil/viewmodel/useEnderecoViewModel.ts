@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
+import { useBuscaCep } from "../../../comum/hooks/useBuscaCep";
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import {
   useCriarEnderecoMutation,
@@ -55,7 +56,23 @@ export function useEnderecoViewModel(id?: string) {
     resetOptions: { keepDirtyValues: true },
   });
 
-  const [cidade, uf] = useWatch({ control: form.control, name: ["cidade", "uf"] });
+  const [cidade, uf, cep] = useWatch({ control: form.control, name: ["cidade", "uf", "cep"] });
+
+  const { carregando: buscandoCep, erro: erroCep } = useBuscaCep(cep ?? "", (endereco) => {
+    // CEP carregado da API (hidratação assíncrona de `values`) não conta como o
+    // usuário completando o campo — só aplica se ele de fato editou o CEP.
+    if (!form.getFieldState("cep").isDirty) {
+      return;
+    }
+    const opcoes = { shouldDirty: true, shouldValidate: true } as const;
+    if (endereco.rua !== null) {
+      form.setValue("rua", endereco.rua, opcoes);
+    }
+    if (endereco.bairro !== null) {
+      form.setValue("bairro", endereco.bairro, opcoes);
+    }
+    definirCidade({ nome: endereco.cidade, uf: endereco.uf });
+  });
 
   // A cidade escolhida não pode vazar pra próxima vez que a tela abrir.
   useEffect(() => () => definirCidade(null), [definirCidade]);
@@ -123,6 +140,8 @@ export function useEnderecoViewModel(id?: string) {
     },
     control: form.control,
     erros: form.formState.errors,
+    buscandoCep,
+    erroCep,
     cidadeUf: cidade && uf ? `${cidade} · ${uf}` : null,
     aoEscolherCidade: () => {
       definirCidade(cidade && uf ? { nome: cidade, uf } : null);
