@@ -5,10 +5,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
 import { Icone } from "../../../comum/componentes/ui/Icone";
-import type {
-  FolhaRemoverFotoExibida,
-  FotoCheckoutExibida,
-} from "../viewmodel/useCheckoutViewModel";
+import type { FolhaRemoverFotoExibida } from "../viewmodel/useCheckoutViewModel";
+import type { FotoExibida } from "../viewmodel/useEscolhaDeFotos";
 import { CampoContador } from "./componentes/CampoContador";
 import { FolhaAdicionarFoto } from "./componentes/FolhaAdicionarFoto";
 import { FolhaRemoverFoto } from "./componentes/FolhaRemoverFoto";
@@ -17,7 +15,7 @@ import { GradeFotosCheckout } from "./componentes/GradeFotosCheckout";
 interface CheckoutViewProps {
   empregador: string;
   avisoValidacao: string;
-  fotos: FotoCheckoutExibida[];
+  fotos: FotoExibida[];
   fotosMax: number;
   podeAdicionarFoto: boolean;
   preparandoFotos: boolean;

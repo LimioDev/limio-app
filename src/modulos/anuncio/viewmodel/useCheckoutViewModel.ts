@@ -1,25 +1,14 @@
-import * as ImagePicker from "expo-image-picker";
-import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { Alert } from "react-native";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
-import { prepararFoto } from "../../../comum/lib/foto";
 import { TipoToast, useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import type { ArquivoFoto } from "../../../comum/tipos/foto";
 import { useCheckoutMutation, useServicoQuery } from "../servico/anuncio.queries";
 import type { FotoRascunho } from "../store/rascunhoAnuncio.store";
 import { FOTOS_CHECKOUT_MAX } from "../tipos/anuncio.types";
-
-/** Miniatura da grade da tela 38. */
-export interface FotoCheckoutExibida {
-  chave: string;
-  uri: string;
-  /** Motivo da recusa no preparo; a foto recusada não é enviada. */
-  erro: string | null;
-}
+import { useEscolhaDeFotos, type FotoExibida, type MotivoPermissao } from "./useEscolhaDeFotos";
 
 /** Folha "Remover foto?" ao tocar numa miniatura. */
 export interface FolhaRemoverFotoExibida {
@@ -28,49 +17,12 @@ export interface FolhaRemoverFotoExibida {
   rotulo: string;
 }
 
-const MENSAGEM_FALHA_GALERIA = "Não foi possível abrir suas fotos. Tente de novo.";
-const MENSAGEM_FALHA_PREPARO = "Não foi possível ler essa imagem. Escolha outra.";
 const MENSAGEM_FOTOS_RECUSADAS = "Remova as fotos recusadas para enviar o check-out.";
 
-const Origem = {
-  CAMERA: "CAMERA",
-  GALERIA: "GALERIA",
-} as const;
-
-type Origem = (typeof Origem)[keyof typeof Origem];
-
-function avisarPermissaoNegada(origem: Origem): void {
-  const camera = origem === Origem.CAMERA;
-  Alert.alert(
-    camera ? "Sem acesso à câmera" : "Sem acesso às fotos",
-    camera
-      ? "Para fotografar o serviço pronto, permita que o LIMIO use a câmera nos ajustes do aparelho."
-      : "Para anexar fotos do serviço, permita que o LIMIO acesse suas fotos nos ajustes do aparelho.",
-    [
-      { text: "Agora não", style: "cancel" },
-      { text: "Abrir ajustes", onPress: () => void Linking.openSettings() },
-    ],
-  );
-}
-
-let contadorChave = 0;
-
-/** Prepara cada imagem escolhida (JPEG reduzido + conferência de tipo e tamanho). */
-async function prepararEscolhidas(imagens: ImagePicker.ImagePickerAsset[]): Promise<FotoRascunho[]> {
-  const fotos: FotoRascunho[] = [];
-  for (const imagem of imagens) {
-    contadorChave += 1;
-    const chave = `checkout-${Date.now()}-${contadorChave}`;
-    const preparo = await prepararFoto(imagem, `${chave}.jpg`).catch(() => null);
-    fotos.push({
-      chave,
-      previewUri: imagem.uri,
-      arquivo: preparo?.valido ? preparo.arquivo : null,
-      erro: !preparo ? MENSAGEM_FALHA_PREPARO : preparo.valido ? null : preparo.mensagem,
-    });
-  }
-  return fotos;
-}
+const MOTIVO_CHECKOUT: MotivoPermissao = {
+  camera: "Para fotografar o serviço pronto",
+  galeria: "Para anexar fotos do serviço",
+};
 
 /** "Marina Bertoldi" → "Marina"; sem nome (conta encerrada), "o Empregador". */
 function primeiroNome(nome: string | null | undefined): string {
@@ -86,9 +38,6 @@ function maiusculaInicial(texto: string): string {
  * e observação, enviadas juntas no "Enviar check-out". Só sai da tela no
  * sucesso (volta pra "Seu serviço" já em "Aguardando validação") ou quando o
  * serviço não aceita mais check-out.
- *
- * TODO(ETI-62): a escolha de fotos (câmera/galeria + permissão) repete a da
- * tela 14; quando a PR do ETI-62 entrar, trocar pelo `useEscolhaDeFotos`.
  */
 export function useCheckoutViewModel(anuncioId: string) {
   const router = useRouter();
@@ -103,55 +52,19 @@ export function useCheckoutViewModel(anuncioId: string) {
   const [erroFotos, setErroFotos] = useState<string | null>(null);
   const [erroEnvio, setErroEnvio] = useState<string | null>(null);
   const [removendo, setRemovendo] = useState<string | null>(null);
-  const [folhaFotoVisivel, setFolhaFotoVisivel] = useState(false);
-  const [preparandoFotos, setPreparandoFotos] = useState(false);
-  // Travas desde o toque: `isPending` só muda no próximo render, e um toque
-  // duplo mandaria dois check-outs; a galeria e o preparo também têm esperas.
-  const escolhendo = useRef(false);
+  // Trava desde o toque: `isPending` só muda no próximo render, e um toque
+  // duplo mandaria dois check-outs.
   const enviando = useRef(false);
 
-  const vagas = FOTOS_CHECKOUT_MAX - fotos.length;
-
-  const adicionarDe = async (origem: Origem) => {
-    setFolhaFotoVisivel(false);
-    if (escolhendo.current || vagas <= 0) {
-      return;
-    }
-    escolhendo.current = true;
-    try {
-      // iOS com acesso "limitado" também vem `granted`. No web a chamada não faz nada.
-      const permissao =
-        origem === Origem.CAMERA
-          ? await ImagePicker.requestCameraPermissionsAsync()
-          : await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permissao.granted) {
-        avisarPermissaoNegada(origem);
-        return;
-      }
-      const escolha =
-        origem === Origem.CAMERA
-          ? await ImagePicker.launchCameraAsync({ mediaTypes: "images", quality: 1 })
-          : await ImagePicker.launchImageLibraryAsync({
-              mediaTypes: "images",
-              allowsMultipleSelection: true,
-              selectionLimit: vagas,
-              quality: 1,
-            });
-      if (escolha.canceled) {
-        return;
-      }
-      setPreparandoFotos(true);
-      // No Android o limite de seleção nem sempre é respeitado.
-      const novas = await prepararEscolhidas(escolha.assets.slice(0, vagas));
+  const escolhaDeFotos = useEscolhaDeFotos({
+    vagas: FOTOS_CHECKOUT_MAX - fotos.length,
+    aoEscolher: (novas: FotoRascunho[]) => {
       setFotos((atuais) => [...atuais, ...novas].slice(0, FOTOS_CHECKOUT_MAX));
       setErroFotos(null);
-    } catch {
-      mostrarToast(MENSAGEM_FALHA_GALERIA, TipoToast.ERRO);
-    } finally {
-      escolhendo.current = false;
-      setPreparandoFotos(false);
-    }
-  };
+    },
+    motivoPermissao: MOTIVO_CHECKOUT,
+  });
+  const { preparandoFotos } = escolhaDeFotos;
 
   const confirmarRemocao = () => {
     setFotos((atuais) => atuais.filter((foto) => foto.chave !== removendo));
@@ -222,7 +135,7 @@ export function useCheckoutViewModel(anuncioId: string) {
   };
 
   const empregador = primeiroNome(servico.data?.outraParte.nome);
-  const fotosExibidas: FotoCheckoutExibida[] = fotos.map((foto) => ({
+  const fotosExibidas: FotoExibida[] = fotos.map((foto) => ({
     chave: foto.chave,
     uri: foto.previewUri,
     erro: foto.erro,
@@ -239,14 +152,9 @@ export function useCheckoutViewModel(anuncioId: string) {
     avisoValidacao: `${maiusculaInicial(empregador)} tem um prazo para validar. Sem resposta, o serviço conclui sozinho.`,
     fotos: fotosExibidas,
     fotosMax: FOTOS_CHECKOUT_MAX,
-    podeAdicionarFoto: vagas > 0 && !preparandoFotos && !checkout.isPending,
-    preparandoFotos,
+    ...escolhaDeFotos,
+    podeAdicionarFoto: escolhaDeFotos.podeAdicionarFoto && !checkout.isPending,
     erroFotos: erroFotos ?? (temRecusada ? MENSAGEM_FOTOS_RECUSADAS : null),
-    aoAdicionarFoto: () => setFolhaFotoVisivel(true),
-    folhaFotoVisivel,
-    aoTirarFoto: () => void adicionarDe(Origem.CAMERA),
-    aoEscolherDaGaleria: () => void adicionarDe(Origem.GALERIA),
-    aoFecharFolhaFoto: () => setFolhaFotoVisivel(false),
     aoTocarFoto: (chave: string) => {
       if (!checkout.isPending) {
         setRemovendo(chave);

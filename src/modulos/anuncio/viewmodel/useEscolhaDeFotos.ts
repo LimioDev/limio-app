@@ -25,13 +25,24 @@ const Origem = {
 
 type Origem = (typeof Origem)[keyof typeof Origem];
 
-function avisarPermissaoNegada(origem: Origem): void {
+/** Começo do aviso de permissão negada, por origem: "Para tirar fotos do anúncio". */
+export interface MotivoPermissao {
+  camera: string;
+  galeria: string;
+}
+
+const MOTIVO_ANUNCIO: MotivoPermissao = {
+  camera: "Para tirar fotos do anúncio",
+  galeria: "Para anexar fotos ao anúncio",
+};
+
+function avisarPermissaoNegada(origem: Origem, motivo: MotivoPermissao): void {
   const camera = origem === Origem.CAMERA;
   Alert.alert(
     camera ? "Sem acesso à câmera" : "Sem acesso às fotos",
     camera
-      ? "Para tirar fotos do anúncio, permita que o LIMIO use a câmera nos ajustes do aparelho."
-      : "Para anexar fotos ao anúncio, permita que o LIMIO acesse suas fotos nos ajustes do aparelho.",
+      ? `${motivo.camera}, permita que o LIMIO use a câmera nos ajustes do aparelho.`
+      : `${motivo.galeria}, permita que o LIMIO acesse suas fotos nos ajustes do aparelho.`,
     [
       { text: "Agora não", style: "cancel" },
       { text: "Abrir ajustes", onPress: () => void Linking.openSettings() },
@@ -59,16 +70,19 @@ async function prepararEscolhidas(imagens: ImagePicker.ImagePickerAsset[]): Prom
 }
 
 /**
- * Folha "Adicionar foto" (tela 14c) das telas 14 e 16a: câmera (uma foto) ou
- * galeria (várias, até as `vagas`). As escolhidas chegam já preparadas em
- * `aoEscolher`; nada é enviado à API aqui.
+ * Folha "Adicionar foto" (telas 14c e 38b) das telas 14, 16a e 38: câmera
+ * (uma foto) ou galeria (várias, até as `vagas`). As escolhidas chegam já
+ * preparadas em `aoEscolher`; nada é enviado à API aqui.
  */
 export function useEscolhaDeFotos({
   vagas,
   aoEscolher,
+  motivoPermissao = MOTIVO_ANUNCIO,
 }: {
   vagas: number;
   aoEscolher: (fotos: FotoRascunho[]) => void;
+  /** Texto do aviso de permissão negada; o padrão fala do anúncio. */
+  motivoPermissao?: MotivoPermissao;
 }) {
   const mostrarToast = useToast((estado) => estado.mostrar);
   // Trava desde o toque: a galeria e o preparo têm esperas em que um segundo toque passaria.
@@ -89,7 +103,7 @@ export function useEscolhaDeFotos({
           ? await ImagePicker.requestCameraPermissionsAsync()
           : await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissao.granted) {
-        avisarPermissaoNegada(origem);
+        avisarPermissaoNegada(origem, motivoPermissao);
         return;
       }
       const escolha =

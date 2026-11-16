@@ -3,10 +3,10 @@ import { Camera, Check, CircleAlert } from "lucide-react-native";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
 import { CORES_ICONE, Icone } from "../../../../comum/componentes/ui/Icone";
-import type { FotoCheckoutExibida } from "../../viewmodel/useCheckoutViewModel";
+import type { FotoExibida } from "../../viewmodel/useEscolhaDeFotos";
 
 interface GradeFotosCheckoutProps {
-  fotos: FotoCheckoutExibida[];
+  fotos: FotoExibida[];
   /** Tocar na miniatura abre a folha "Remover foto?". */
   aoTocarFoto: (chave: string) => void;
   aoAdicionar: () => void;
