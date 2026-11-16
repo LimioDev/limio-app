@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import { format, isToday, isTomorrow } from "date-fns";
+import { differenceInCalendarDays, format, isToday, isTomorrow } from "date-fns";
 
 import { paraFusoLocal } from "../../../comum/lib/datas";
 import { erroApi } from "../../../comum/lib/erros";
@@ -77,6 +77,27 @@ export function momentoDoPasso(dataHoraUtc: string, agora: Date = new Date()): s
   const data = paraFusoLocal(dataHoraUtc);
   const ehHoje = format(data, "yyyy-MM-dd") === format(paraFusoLocal(agora), "yyyy-MM-dd");
   return `${ehHoje ? "hoje" : format(data, "dd/MM")} · ${format(data, "HH:mm")}`;
+}
+
+/**
+ * "hoje", "amanhã" ou "em 3 dias", contando dias de calendário no fuso do
+ * sistema — card de status da tela 25. `null` pra data que já passou.
+ * `agora` só existe pra teste.
+ */
+export function emQuantosDias(dataHoraUtc: string, agora: Date = new Date()): string | null {
+  const dias = differenceInCalendarDays(paraFusoLocal(dataHoraUtc), paraFusoLocal(agora));
+  if (dias < 0) {
+    return null;
+  }
+  if (dias === 0) {
+    return "hoje";
+  }
+  return dias === 1 ? "amanhã" : `em ${dias} dias`;
+}
+
+/** "02/09, 14:00" — momentos citados nos textos corridos (rodapés da tela 25). */
+export function dataEHora(dataHoraUtc: string): string {
+  return format(paraFusoLocal(dataHoraUtc), "dd/MM, HH:mm");
 }
 
 /** Motivo de uma foto do anúncio não ter subido, pro aviso depois de publicar ou salvar. */
