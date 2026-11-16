@@ -172,6 +172,10 @@ export function useCheckoutViewModel(anuncioId: string) {
     enviando: checkout.isPending,
     erroEnvio,
     aoEnviar,
-    aoVoltar: voltarAoServico,
+    aoVoltar: () => {
+      if (!checkout.isPending) {
+        voltarAoServico();
+      }
+    },
   };
 }
