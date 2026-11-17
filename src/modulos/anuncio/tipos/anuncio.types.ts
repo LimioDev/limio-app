@@ -403,6 +403,12 @@ export const ServicoCombinadoSchema = z.object({
   propostaPendente: PropostaReagendamentoSchema.nullable(),
   chatId: z.string().nullable(),
   mensagensNaoLidas: z.number().int(),
+  /**
+   * Id da candidatura escolhida, que é por onde o chat abre
+   * (`GET /candidaturas/{id}/chat`). Ainda não vem na resposta (pedido no
+   * ETI-86); sem ele, "Conversar com" aparece sem abrir o chat.
+   */
+  candidaturaId: z.string().nullish(),
 });
 
 export type ServicoCombinado = z.infer<typeof ServicoCombinadoSchema>;
@@ -438,3 +444,22 @@ export type MinhaCandidatura = z.infer<typeof MinhaCandidaturaSchema>;
 export const MinhasCandidaturasResponseSchema = respostaPaginadaSchema(MinhaCandidaturaSchema);
 
 export type MinhasCandidaturasResponse = z.infer<typeof MinhasCandidaturasResponseSchema>;
+
+/**
+ * Fotos do check-out (ETI-90): a API usa os mesmos limites das fotos do
+ * anúncio (`anuncio.foto.*`), então o teto é o mesmo.
+ */
+export const FOTOS_CHECKOUT_MAX = FOTOS_MAX;
+
+/**
+ * Espelha `CheckoutResponse` — `POST /anuncios/{anuncioId}/checkout` (ETI-90):
+ * `200` já em `AGUARDANDO_VALIDACAO`. `prazoValidacaoEm` é `checkoutEm` mais o
+ * prazo gravado no anúncio; sai `null` em anúncio antigo, sem prazo gravado.
+ */
+export const CheckoutSchema = z.object({
+  status: z.enum(StatusAnuncio),
+  checkoutEm: z.string(),
+  prazoValidacaoEm: z.string().nullable(),
+});
+
+export type Checkout = z.infer<typeof CheckoutSchema>;

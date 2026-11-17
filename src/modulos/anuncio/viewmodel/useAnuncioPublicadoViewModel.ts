@@ -28,10 +28,12 @@ export interface AnuncioPublicadoExibido {
   candidaturasPendentes: number;
   /**
    * Só aguardando candidatos. Combinado, os outros já foram encerrados e o card
-   * diria "Nenhum prestador se candidatou ainda" logo depois da escolha (tela 23,
-   * ETI-70), que abre esta tela até a tela 25 chegar (ETI-87).
+   * diria "Nenhum prestador se candidatou ainda" (a escolha, tela 23, ETI-70,
+   * deixa esta tela embaixo da tela 25).
    */
   aguardandoCandidatos: boolean;
+  /** "Ver serviço combinado" (tela 25, ETI-87): só com Prestador escolhido. */
+  podeVerServico: boolean;
   /** Botões "Editar" (ETI-62) e "Cancelar" (ETI-64): só em `PUBLICADO` sem candidatura escolhida. */
   podeAlterar: boolean;
   avatares: { chave: string; nome: string; fotoUrl: string | null }[];
@@ -66,6 +68,13 @@ function paraExibicao(
   return {
     estado,
     aguardandoCandidatos: estado === "aguardando",
+    // Cancelado também abre: o serviço continua lá pra consulta (tela 25d).
+    // Sem saber ainda se houve escolha, só os status que já pressupõem uma.
+    podeVerServico:
+      temEscolhido ||
+      anuncio.status === StatusAnuncio.EM_ANDAMENTO ||
+      anuncio.status === StatusAnuncio.AGUARDANDO_VALIDACAO ||
+      anuncio.status === StatusAnuncio.CONCLUIDO,
     titulo: anuncio.titulo,
     quando: quandoCurto(anuncio.dataHoraPretendida),
     local,
@@ -174,6 +183,9 @@ export function useAnuncioPublicadoViewModel(id: string) {
     // Aberta direto pelo link (sem tela antes), volta pro Início.
     aoVoltar: () =>
       router.canGoBack() ? router.back() : router.replace("/(app)/(contratante)"),
+    // Tela 25 (ETI-87), por cima desta.
+    aoVerServico: () =>
+      router.push({ pathname: "/(app)/servico/combinado/[id]", params: { id } }),
     // Tela 16a (ETI-62). Se ainda dá pra editar quem decide é a API, ao salvar.
     aoEditar: () => router.push({ pathname: "/(app)/anuncio/[id]/editar", params: { id } }),
     // Telas 18/19 (ETI-68).

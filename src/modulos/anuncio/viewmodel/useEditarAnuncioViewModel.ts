@@ -148,8 +148,8 @@ export function useEditarAnuncioViewModel(id: string) {
   /**
    * `409 ANUNCIO_ESTADO_INVALIDO`: alguém foi escolhido (ou o anúncio foi
    * cancelado em outro aparelho) antes de salvar. Volta pra tela 16, que
-   * mostra a situação (igual ao ETI-70).
-   * TODO(ETI-87): no combinado, abrir a tela 25 do serviço, onde fica o "Reagendar".
+   * mostra a situação (igual ao ETI-70); no combinado, abre a tela 25 por cima
+   * dela, onde fica o "Reagendar" (ETI-87).
    */
   const aoAnuncioFechado = async () => {
     void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
@@ -160,6 +160,13 @@ export function useEditarAnuncioViewModel(id: string) {
       encerrado ? "Este anúncio não pode mais ser editado" : "Este anúncio já foi combinado",
       TipoToast.ERRO,
     );
+    // O serviço é outra pilha: um `replace` daqui levaria a tela 16 junto e o
+    // voltar da 25 ficaria sem destino.
+    if (montada.current && !encerrado) {
+      voltarPraTela16();
+      router.push({ pathname: "/(app)/servico/combinado/[id]", params: { id } });
+      return;
+    }
     sairSeAindaAberta();
   };
 

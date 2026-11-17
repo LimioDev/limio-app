@@ -75,19 +75,29 @@ export async function prepararFoto(
     : { valido: false, mensagem: MENSAGEM_FOTO_INVALIDA };
 }
 
-/** `FormData` com a foto na parte `campo`. Sem `Content-Type` manual: o axios deixa o navegador/RN pôr o boundary. */
-export function formDataComFoto(campo: string, arquivo: ArquivoFoto): FormData {
-  const valido = ArquivoFotoSchema.parse(arquivo);
+/**
+ * `FormData` com as fotos, todas na mesma parte `campo` (o Spring lê como
+ * lista). Sem `Content-Type` manual: o axios deixa o navegador/RN pôr o boundary.
+ */
+export function formDataComFotos(campo: string, arquivos: ArquivoFoto[]): FormData {
   const corpo = new FormData();
-  if (Platform.OS === "web" && valido.conteudo) {
-    corpo.append(campo, valido.conteudo, valido.nome);
-  } else {
-    // No React Native o FormData lê o arquivo pela URI (formato próprio do RN).
-    corpo.append(campo, {
-      uri: valido.uri,
-      name: valido.nome,
-      type: valido.tipo,
-    } as unknown as Blob);
+  for (const arquivo of arquivos) {
+    const valido = ArquivoFotoSchema.parse(arquivo);
+    if (Platform.OS === "web" && valido.conteudo) {
+      corpo.append(campo, valido.conteudo, valido.nome);
+    } else {
+      // No React Native o FormData lê o arquivo pela URI (formato próprio do RN).
+      corpo.append(campo, {
+        uri: valido.uri,
+        name: valido.nome,
+        type: valido.tipo,
+      } as unknown as Blob);
+    }
   }
   return corpo;
+}
+
+/** `FormData` com uma foto na parte `campo`. */
+export function formDataComFoto(campo: string, arquivo: ArquivoFoto): FormData {
+  return formDataComFotos(campo, [arquivo]);
 }

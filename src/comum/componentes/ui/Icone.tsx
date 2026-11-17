@@ -7,6 +7,8 @@ export const CORES_ICONE = {
   fraco: "#7B87A4",
   marca: "#2159CC",
   "marca-escura": "#0F1F4C",
+  /** `marca-300`: ícone sobre o fundo `marca-800` (card de status do serviço). */
+  "marca-clara": "#7D9BF2",
   perigo: "#8C2A20",
   sucesso: "#1D5A3C",
   alerta: "#7A4A11",

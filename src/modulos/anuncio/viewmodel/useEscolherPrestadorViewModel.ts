@@ -83,8 +83,8 @@ function outrosDisponiveis(total: number): string {
  * de baixo por cima da tela 18 ou do chat (tela 21). Os dados do candidato
  * vêm da lista de candidatos (já em cache por quem abriu a folha).
  *
- * O sucesso deveria abrir a tela 25 "Serviço combinado", que chega com o
- * ETI-87; até lá, abre a tela 16, que mostra o anúncio como "Combinado".
+ * O sucesso abre a tela 25 "Serviço combinado" (ETI-87) por cima da tela 16,
+ * que fica embaixo como destino do voltar.
  */
 export function useEscolherPrestadorViewModel(anuncioId: string, candidaturaId: string) {
   const router = useRouter();
@@ -120,10 +120,12 @@ export function useEscolherPrestadorViewModel(anuncioId: string, candidaturaId: 
     }
   }, [router, anuncioId]);
 
-  // Tela 25 (ETI-87) ainda não existe: a tela 16 mostra o anúncio "Combinado".
+  // O serviço é outra pilha: volta pra tela 16 antes e abre a 25 por cima,
+  // senão o voltar da 25 fica sem destino.
   function abrirServicoCombinado() {
     encerrada.current = true;
     router.dismissTo({ pathname: "/(app)/anuncio/[id]", params: { id: anuncioId } });
+    router.push({ pathname: "/(app)/servico/combinado/[id]", params: { id: anuncioId } });
   }
 
   // Aberta com a lista já sem o candidato (desistiu ou foi recusado em outro

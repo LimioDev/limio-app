@@ -1,4 +1,5 @@
 import {
+  Camera,
   Check,
   CircleCheck,
   MapPin,
@@ -19,6 +20,7 @@ import type {
   PassoServicoExibido,
   ServicoExibido,
 } from "../viewmodel/useSeuServicoViewModel";
+import { CartaoConversa } from "./componentes/CartaoConversa";
 import { FolhaIniciarServico } from "./componentes/FolhaIniciarServico";
 
 interface SeuServicoViewProps {
@@ -33,8 +35,12 @@ interface SeuServicoViewProps {
   /** Sem telefone (conta encerrada), os atalhos não aparecem. */
   aoLigar?: () => void;
   aoAbrirWhatsApp?: () => void;
+  /** Sem função, o card "Conversar com" aparece sem abrir o chat. */
+  aoConversar?: () => void;
   folha: FolhaIniciarExibida;
   aoIniciar: () => void;
+  /** Abre a tela 38 "Checkout". */
+  aoFinalizarComFoto: () => void;
   aoConfirmarInicio: () => void;
   aoFecharFolha: () => void;
 }
@@ -103,8 +109,10 @@ export function SeuServicoView({
   aoVoltar,
   aoLigar,
   aoAbrirWhatsApp,
+  aoConversar,
   folha,
   aoIniciar,
+  aoFinalizarComFoto,
   aoConfirmarInicio,
   aoFecharFolha,
 }: SeuServicoViewProps) {
@@ -194,6 +202,14 @@ export function SeuServicoView({
           ) : null}
         </View>
 
+        <CartaoConversa
+          titulo={servico.conversa.titulo}
+          detalhe={servico.conversa.detalhe}
+          aoConversar={aoConversar}
+        />
+
+        {servico.propostaPendente ? <Aviso titulo={servico.propostaPendente} /> : null}
+
         {servico.andamento.length > 0 ? (
           <View className="gap-3">
             <Text className="text-overline font-bold uppercase tracking-[0.8px] text-tinta-fraco">
@@ -222,9 +238,15 @@ export function SeuServicoView({
         ) : null}
       </ScrollView>
 
-      {/* "Finalizar com foto" (ETI-91), "Propor novo horário" (ETI-100) e
-          "Cancelar serviço" (ETI-97) entram com os cards deles. */}
-      {servico.podeIniciar ? (
+      {/* "Propor novo horário" (ETI-100) e "Cancelar serviço" (ETI-97) entram
+          com os cards deles. */}
+      {servico.podeFinalizar ? (
+        <SafeAreaView edges={["bottom"]} className="border-t border-borda bg-superficie">
+          <View className="px-margem py-3">
+            <Botao rotulo="Finalizar com foto" icone={Camera} onPress={aoFinalizarComFoto} />
+          </View>
+        </SafeAreaView>
+      ) : servico.podeIniciar ? (
         <SafeAreaView edges={["bottom"]} className="border-t border-borda bg-superficie">
           <View className="px-margem py-3">
             <Botao
