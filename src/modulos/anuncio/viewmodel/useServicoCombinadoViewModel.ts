@@ -58,9 +58,9 @@ export interface ServicoCombinadoExibido {
   /** Texto de baixo dos botões (ou do aviso de cancelado). */
   rodape: string | null;
   /**
-   * Ações do Empregador derivadas do status. Calculadas aqui, mas a tela só
-   * mostra cada uma quando o card do fluxo entrar: "Validar serviço" (tela 27,
-   * ETI-93), "Reagendar" (ETI-100) e "Cancelar" (ETI-95).
+   * Ações do Empregador derivadas do status. "Validar serviço" (tela 27,
+   * ETI-93) já aparece; "Reagendar" (ETI-100) e "Cancelar" (ETI-95) são
+   * calculadas aqui, mas só aparecem quando os cards deles entrarem.
    */
   acoes: AcoesDoEmpregador;
   /** "Avaliar Rafael" (tela 45, ETI-108): só com o serviço concluído. */
@@ -137,10 +137,8 @@ function rodape(servico: ServicoCombinado, nome: string): string | null {
     // estornar." voltam com o "Cancelar" (ETI-95).
     case StatusAnuncio.PUBLICADO:
       return null;
-    // "Vi o serviço pronto no local? Você já pode validar." volta com o
-    // "Validar serviço" (tela 27, ETI-93).
     case StatusAnuncio.EM_ANDAMENTO:
-      return "O serviço já começou: não dá mais para cancelar nem reagendar.";
+      return "Vi o serviço pronto no local? Você já pode validar. O serviço já começou: não dá mais para cancelar nem reagendar.";
     case StatusAnuncio.AGUARDANDO_VALIDACAO: {
       const quando = servico.checkoutEm ? ` em ${dataEHora(servico.checkoutEm)}` : "";
       return `${nome} enviou o check-out${quando}. Você tem 24h para validar. Sem resposta, o serviço é concluído automaticamente.`;
@@ -258,6 +256,9 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
             params: { aplicacaoId: candidaturaId },
           })
       : undefined,
+    // Tela 27 (ETI-93).
+    aoValidar: () =>
+      router.push({ pathname: "/(app)/servico/validar/[id]", params: { id: anuncioId } }),
     // Tela 45 (ETI-108).
     aoAvaliar: () =>
       router.push({ pathname: "/(app)/avaliacao/[anuncioId]", params: { anuncioId } }),

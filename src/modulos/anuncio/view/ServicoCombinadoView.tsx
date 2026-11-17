@@ -2,6 +2,7 @@ import {
   CalendarClock,
   CalendarDays,
   Check,
+  CircleCheck,
   DollarSign,
   MapPin,
   Smartphone,
@@ -37,6 +38,8 @@ interface ServicoCombinadoViewProps {
   aoLigar?: () => void;
   /** Sem função, o card "Conversar com" aparece sem abrir o chat. */
   aoConversar?: () => void;
+  /** Tela 27 "Validar serviço" (ETI-93). */
+  aoValidar: () => void;
   aoAvaliar: () => void;
 }
 
@@ -116,6 +119,7 @@ export function ServicoCombinadoView({
   aoVoltar,
   aoLigar,
   aoConversar,
+  aoValidar,
   aoAvaliar,
 }: ServicoCombinadoViewProps) {
   if (!servico) {
@@ -251,9 +255,17 @@ export function ServicoCombinadoView({
           </View>
         ) : null}
 
-        {/* "Validar serviço" (tela 27, ETI-93), "Reagendar" (ETI-100) e
-            "Cancelar" (ETI-95) entram com os cards deles; as regras já estão em
-            `servico.acoes`. */}
+        {/* Tela 27: cheio aguardando validação, contornado (presencial) antes do check-out. */}
+        {servico.acoes.validar ? (
+          <Botao
+            rotulo="Validar serviço"
+            icone={CircleCheck}
+            variante={servico.acoes.validar === "checkout" ? "primario" : "contorno"}
+            onPress={aoValidar}
+          />
+        ) : null}
+        {/* "Reagendar" (ETI-100) e "Cancelar" (ETI-95) entram com os cards
+            deles; as regras já estão em `servico.acoes`. */}
         {servico.podeAvaliar ? (
           <Botao rotulo={servico.rotuloAvaliar} icone={Star} onPress={aoAvaliar} />
         ) : null}
