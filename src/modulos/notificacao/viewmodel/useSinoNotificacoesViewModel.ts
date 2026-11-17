@@ -1,7 +1,7 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useRef } from "react";
 
-import { useNaoLidasQuery } from "../servico/notificacao.queries";
+import { useConsultarNaoLidasDeNovo, useNaoLidasQuery } from "../servico/notificacao.queries";
 
 /**
  * Sino do topo da tela 13 "Início" com o total de não lidas (ETI-111). Fica no
@@ -11,7 +11,7 @@ import { useNaoLidasQuery } from "../servico/notificacao.queries";
 export function useSinoNotificacoesViewModel() {
   const router = useRouter();
   const query = useNaoLidasQuery();
-  const { refetch } = query;
+  const consultarDeNovo = useConsultarNaoLidasDeNovo();
 
   // O dashboard continua montado nas abas: ao voltar pra ele, confere se
   // chegou notificação nova. O primeiro foco é pulado porque o mount já consultou.
@@ -22,8 +22,8 @@ export function useSinoNotificacoesViewModel() {
         primeiroFoco.current = false;
         return;
       }
-      void refetch();
-    }, [refetch]),
+      void consultarDeNovo();
+    }, [consultarDeNovo]),
   );
 
   return {

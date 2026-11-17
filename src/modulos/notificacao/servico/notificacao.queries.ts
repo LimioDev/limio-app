@@ -5,6 +5,7 @@ import {
   type InfiniteData,
   type QueryClient,
 } from "@tanstack/react-query";
+import { useCallback } from "react";
 
 import type { NotificacoesResponse } from "../tipos/notificacao.types";
 import {
@@ -44,6 +45,25 @@ export function useNaoLidasQuery() {
     ...opcoesLista,
     select: (dados: PaginasNotificacoes) => dados.pages[0]?.naoLidas ?? 0,
   });
+}
+
+/**
+ * Sino: consulta de novo o total de não lidas. Antes, deixa só a primeira
+ * página no cache: o `refetch` de uma consulta infinita busca de novo todas as
+ * páginas que a tela 43 já rolou, uma por vez, só pra ler o `naoLidas` da
+ * primeira. Com o Início em foco a tela 43 já saiu da pilha, então ninguém
+ * está vendo as outras páginas.
+ */
+export function useConsultarNaoLidasDeNovo() {
+  const queryClient = useQueryClient();
+  return useCallback(() => {
+    queryClient.setQueryData<PaginasNotificacoes>(chavesNotificacao.lista, (dados) =>
+      dados && dados.pages.length > 1
+        ? { pages: dados.pages.slice(0, 1), pageParams: dados.pageParams.slice(0, 1) }
+        : dados,
+    );
+    return queryClient.refetchQueries({ queryKey: chavesNotificacao.lista, exact: true });
+  }, [queryClient]);
 }
 
 /**
