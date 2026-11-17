@@ -10,6 +10,8 @@ interface FolhaAdicionarFotoProps {
   aoTirarFoto: () => void;
   aoEscolherDaGaleria: () => void;
   aoFechar: () => void;
+  /** Subtítulo da folha; o padrão é o da tela 14c. */
+  descricao?: string;
 }
 
 function Opcao({
@@ -41,12 +43,13 @@ function Opcao({
   );
 }
 
-/** Tela 14c: de onde vem a foto do anúncio. Modal próprio porque `Alert` não abre no navegador. */
+/** Telas 14c e 38b: de onde vem a foto. Modal próprio porque `Alert` não abre no navegador. */
 export function FolhaAdicionarFoto({
   visivel,
   aoTirarFoto,
   aoEscolherDaGaleria,
   aoFechar,
+  descricao = "Escolha de onde vem a foto do anúncio.",
 }: FolhaAdicionarFotoProps) {
   return (
     <Modal
@@ -75,7 +78,7 @@ export function FolhaAdicionarFoto({
                   Adicionar foto
                 </Text>
                 <Text className="text-rotulo text-tinta-suave">
-                  Escolha de onde vem a foto do anúncio.
+                  {descricao}
                 </Text>
               </View>
               <Opcao

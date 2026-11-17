@@ -9,6 +9,7 @@ import {
 
 import { erroApi } from "../../../comum/lib/erros";
 import { CodigoErro } from "../../../comum/tipos/erros";
+import type { ArquivoFoto } from "../../../comum/tipos/foto";
 import type { AbaCandidatura } from "../tipos/anuncio.enums";
 import type {
   CandidatosResponse,
@@ -30,6 +31,7 @@ import {
   criarAnuncio,
   desistirCandidatura,
   editarAnuncio,
+  enviarCheckout,
   escolherPrestador,
   iniciarServico,
   listarMinhasCandidaturas,
@@ -311,6 +313,39 @@ export function useDesistirCandidaturaMutation() {
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.minhasCandidaturas });
       void queryClient.invalidateQueries({ queryKey: ["anuncio", "mural"] });
+    },
+  });
+}
+
+/**
+ * "Enviar check-out" (tela 38, ETI-90). No sucesso "Seu serviço" já volta em
+ * "Aguardando validação" com o `checkoutEm` da resposta, e a consulta confirma
+ * em seguida; a candidatura também muda de status, então "Aplicações" recarrega.
+ * Com `SERVICO_NAO_ENCONTRADO` o Prestador deixou de ser o escolhido: o serviço
+ * é zerado e consultado de novo (`reset`, não `remove`), porque a tela 37
+ * continua montada embaixo e manteria contato e endereço; a nova consulta
+ * devolve o 404 e ela troca pelo "não disponível".
+ */
+export function useCheckoutMutation(anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ arquivos, observacao }: { arquivos: ArquivoFoto[]; observacao: string }) =>
+      enviarCheckout({ anuncioId, arquivos, observacao }),
+    onSuccess: ({ status, checkoutEm }) => {
+      queryClient.setQueryData<ServicoCombinado>(
+        chavesAnuncio.servico(anuncioId),
+        (atual) => (atual ? { ...atual, status, checkoutEm } : atual),
+      );
+    },
+    onSettled: (_dados, falha) => {
+      if (erroApi(falha)?.codigo === CodigoErro.SERVICO_NAO_ENCONTRADO) {
+        void queryClient.resetQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+        void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalheMural(anuncioId) });
+        void queryClient.invalidateQueries({ queryKey: chavesAnuncio.minhasCandidaturas });
+        return;
+      }
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.minhasCandidaturas });
     },
   });
 }
