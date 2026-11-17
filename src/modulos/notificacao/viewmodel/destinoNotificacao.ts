@@ -12,7 +12,26 @@ export interface DestinoNotificacao {
    */
   papel: PapelDoApp | null;
   /** GET que confirma que o anúncio/serviço ainda existe; `null` = não precisa. */
-  conferir: string | null;
+  conferir: Conferencia | null;
+}
+
+export interface Conferencia {
+  caminho: string;
+  /** Aviso quando o GET volta 404: a tela 43 mostra e fica na lista. */
+  mensagemSeSumiu: string;
+}
+
+function conferirAnuncio(caminho: string): Conferencia {
+  return { caminho, mensagemSeSumiu: "Esse anúncio não existe mais." };
+}
+
+// O 404 do serviço nem sempre é anúncio apagado: o Prestador que deixou de ser
+// o escolhido também recebe 404 aqui.
+function conferirServico(anuncioId: string): Conferencia {
+  return {
+    caminho: `/anuncios/${anuncioId}/servico`,
+    mensagemSeSumiu: "Este serviço não está mais disponível.",
+  };
 }
 
 interface Contexto {
@@ -67,14 +86,14 @@ export function destinoDaNotificacao(
       return {
         rota: { pathname: "/(app)/anuncio/[id]/candidatos", params: { id: anuncioId } },
         papel: PapelUsuario.EMPREGADOR,
-        conferir: `/anuncios/${anuncioId}`,
+        conferir: conferirAnuncio(`/anuncios/${anuncioId}`),
       };
     // "Novo serviço na sua área" → tela 30 "Detalhe do anúncio" (US19).
     case TipoNotificacao.NOVO_SERVICO_NA_AREA:
       return {
         rota: { pathname: "/(app)/mural/[id]", params: { id: anuncioId } },
         papel: PapelUsuario.PRESTADOR,
-        conferir: `/anuncios/mural/${anuncioId}`,
+        conferir: conferirAnuncio(`/anuncios/mural/${anuncioId}`),
       };
     // "Check-out enviado" → tela 27 "Validar serviço" (US42). A tela 27 ainda
     // não existe no app: abre a tela 25 "Serviço combinado", de onde ela sai.
@@ -82,27 +101,27 @@ export function destinoDaNotificacao(
       return {
         rota: { pathname: "/(app)/servico/combinado/[id]", params: { id: anuncioId } },
         papel: PapelUsuario.EMPREGADOR,
-        conferir: `/anuncios/${anuncioId}/servico`,
+        conferir: conferirServico(anuncioId),
       };
     case TipoNotificacao.PRESTADOR_ESCOLHIDO:
       return {
         rota: { pathname: "/(app)/servico/[id]", params: { id: anuncioId } },
         papel: PapelUsuario.PRESTADOR,
-        conferir: `/anuncios/${anuncioId}/servico`,
+        conferir: conferirServico(anuncioId),
       };
     // Do Empregador: tela 25 "Serviço combinado" (a `servico/[id]` é a do Prestador).
     case TipoNotificacao.SERVICO_INICIADO:
       return {
         rota: { pathname: "/(app)/servico/combinado/[id]", params: { id: anuncioId } },
         papel: PapelUsuario.EMPREGADOR,
-        conferir: `/anuncios/${anuncioId}/servico`,
+        conferir: conferirServico(anuncioId),
       };
     // "Serviço concluído" → tela 45 "Avaliação" (US53); vale pros dois lados.
     case TipoNotificacao.SERVICO_CONCLUIDO:
       return {
         rota: { pathname: "/(app)/avaliacao/[anuncioId]", params: { anuncioId } },
         papel: null,
-        conferir: `/anuncios/${anuncioId}/servico`,
+        conferir: conferirServico(anuncioId),
       };
     // Aviso genérico de anúncio: abre o anúncio do jeito que o papel ativo vê.
     case TipoNotificacao.AVISO_DE_ANUNCIO:
@@ -110,12 +129,12 @@ export function destinoDaNotificacao(
         ? {
             rota: { pathname: "/(app)/anuncio/[id]", params: { id: anuncioId } },
             papel: PapelUsuario.EMPREGADOR,
-            conferir: `/anuncios/${anuncioId}`,
+            conferir: conferirAnuncio(`/anuncios/${anuncioId}`),
           }
         : {
             rota: { pathname: "/(app)/mural/[id]", params: { id: anuncioId } },
             papel: PapelUsuario.PRESTADOR,
-            conferir: `/anuncios/mural/${anuncioId}`,
+            conferir: conferirAnuncio(`/anuncios/mural/${anuncioId}`),
           };
     default:
       return null;

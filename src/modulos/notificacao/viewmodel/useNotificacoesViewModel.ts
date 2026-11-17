@@ -115,10 +115,10 @@ export function useNotificacoesViewModel() {
       }
       if (destino.conferir) {
         setAbrindoId(id);
-        const existe = await recursoAindaExiste(destino.conferir);
+        const existe = await recursoAindaExiste(destino.conferir.caminho);
         setAbrindoId(null);
         if (!existe) {
-          mostrarToast("Esse anúncio não existe mais.", TipoToast.ERRO);
+          mostrarToast(destino.conferir.mensagemSeSumiu, TipoToast.ERRO);
           return;
         }
       }
