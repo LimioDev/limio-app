@@ -26,6 +26,11 @@ export interface ParametrosPerfilPublico {
   candidaturaId?: string;
   /** Anúncio da candidatura: o "Escolher" abre a tela 23 com ele. */
   anuncioId?: string;
+  /**
+   * `"chat"` quando vem do menu "⋮" do chat: quem abriu já está conversando
+   * com a pessoa, então o aviso da 20b não aparece.
+   */
+  origem?: string;
 }
 
 export interface AvaliacaoExibida {
@@ -111,6 +116,7 @@ export function usePerfilPublicoViewModel({
   papel: papelDaRota,
   candidaturaId,
   anuncioId,
+  origem,
 }: ParametrosPerfilPublico) {
   const router = useRouter();
   const papelAtivo = useSessao((estado) => estado.papelAtivo);
@@ -181,9 +187,11 @@ export function usePerfilPublicoViewModel({
             : undefined,
         }
       : null,
-    // O aviso da 20b só faz sentido pra quem tem anúncio: o Empregador vendo um Prestador.
+    // O aviso da 20b só faz sentido pra quem tem anúncio: o Empregador vendo um
+    // Prestador. Pelo chat não: a pessoa é candidata e ele acabou de sair da conversa.
     mostrarAvisoConsulta:
       !comoCandidato &&
+      origem !== "chat" &&
       papel === PapelUsuario.PRESTADOR &&
       papelAtivo === PapelUsuario.EMPREGADOR,
   };

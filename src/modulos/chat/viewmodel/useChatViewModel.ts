@@ -364,6 +364,8 @@ export function useChatViewModel(candidaturaId: string, anuncioId?: string) {
             chat.outraParte.papel === PapelNoChat.CANDIDATO
               ? PapelUsuario.PRESTADOR
               : PapelUsuario.EMPREGADOR,
+          // Sem o aviso da 20b: quem abriu já está conversando com a pessoa.
+          origem: "chat",
         },
       });
     },
