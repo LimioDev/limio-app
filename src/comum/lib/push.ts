@@ -76,6 +76,12 @@ function permitida(permissao: Notifications.NotificationPermissionsStatus): bool
 export async function obterTokenPush(): Promise<string> {
   const projectId =
     Constants.easConfig?.projectId ?? Constants.expoConfig?.extra?.eas?.projectId;
+  if (!projectId && __DEV__) {
+    // Pra quem usa o app a falha é silenciosa (critério do card); em dev, avisa.
+    console.warn(
+      "[push] Sem extra.eas.projectId no app.json: o aparelho não vai se registrar para push.",
+    );
+  }
   const { data } = await Notifications.getExpoPushTokenAsync(
     projectId ? { projectId } : undefined,
   );
@@ -101,4 +107,19 @@ export async function tokenPushParaRemover(): Promise<string | null> {
 /** Depois do logout o token não é mais desta conta. */
 export function esquecerTokenPush(): void {
   tokenAtual = null;
+}
+
+/**
+ * Descarta o último toque guardado pelo sistema: senão o próximo login, de
+ * qualquer conta, abriria uma notificação da conta que saiu.
+ */
+export function descartarUltimoToquePush(): void {
+  if (!PUSH_SUPORTADO) {
+    return;
+  }
+  try {
+    Notifications.clearLastNotificationResponse();
+  } catch {
+    // Módulo nativo indisponível: não há toque guardado pra limpar.
+  }
 }

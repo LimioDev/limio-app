@@ -1,6 +1,6 @@
 import * as Notifications from "expo-notifications";
 
-import { PUSH_SUPORTADO } from "../../../comum/lib/push";
+import { descartarUltimoToquePush, PUSH_SUPORTADO } from "../../../comum/lib/push";
 import { DadosPushSchema, type DadosPush } from "../tipos/notificacao.types";
 
 /** Push recebido, já validado: o texto mostrado e os dados do toque. */
@@ -56,12 +56,14 @@ export function escutarPush(ouvintes: {
     }
     ultimoToque = id;
     // Já tratado: não abre de novo na próxima vez que o app subir.
-    void Notifications.clearLastNotificationResponseAsync().catch(() => {});
+    descartarUltimoToquePush();
     ouvintes.aoTocar(lerPush(resposta.notification));
   };
 
   // O toque que abriu o app (fechado ou antes do login) chega como "última resposta".
-  Notifications.getLastNotificationResponseAsync()
+  // Fora do render: o layout termina de montar antes de navegar.
+  Promise.resolve()
+    .then(() => Notifications.getLastNotificationResponse())
     .then((resposta) => {
       if (ativo && resposta) {
         tocar(resposta);

@@ -1,4 +1,5 @@
 import {
+  descartarUltimoToquePush,
   esquecerTokenPush,
   garantirPermissaoPush,
   obterTokenPush,
@@ -37,6 +38,7 @@ export async function registrarEsteAparelho(): Promise<boolean> {
  * "Remover aparelho" no logout, antes de limpar a sessão (precisa do token de
  * acesso). Melhor esforço com prazo: falhou ou demorou, o logout segue — se o
  * aparelho ficar registrado, o próximo login nele passa o push pra nova conta.
+ * Também descarta o último toque, pra não abrir na próxima conta.
  */
 export async function removerEsteAparelho(): Promise<void> {
   const remover = async () => {
@@ -54,5 +56,6 @@ export async function removerEsteAparelho(): Promise<void> {
     // Sem rede ou token indisponível: segue pro logout.
   } finally {
     esquecerTokenPush();
+    descartarUltimoToquePush();
   }
 }
