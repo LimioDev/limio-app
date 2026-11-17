@@ -1,6 +1,6 @@
 import * as Linking from "expo-linking";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useRef, useState } from "react";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { formatarTelefone, telefoneNacional } from "../../../comum/lib/telefone";
@@ -9,8 +9,10 @@ import { TipoToast, useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import { PapelUsuario } from "../../../comum/tipos/papel";
 import {
+  avisoPropostaPendente,
   diaComData,
   horaPretendida,
+  mensagensNovas,
   momentoDoPasso,
 } from "../servico/anuncio.helpers";
 import { useIniciarServicoMutation, useServicoQuery } from "../servico/anuncio.queries";
@@ -41,6 +43,14 @@ export interface ServicoExibido {
   /** `null` quando a API não conseguiu montar o endereço. */
   endereco: string | null;
   bairro: string | null;
+  conversa: {
+    /** "Conversar com Marina". */
+    titulo: string;
+    /** "2 mensagens novas", "Nenhuma mensagem nova" ou "Conversa em somente leitura". */
+    detalhe: string;
+  };
+  /** "Há uma proposta de reagendamento para 05/09, 10:00." (ETI-100 traz o atalho). */
+  propostaPendente: string | null;
   /** Tela 37: o serviço já foi iniciado. */
   emAndamento: boolean;
   /** Só na tela 37, depois de iniciar. */
@@ -154,6 +164,17 @@ function servicoParaExibicao(servico: ServicoCombinado, ehPrestador: boolean): S
     },
     endereco: servico.enderecoCompleto,
     bairro: servico.bairroRegiao,
+    conversa: {
+      titulo: `Conversar com ${primeiroNome(outraParte.nome)}`,
+      detalhe:
+        servico.status === StatusAnuncio.ENCERRADO
+          ? "Conversa em somente leitura"
+          : mensagensNovas(servico.mensagensNaoLidas),
+    },
+    propostaPendente:
+      servico.propostaPendente && servico.status !== StatusAnuncio.ENCERRADO
+        ? avisoPropostaPendente(servico.propostaPendente.dataProposta)
+        : null,
     emAndamento: servico.status === StatusAnuncio.EM_ANDAMENTO,
     andamento: passosDoServico(servico),
     // A API só devolve o serviço pro Empregador dono e pro Prestador escolhido;
@@ -173,6 +194,21 @@ export function useSeuServicoViewModel(anuncioId: string) {
   const [folhaAberta, setFolhaAberta] = useState(false);
   const [erroFolha, setErroFolha] = useState<string | null>(null);
 
+  // A tela continua montada embaixo do chat, e o React Query no
+  // React Native não consulta de novo ao voltar o foco. O primeiro foco é
+  // pulado porque o mount já consultou.
+  const { refetch } = query;
+  const primeiroFoco = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (primeiroFoco.current) {
+        primeiroFoco.current = false;
+        return;
+      }
+      void refetch();
+    }, [refetch]),
+  );
+
   // Numa recarga com erro o React Query mantém o `data` anterior. Se o serviço
   // deixou de ser dele, contato e endereço não podem continuar na tela (ETI-86).
   const naoDisponivel = erroApi(query.error)?.codigo === CodigoErro.SERVICO_NAO_ENCONTRADO;
@@ -188,6 +224,7 @@ export function useSeuServicoViewModel(anuncioId: string) {
   }
 
   const servico = dados ? servicoParaExibicao(dados, ehPrestador) : null;
+  const candidaturaId = dados?.candidaturaId ?? null;
   const telefoneNacionalEmpregador = dados?.outraParte.telefone
     ? telefoneNacional(dados.outraParte.telefone)
     : null;
@@ -246,6 +283,14 @@ export function useSeuServicoViewModel(anuncioId: string) {
       : undefined,
     aoAbrirWhatsApp: telefoneNacionalEmpregador
       ? () => void Linking.openURL(`https://wa.me/55${telefoneNacionalEmpregador}`)
+      : undefined,
+    // Tela 21 (ETI-102). O chat abre pela candidatura, que a API ainda não manda.
+    aoConversar: candidaturaId
+      ? () =>
+          router.push({
+            pathname: "/(app)/chat/[aplicacaoId]",
+            params: { aplicacaoId: candidaturaId },
+          })
       : undefined,
     folha,
     aoIniciar: () => setFolhaAberta(true),

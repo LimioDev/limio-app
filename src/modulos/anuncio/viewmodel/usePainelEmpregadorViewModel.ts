@@ -18,6 +18,8 @@ export interface AnuncioExibido {
   estado: Estado;
   /** "4 candidatos" ou "com Rafael S.". */
   rodape: string;
+  /** Já tem Prestador escolhido: abre a tela 25 "Serviço combinado" em vez da 16. */
+  combinado: boolean;
 }
 
 /** Foto, data e saudação ficam no `CabecalhoInicioView` (módulo `perfil`), composto pela rota. */
@@ -44,6 +46,7 @@ function anuncioParaExibicao(anuncio: AnuncioResumo): AnuncioExibido {
     bairro: anuncio.bairro,
     estado: estadoDoAnuncio(anuncio.status, anuncio.prestadorEscolhido !== null),
     rodape: rodape(anuncio),
+    combinado: anuncio.prestadorEscolhido !== null,
   };
 }
 
@@ -98,7 +101,13 @@ export function usePainelEmpregadorViewModel() {
     aoAbrirNotificacoes: () => router.push("/(app)/notificacoes"),
     aoPublicar: () => router.push("/(app)/anuncio/novo"),
     aoVerHistorico: () => router.push("/(app)/(contratante)/anuncios"),
-    aoAbrirAnuncio: (id: string) =>
-      router.push({ pathname: "/(app)/anuncio/[id]", params: { id } }),
+    aoAbrirAnuncio: (id: string) => {
+      const combinado = painel?.anuncios.find((a) => a.id === id)?.combinado ?? false;
+      router.push(
+        combinado
+          ? { pathname: "/(app)/servico/combinado/[id]", params: { id } }
+          : { pathname: "/(app)/anuncio/[id]", params: { id } },
+      );
+    },
   };
 }

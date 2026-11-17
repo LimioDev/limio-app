@@ -23,6 +23,8 @@ interface AnuncioPublicadoViewProps {
   aoVoltar: () => void;
   aoVerCandidatos: () => void;
   aoEditar: () => void;
+  /** Tela 25 "Serviço combinado" (ETI-87). */
+  aoVerServico: () => void;
   folhaCancelarVisivel: boolean;
   cancelando: boolean;
   erroCancelar: string | null;
@@ -93,6 +95,7 @@ export function AnuncioPublicadoView({
   aoVoltar,
   aoVerCandidatos,
   aoEditar,
+  aoVerServico,
   folhaCancelarVisivel,
   cancelando,
   erroCancelar,
@@ -189,6 +192,11 @@ export function AnuncioPublicadoView({
       </ScrollView>
 
       <SafeAreaView edges={["bottom"]} className="bg-fundo">
+        {anuncio.podeVerServico ? (
+          <View className="border-t border-borda px-margem py-4">
+            <Botao rotulo="Ver serviço combinado" onPress={aoVerServico} />
+          </View>
+        ) : null}
         {anuncio.podeAlterar ? (
           <View className="flex-row gap-3 border-t border-borda px-margem py-4">
             <View className="flex-1">

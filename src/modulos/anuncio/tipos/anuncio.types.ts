@@ -403,6 +403,12 @@ export const ServicoCombinadoSchema = z.object({
   propostaPendente: PropostaReagendamentoSchema.nullable(),
   chatId: z.string().nullable(),
   mensagensNaoLidas: z.number().int(),
+  /**
+   * Id da candidatura escolhida, que é por onde o chat abre
+   * (`GET /candidaturas/{id}/chat`). Ainda não vem na resposta (pedido no
+   * ETI-86); sem ele, "Conversar com" aparece sem abrir o chat.
+   */
+  candidaturaId: z.string().nullish(),
 });
 
 export type ServicoCombinado = z.infer<typeof ServicoCombinadoSchema>;
