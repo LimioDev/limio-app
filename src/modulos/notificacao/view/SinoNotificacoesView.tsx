@@ -8,7 +8,7 @@ interface SinoNotificacoesViewProps {
   aoAbrirNotificacoes: () => void;
 }
 
-/** Sino da tela 13 com o total de não lidas no canto (some quando é zero). */
+/** Sino da tela 13 (Empregador) e do mural (Prestador) com o total de não lidas no canto (some quando é zero). */
 export function SinoNotificacoesView({ naoLidas, aoAbrirNotificacoes }: SinoNotificacoesViewProps) {
   const rotulo =
     naoLidas === 0

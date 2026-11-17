@@ -4,17 +4,17 @@ import { useCallback, useRef } from "react";
 import { useConsultarNaoLidasDeNovo, useNaoLidasQuery } from "../servico/notificacao.queries";
 
 /**
- * Sino do topo da tela 13 "Início" com o total de não lidas (ETI-111). Fica no
- * módulo `notificacao` e a rota passa pronto pro painel, pra `anuncio` não
- * importar este módulo.
+ * Sino do topo da tela 13 "Início" e do mural do Prestador com o total de não
+ * lidas (ETI-111). Fica no módulo `notificacao` e a rota passa pronto pro
+ * painel e pro mural, pra `anuncio` não importar este módulo.
  */
 export function useSinoNotificacoesViewModel() {
   const router = useRouter();
   const query = useNaoLidasQuery();
   const consultarDeNovo = useConsultarNaoLidasDeNovo();
 
-  // O dashboard continua montado nas abas: ao voltar pra ele, confere se
-  // chegou notificação nova. O primeiro foco é pulado porque o mount já consultou.
+  // A aba continua montada: ao voltar pra ela, confere se chegou notificação
+  // nova. O primeiro foco é pulado porque o mount já consultou.
   const primeiroFoco = useRef(true);
   useFocusEffect(
     useCallback(() => {
