@@ -1,6 +1,6 @@
 import * as Linking from "expo-linking";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useRef, useState } from "react";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { formatarTelefone, telefoneNacional } from "../../../comum/lib/telefone";
@@ -187,6 +187,21 @@ export function useSeuServicoViewModel(anuncioId: string) {
   const mostrarToast = useToast((estado) => estado.mostrar);
   const [folhaAberta, setFolhaAberta] = useState(false);
   const [erroFolha, setErroFolha] = useState<string | null>(null);
+
+  // A tela continua montada embaixo do chat, e o React Query no
+  // React Native não consulta de novo ao voltar o foco. O primeiro foco é
+  // pulado porque o mount já consultou.
+  const { refetch } = query;
+  const primeiroFoco = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (primeiroFoco.current) {
+        primeiroFoco.current = false;
+        return;
+      }
+      void refetch();
+    }, [refetch]),
+  );
 
   // Numa recarga com erro o React Query mantém o `data` anterior. Se o serviço
   // deixou de ser dele, contato e endereço não podem continuar na tela (ETI-86).
