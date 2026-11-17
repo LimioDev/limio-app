@@ -13,14 +13,6 @@ import {
 } from "../servico/anuncio.queries";
 import { ModoValidacao, rotuloModoValidacao, StatusAnuncio } from "../tipos/anuncio.enums";
 
-/** Uma opção de "Como você quer validar?". */
-export interface OpcaoModoExibida {
-  modo: ModoValidacao;
-  /** "Vi no local" ou "Pela foto". */
-  rotulo: string;
-  selecionada: boolean;
-}
-
 /** Foto do check-out; `url` `null` quando o storage não respondeu (fica o desenho). */
 export interface FotoCheckoutExibida {
   chave: string;
@@ -36,7 +28,11 @@ export interface ValidacaoExibida {
   /** Só com check-out (tela 27); sem ele (27b) a área da foto não aparece. */
   comCheckout: boolean;
   fotos: FotoCheckoutExibida[];
-  opcoes: OpcaoModoExibida[];
+  /**
+   * "Como você quer validar?": "Pela foto" com check-out e "Vi no local" sem
+   * ele. A API só aceita um modo por status (ETI-92), então não há escolha.
+   */
+  modo: string;
   /** Sem check-out: "\"Pela foto\" fica disponível quando Rafael enviar o check-out." */
   dicaModo: string | null;
 }
@@ -67,9 +63,11 @@ function aceitaValidacao(status: StatusAnuncio): boolean {
 /**
  * Tela 27 "Validar serviço" do Empregador (ETI-93), aberta pela tela 25. O
  * status vem do "Consultar serviço" (já em cache pela tela 25); as fotos e a
- * hora do check-out, do "Consultar validação". "Pela foto" só existe depois do
- * check-out e já vem marcado; antes dele (27b), só "Vi no local". No sucesso
- * troca pela tela 45 "Avaliação", que volta pra tela 25 já concluída.
+ * hora do check-out, do "Consultar validação". O modo segue o status, como a
+ * API exige (ETI-92): "Pela foto" em `AGUARDANDO_VALIDACAO` e "Vi no local"
+ * antes do check-out (27b). O protótipo oferece os dois depois do check-out,
+ * mas a API recusa o presencial ali. No sucesso troca pela tela 45
+ * "Avaliação", que volta pra tela 25 já concluída.
  */
 export function useValidarServicoViewModel(anuncioId: string) {
   const router = useRouter();
@@ -78,7 +76,6 @@ export function useValidarServicoViewModel(anuncioId: string) {
   const validacaoQuery = useValidacaoQuery(anuncioId);
   const validar = useValidarServicoMutation(anuncioId);
 
-  const [modoEscolhido, setModoEscolhido] = useState<ModoValidacao | null>(null);
   const [erroEnvio, setErroEnvio] = useState<string | null>(null);
 
   // Trava síncrona do "Validar serviço": `isPending` só muda no próximo
@@ -135,20 +132,15 @@ export function useValidarServicoViewModel(anuncioId: string) {
     erro = mensagemErroApi(validacaoQuery.error, "Não foi possível carregar a validação.");
   }
 
-  // "Pela foto" só a partir de `AGUARDANDO_VALIDACAO` (ETI-92).
+  // "Pela foto" só em `AGUARDANDO_VALIDACAO`; "Vi no local" só antes (ETI-92).
   const comCheckout = servico?.status === StatusAnuncio.AGUARDANDO_VALIDACAO;
-  const modo: ModoValidacao = comCheckout
-    ? (modoEscolhido ?? ModoValidacao.PELA_FOTO)
-    : ModoValidacao.PRESENCIAL;
+  const modo: ModoValidacao = comCheckout ? ModoValidacao.PELA_FOTO : ModoValidacao.PRESENCIAL;
 
   const nomeCompleto = consulta?.nomePrestador ?? servico?.outraParte.nome ?? null;
   const nome = nomeCompleto ? primeiroNome(nomeCompleto) : "o Prestador";
 
   let validacao: ValidacaoExibida | null = null;
   if (servico && consulta && erro === null) {
-    const modos = comCheckout
-      ? [ModoValidacao.PRESENCIAL, ModoValidacao.PELA_FOTO]
-      : [ModoValidacao.PRESENCIAL];
     validacao = {
       // Sempre há Prestador escolhido aqui: `PUBLICADO` é o "Combinado".
       estado: estadoDoAnuncio(servico.status, true),
@@ -161,11 +153,7 @@ export function useValidarServicoViewModel(anuncioId: string) {
           : `${maiusculaInicial(nome)} ainda não enviou o check-out.`,
       comCheckout,
       fotos: consulta.fotosCheckout.map((foto) => ({ chave: foto.id, url: foto.url })),
-      opcoes: modos.map((cada) => ({
-        modo: cada,
-        rotulo: rotuloModoValidacao(cada),
-        selecionada: cada === modo,
-      })),
+      modo: rotuloModoValidacao(modo),
       dicaModo: comCheckout
         ? null
         : `"Pela foto" fica disponível quando ${nome} enviar o check-out.`,
@@ -192,9 +180,9 @@ export function useValidarServicoViewModel(anuncioId: string) {
       onError: (falha) => {
         enviando.current = false;
         switch (erroApi(falha)?.codigo) {
-          // Ficou sem check-out entre abrir a tela e validar: só sobra o presencial.
+          // Ficou sem check-out entre abrir a tela e validar: a consulta do
+          // serviço recarrega (mutation) e a tela passa pra "Vi no local".
           case CodigoErro.VALIDACAO_SEM_CHECKOUT:
-            setModoEscolhido(ModoValidacao.PRESENCIAL);
             setErroEnvio(MENSAGEM_SEM_CHECKOUT);
             return;
           // Já concluído ou cancelado entre abrir a tela e validar.
@@ -221,12 +209,6 @@ export function useValidarServicoViewModel(anuncioId: string) {
     aoTentarDeNovo: () => {
       if (servicoQuery.isError) void servicoQuery.refetch();
       if (validacaoQuery.isError) void validacaoQuery.refetch();
-    },
-    aoEscolherModo: (escolhido: ModoValidacao) => {
-      if (!validar.isPending) {
-        setModoEscolhido(escolhido);
-        setErroEnvio(null);
-      }
     },
     enviando: validar.isPending,
     erroEnvio,

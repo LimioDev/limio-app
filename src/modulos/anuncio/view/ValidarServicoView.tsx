@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { CircleCheck, DollarSign, ImageIcon } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Badge } from "../../../comum/componentes/ui/Badge";
@@ -10,10 +10,8 @@ import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
 import { Card } from "../../../comum/componentes/ui/Card";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { Icone } from "../../../comum/componentes/ui/Icone";
-import type { ModoValidacao } from "../tipos/anuncio.enums";
 import type {
   FotoCheckoutExibida,
-  OpcaoModoExibida,
   ValidacaoExibida,
 } from "../viewmodel/useValidarServicoViewModel";
 
@@ -25,7 +23,6 @@ interface ValidarServicoViewProps {
   podeTentarDeNovo: boolean;
   tentandoDeNovo: boolean;
   aoTentarDeNovo: () => void;
-  aoEscolherModo: (modo: ModoValidacao) => void;
   enviando: boolean;
   erroEnvio: string | null;
   aoValidar: () => void;
@@ -98,35 +95,6 @@ function FotosDoCheckout({ fotos }: { fotos: FotoCheckoutExibida[] }) {
   );
 }
 
-/** Botão de "Como você quer validar?": cheio quando marcado. */
-function OpcaoModo({
-  opcao,
-  aoEscolher,
-  desabilitado,
-}: {
-  opcao: OpcaoModoExibida;
-  aoEscolher: (modo: ModoValidacao) => void;
-  desabilitado: boolean;
-}) {
-  return (
-    <Pressable
-      onPress={() => aoEscolher(opcao.modo)}
-      disabled={desabilitado}
-      accessibilityRole="radio"
-      accessibilityState={{ checked: opcao.selecionada, disabled: desabilitado }}
-      className={`h-10 flex-1 items-center justify-center rounded-campo border active:opacity-80 ${
-        opcao.selecionada ? "border-marca-500 bg-marca-500" : "border-borda-campo bg-superficie"
-      }`}
-    >
-      <Text
-        className={`text-rotulo font-bold ${opcao.selecionada ? "text-white" : "text-tinta-suave"}`}
-      >
-        {opcao.rotulo}
-      </Text>
-    </Pressable>
-  );
-}
-
 /** Tela 27 "Validar serviço" do Empregador e a variante 27b, sem check-out. */
 export function ValidarServicoView({
   validacao,
@@ -135,7 +103,6 @@ export function ValidarServicoView({
   podeTentarDeNovo,
   tentandoDeNovo,
   aoTentarDeNovo,
-  aoEscolherModo,
   enviando,
   erroEnvio,
   aoValidar,
@@ -180,15 +147,9 @@ export function ValidarServicoView({
 
         <Card className="gap-3">
           <Text className="text-corpo font-bold text-tinta">Como você quer validar?</Text>
-          <View className="flex-row gap-3" accessibilityRole="radiogroup">
-            {validacao.opcoes.map((opcao) => (
-              <OpcaoModo
-                key={opcao.modo}
-                opcao={opcao}
-                aoEscolher={aoEscolherModo}
-                desabilitado={enviando}
-              />
-            ))}
+          {/* Um modo só, o que a API aceita no status (ETI-92): sem escolha. */}
+          <View className="h-10 items-center justify-center rounded-campo bg-marca-500">
+            <Text className="text-rotulo font-bold text-white">{validacao.modo}</Text>
           </View>
           {validacao.dicaModo ? (
             <Text className="text-rotulo text-tinta-fraco">{validacao.dicaModo}</Text>
