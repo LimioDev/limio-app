@@ -77,10 +77,10 @@ export function destinoDaNotificacao(
         conferir: `/anuncios/mural/${anuncioId}`,
       };
     // "Check-out enviado" → tela 27 "Validar serviço" (US42). A tela 27 ainda
-    // não existe no app: abre o serviço (telas 36/37), de onde ela vai sair.
+    // não existe no app: abre a tela 25 "Serviço combinado", de onde ela sai.
     case TipoNotificacao.CHECKOUT_ENVIADO:
       return {
-        rota: { pathname: "/(app)/servico/[id]", params: { id: anuncioId } },
+        rota: { pathname: "/(app)/servico/combinado/[id]", params: { id: anuncioId } },
         papel: PapelUsuario.EMPREGADOR,
         conferir: `/anuncios/${anuncioId}/servico`,
       };
@@ -90,9 +90,10 @@ export function destinoDaNotificacao(
         papel: PapelUsuario.PRESTADOR,
         conferir: `/anuncios/${anuncioId}/servico`,
       };
+    // Do Empregador: tela 25 "Serviço combinado" (a `servico/[id]` é a do Prestador).
     case TipoNotificacao.SERVICO_INICIADO:
       return {
-        rota: { pathname: "/(app)/servico/[id]", params: { id: anuncioId } },
+        rota: { pathname: "/(app)/servico/combinado/[id]", params: { id: anuncioId } },
         papel: PapelUsuario.EMPREGADOR,
         conferir: `/anuncios/${anuncioId}/servico`,
       };
