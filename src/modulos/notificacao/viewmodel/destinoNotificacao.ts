@@ -40,10 +40,15 @@ export function destinoDaNotificacao(
     case TipoNotificacao.ANUNCIO_CANCELADO:
       // Aba "Aplicações" do Prestador, onde a candidatura aparece encerrada.
       return { rota: "/(app)/(prestador)/aplicacoes", papel: PapelUsuario.PRESTADOR, conferir: null };
+    // O perfil público (telas 20a/20b) exige o papel; no caso comum a avaliação
+    // é do papel em que a pessoa está.
     case TipoNotificacao.AVALIACAO_RECEBIDA:
-      return usuarioId
+      return usuarioId && papelAtivo
         ? {
-            rota: { pathname: "/(app)/perfil/[usuarioId]", params: { usuarioId } },
+            rota: {
+              pathname: "/(app)/perfil/[usuarioId]",
+              params: { usuarioId, papel: papelAtivo },
+            },
             papel: null,
             conferir: null,
           }
