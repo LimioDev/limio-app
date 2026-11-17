@@ -1,4 +1,5 @@
 import {
+  Camera,
   Check,
   CircleCheck,
   MapPin,
@@ -35,6 +36,8 @@ interface SeuServicoViewProps {
   aoAbrirWhatsApp?: () => void;
   folha: FolhaIniciarExibida;
   aoIniciar: () => void;
+  /** Abre a tela 38 "Checkout". */
+  aoFinalizarComFoto: () => void;
   aoConfirmarInicio: () => void;
   aoFecharFolha: () => void;
 }
@@ -105,6 +108,7 @@ export function SeuServicoView({
   aoAbrirWhatsApp,
   folha,
   aoIniciar,
+  aoFinalizarComFoto,
   aoConfirmarInicio,
   aoFecharFolha,
 }: SeuServicoViewProps) {
@@ -222,9 +226,15 @@ export function SeuServicoView({
         ) : null}
       </ScrollView>
 
-      {/* "Finalizar com foto" (ETI-91), "Propor novo horário" (ETI-100) e
-          "Cancelar serviço" (ETI-97) entram com os cards deles. */}
-      {servico.podeIniciar ? (
+      {/* "Propor novo horário" (ETI-100) e "Cancelar serviço" (ETI-97) entram
+          com os cards deles. */}
+      {servico.podeFinalizar ? (
+        <SafeAreaView edges={["bottom"]} className="border-t border-borda bg-superficie">
+          <View className="px-margem py-3">
+            <Botao rotulo="Finalizar com foto" icone={Camera} onPress={aoFinalizarComFoto} />
+          </View>
+        </SafeAreaView>
+      ) : servico.podeIniciar ? (
         <SafeAreaView edges={["bottom"]} className="border-t border-borda bg-superficie">
           <View className="px-margem py-3">
             <Botao

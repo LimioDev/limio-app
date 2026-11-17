@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { api } from "../../../comum/lib/api";
-import { formDataComFoto } from "../../../comum/lib/foto";
+import { formDataComFoto, formDataComFotos } from "../../../comum/lib/foto";
 import type { ArquivoFoto } from "../../../comum/tipos/foto";
 import {
   AnuncioCriadoResponseSchema,
@@ -9,6 +9,7 @@ import {
   AnuncioRequestSchema,
   CandidatosResponseSchema,
   CandidaturaCriadaSchema,
+  CheckoutSchema,
   DetalheAnuncioMuralSchema,
   EditarAnuncioRequestSchema,
   EscolhaResponseSchema,
@@ -23,6 +24,7 @@ import {
   type AnuncioRequest,
   type CandidatosResponse,
   type CandidaturaCriada,
+  type Checkout,
   type DetalheAnuncioMural,
   type EditarAnuncioRequest,
   type EscolhaResponse,
@@ -239,4 +241,29 @@ export async function listarMinhasCandidaturas(
  */
 export async function desistirCandidatura(candidaturaId: string): Promise<void> {
   await api.post(`/candidaturas/${candidaturaId}/desistir`);
+}
+
+/**
+ * Check-out do Prestador escolhido (ETI-90, `CheckoutController`): multipart
+ * com as fotos na parte `arquivos` e a `observacao` opcional, tudo numa
+ * chamada só (a API grava todas ou nenhuma). Erros: `404
+ * SERVICO_NAO_ENCONTRADO` (não é o escolhido), `409 SERVICO_ESTADO_INVALIDO`
+ * (fora de `EM_ANDAMENTO`/combinado), `422 FOTO_OBRIGATORIA` e `422 FOTO_INVALIDA`.
+ */
+export async function enviarCheckout({
+  anuncioId,
+  arquivos,
+  observacao,
+}: {
+  anuncioId: string;
+  arquivos: ArquivoFoto[];
+  observacao: string;
+}): Promise<Checkout> {
+  const corpo = formDataComFotos("arquivos", arquivos);
+  const texto = observacao.trim();
+  if (texto) {
+    corpo.append("observacao", texto);
+  }
+  const { data } = await api.post(`/anuncios/${anuncioId}/checkout`, corpo);
+  return CheckoutSchema.parse(data);
 }
