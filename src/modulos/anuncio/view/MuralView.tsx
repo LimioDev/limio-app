@@ -25,6 +25,8 @@ import { FolhaFiltrosMural } from "./componentes/FolhaFiltrosMural";
 type MuralViewProps = MuralViewModel & {
   /** Faixa "Plano FREE — N de 4 escolhas usadas" (ETI-79/ETI-80), composta pela rota. */
   faixaCota?: ReactNode;
+  /** Sino com o total de não lidas: vem pronto da rota (módulo `notificacao`). */
+  sino?: ReactNode;
 };
 
 function BotaoTopo({
@@ -124,6 +126,7 @@ function Aviso({
 
 export function MuralView({
   faixaCota,
+  sino,
   subtitulo,
   atalhos,
   anuncios,
@@ -232,6 +235,7 @@ export function MuralView({
             />
           )}
           <BotaoTopo icone={SlidersHorizontal} rotulo="Filtros" onPress={aoAbrirFiltros} />
+          {sino}
         </View>
         <Text className="-mt-2 text-rotulo text-tinta-suave">{subtitulo}</Text>
         {buscaAberta ? (

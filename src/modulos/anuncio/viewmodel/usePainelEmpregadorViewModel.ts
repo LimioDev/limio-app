@@ -98,7 +98,6 @@ export function usePainelEmpregadorViewModel() {
       : null,
     atualizando: query.isRefetching,
     aoAtualizar: () => void consultarDeNovo(),
-    aoAbrirNotificacoes: () => router.push("/(app)/notificacoes"),
     aoPublicar: () => router.push("/(app)/anuncio/novo"),
     aoVerHistorico: () => router.push("/(app)/(contratante)/anuncios"),
     aoAbrirAnuncio: (id: string) => {

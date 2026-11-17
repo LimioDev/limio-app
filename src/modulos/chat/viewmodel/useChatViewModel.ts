@@ -3,19 +3,14 @@ import { useIsFocused, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 
+import { chaveDia, rotuloDia } from "../../../comum/lib/datas";
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { useSessao } from "../../../comum/store/sessao";
 import { useToast } from "../../../comum/store/toast";
 import { StatusAplicacao } from "../../../comum/tipos/aplicacao";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import { marcarEntregues } from "../servico/chat.api";
-import {
-  avisoSomenteLeitura,
-  chaveDia,
-  horaMensagem,
-  primeiroNome,
-  rotuloDia,
-} from "../servico/chat.helpers";
+import { avisoSomenteLeitura, horaMensagem, primeiroNome } from "../servico/chat.helpers";
 import {
   confirmarMensagensNoCache,
   inserirMensagemNoCache,
