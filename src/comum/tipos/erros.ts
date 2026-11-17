@@ -52,6 +52,8 @@ export const CodigoErro = {
   // Serviço combinado (ETI-86) e iniciar o serviço (ETI-88), PRs #29 e #26 do back.
   SERVICO_NAO_ENCONTRADO: "SERVICO_NAO_ENCONTRADO",
   SERVICO_ESTADO_INVALIDO: "SERVICO_ESTADO_INVALIDO",
+  // Validar o serviço pela foto antes do check-out (ETI-92), limio-api#31.
+  VALIDACAO_SEM_CHECKOUT: "VALIDACAO_SEM_CHECKOUT",
   // Minhas candidaturas e desistir (ETI-77), já na develop do back. Também
   // usados por listar e recusar candidatos (ETI-67).
   CANDIDATURA_NAO_ENCONTRADA: "CANDIDATURA_NAO_ENCONTRADA",

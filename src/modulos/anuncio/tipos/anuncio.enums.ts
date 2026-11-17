@@ -80,3 +80,25 @@ export const EtapaEscolha = {
 } as const;
 
 export type EtapaEscolha = (typeof EtapaEscolha)[keyof typeof EtapaEscolha];
+
+/**
+ * Espelha `ModoValidacao` do backend (ETI-92): como o Empregador confirma que
+ * o serviço foi feito na tela 27. `PELA_FOTO` só depois do check-out.
+ */
+export const ModoValidacao = {
+  /** "Vi no local". */
+  PRESENCIAL: "PRESENCIAL",
+  /** "Pela foto". */
+  PELA_FOTO: "PELA_FOTO",
+} as const;
+
+export type ModoValidacao = (typeof ModoValidacao)[keyof typeof ModoValidacao];
+
+export function rotuloModoValidacao(modo: ModoValidacao): string {
+  switch (modo) {
+    case ModoValidacao.PRESENCIAL:
+      return "Vi no local";
+    case ModoValidacao.PELA_FOTO:
+      return "Pela foto";
+  }
+}

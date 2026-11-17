@@ -10,6 +10,7 @@ import {
   CandidatosResponseSchema,
   CandidaturaCriadaSchema,
   CheckoutSchema,
+  ConsultaValidacaoSchema,
   DetalheAnuncioMuralSchema,
   EditarAnuncioRequestSchema,
   EscolhaResponseSchema,
@@ -19,12 +20,15 @@ import {
   PainelEmpregadorResponseSchema,
   ServicoCombinadoSchema,
   ServicoIniciadoSchema,
+  ServicoValidadoSchema,
+  ValidarServicoRequestSchema,
   type AnuncioCriadoResponse,
   type AnuncioDetalheResponse,
   type AnuncioRequest,
   type CandidatosResponse,
   type CandidaturaCriada,
   type Checkout,
+  type ConsultaValidacao,
   type DetalheAnuncioMural,
   type EditarAnuncioRequest,
   type EscolhaResponse,
@@ -35,6 +39,8 @@ import {
   type PainelEmpregadorResponse,
   type ServicoCombinado,
   type ServicoIniciado,
+  type ServicoValidado,
+  type ValidarServicoRequest,
 } from "../tipos/anuncio.types";
 import type { AbaCandidatura } from "../tipos/anuncio.enums";
 
@@ -266,4 +272,32 @@ export async function enviarCheckout({
   }
   const { data } = await api.post(`/anuncios/${anuncioId}/checkout`, corpo);
   return CheckoutSchema.parse(data);
+}
+
+/**
+ * "Consultar validação" (ETI-92, `ConsultarValidacaoController`): fotos do
+ * check-out, quando foi feito e o nome do Prestador, pro Empregador dono ver
+ * antes de validar. Quem não é o dono recebe `404 SERVICO_NAO_ENCONTRADO`.
+ */
+export async function buscarValidacao(anuncioId: string): Promise<ConsultaValidacao> {
+  const { data } = await api.get(`/anuncios/${anuncioId}/validacao`);
+  return ConsultaValidacaoSchema.parse(data);
+}
+
+/**
+ * "Validar serviço" (ETI-92, `ValidarServicoController`): o anúncio vai pra
+ * `CONCLUIDO`. Erros: `404 SERVICO_NAO_ENCONTRADO`, `409 VALIDACAO_SEM_CHECKOUT`
+ * (`PELA_FOTO` antes do check-out) e `409 SERVICO_ESTADO_INVALIDO` (já
+ * concluído ou cancelado).
+ */
+export async function validarServico({
+  anuncioId,
+  request,
+}: {
+  anuncioId: string;
+  request: ValidarServicoRequest;
+}): Promise<ServicoValidado> {
+  const corpo = ValidarServicoRequestSchema.parse(request);
+  const { data } = await api.post(`/anuncios/${anuncioId}/validar`, corpo);
+  return ServicoValidadoSchema.parse(data);
 }

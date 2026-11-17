@@ -9,7 +9,7 @@ import {
   CamposEnderecoRequestSchema,
 } from "../../../comum/tipos/endereco";
 import { Uf } from "../../../comum/tipos/localidade";
-import { StatusAnuncio, type QuandoMural } from "./anuncio.enums";
+import { ModoValidacao, StatusAnuncio, type QuandoMural } from "./anuncio.enums";
 
 /**
  * Um anúncio da lista "Seus anúncios" (`AnuncioPainelResponse` do backend).
@@ -463,3 +463,43 @@ export const CheckoutSchema = z.object({
 });
 
 export type Checkout = z.infer<typeof CheckoutSchema>;
+
+/**
+ * Uma foto do check-out (`FotoCheckoutResponse`, ETI-92). `url` é link
+ * temporário, válido até `expiraEm`; os dois vêm `null` quando o storage não
+ * respondeu.
+ */
+export const FotoCheckoutSchema = z.object({
+  id: z.string(),
+  url: z.string().nullable(),
+  expiraEm: z.string().nullable(),
+});
+
+/**
+ * Espelha `ConsultaValidacaoResponse` — `GET /anuncios/{anuncioId}/validacao`
+ * (ETI-92), só pro Empregador dono. Sem check-out (validação presencial),
+ * `fotosCheckout` vem vazio e `checkoutEm` `null`. `nomePrestador` é `null` se
+ * a conta dele foi encerrada.
+ */
+export const ConsultaValidacaoSchema = z.object({
+  fotosCheckout: z.array(FotoCheckoutSchema),
+  checkoutEm: z.string().nullable(),
+  nomePrestador: z.string().nullable(),
+});
+
+export type ConsultaValidacao = z.infer<typeof ConsultaValidacaoSchema>;
+
+/** Corpo do `POST /anuncios/{anuncioId}/validar` (`ValidarServicoRequest`, ETI-92). */
+export const ValidarServicoRequestSchema = z.object({
+  modo: z.enum(ModoValidacao),
+});
+
+export type ValidarServicoRequest = z.infer<typeof ValidarServicoRequestSchema>;
+
+/** Resposta do "Validar serviço" (`ServicoValidadoResponse`, ETI-92): `200` já em `CONCLUIDO`. */
+export const ServicoValidadoSchema = z.object({
+  status: z.enum(StatusAnuncio),
+  validadoEm: z.string(),
+});
+
+export type ServicoValidado = z.infer<typeof ServicoValidadoSchema>;

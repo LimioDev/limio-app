@@ -10,7 +10,7 @@ import {
 import { erroApi } from "../../../comum/lib/erros";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import type { ArquivoFoto } from "../../../comum/tipos/foto";
-import type { AbaCandidatura } from "../tipos/anuncio.enums";
+import type { AbaCandidatura, ModoValidacao } from "../tipos/anuncio.enums";
 import type {
   CandidatosResponse,
   DetalheAnuncioMural,
@@ -23,6 +23,7 @@ import {
   buscarAnuncio,
   buscarDetalheAnuncioMural,
   buscarServico,
+  buscarValidacao,
   candidatarAoAnuncio,
   listarCandidatos,
   recusarCandidato,
@@ -37,6 +38,7 @@ import {
   listarMinhasCandidaturas,
   listarMural,
   removerFotoAnuncio,
+  validarServico,
 } from "./anuncio.api";
 
 export const chavesAnuncio = {
@@ -47,6 +49,7 @@ export const chavesAnuncio = {
   detalhe: (id: string) => ["anuncio", "detalhe", id] as const,
   candidatos: (id: string) => ["anuncio", "candidatos", id] as const,
   servico: (id: string) => ["anuncio", "servico", id] as const,
+  validacao: (id: string) => ["anuncio", "validacao", id] as const,
   minhasCandidaturas: ["anuncio", "minhas-candidaturas"] as const,
   minhasCandidaturasDaAba: (aba: AbaCandidatura) =>
     ["anuncio", "minhas-candidaturas", aba] as const,
@@ -346,6 +349,48 @@ export function useCheckoutMutation(anuncioId: string) {
       }
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.minhasCandidaturas });
+    },
+  });
+}
+
+/**
+ * Tela 27 "Validar serviço" (ETI-92/ETI-93). Os links das fotos do check-out
+ * são temporários: consulta de novo a cada abertura.
+ */
+export function useValidacaoQuery(anuncioId: string) {
+  return useQuery({
+    queryKey: chavesAnuncio.validacao(anuncioId),
+    queryFn: () => buscarValidacao(anuncioId),
+    staleTime: 0,
+  });
+}
+
+/**
+ * "Validar serviço" (tela 27, ETI-92). No sucesso a tela 25, que fica embaixo,
+ * já volta "Concluído" com o `validadoEm` da resposta, e a consulta confirma em
+ * seguida; o painel e o detalhe do anúncio também mudam de status. Com
+ * `SERVICO_NAO_ENCONTRADO` o serviço é zerado e consultado de novo (`reset`,
+ * não `remove`), porque a tela 25 continua montada embaixo com contato e
+ * endereço; a nova consulta devolve o 404 e ela troca pelo "não disponível".
+ */
+export function useValidarServicoMutation(anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (modo: ModoValidacao) => validarServico({ anuncioId, request: { modo } }),
+    onSuccess: ({ status, validadoEm }) => {
+      queryClient.setQueryData<ServicoCombinado>(
+        chavesAnuncio.servico(anuncioId),
+        (atual) => (atual ? { ...atual, status, validadoEm } : atual),
+      );
+    },
+    onSettled: (_dados, falha) => {
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalhe(anuncioId) });
+      if (erroApi(falha)?.codigo === CodigoErro.SERVICO_NAO_ENCONTRADO) {
+        void queryClient.resetQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+        return;
+      }
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
     },
   });
 }
