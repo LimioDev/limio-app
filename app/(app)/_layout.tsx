@@ -26,6 +26,10 @@ export default function AppLayout() {
         <Stack.Screen name="(prestador)" />
         {/* Tela 33 "Cota do mês": fora das abas, com voltar (ETI-80). */}
         <Stack.Screen name="cota" />
+        {/* Telas 34 "Assinatura" e 35 "Assinatura GOLD" (ETI-82): só o
+            Prestador assina; a API recusa os outros papéis. */}
+        <Stack.Screen name="conta/assinatura" />
+        <Stack.Screen name="conta/assinatura-gold" />
       </Stack.Protected>
       <Stack.Screen name="trocar-papel" options={{ presentation: "modal" }} />
     </Stack>
