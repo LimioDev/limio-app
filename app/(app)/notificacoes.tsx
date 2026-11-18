@@ -1,9 +1,8 @@
-import { Text, View } from "react-native";
+import { useNotificacoesViewModel } from "../../src/modulos/notificacao/viewmodel/useNotificacoesViewModel";
+import { NotificacoesView } from "../../src/modulos/notificacao/view/NotificacoesView";
 
+/** Tela 43 "Notificações" (ETI-111): vale pros dois papéis. */
 export default function Notificacoes() {
-  return (
-    <View>
-      <Text>notificacoes</Text>
-    </View>
-  );
+  const vm = useNotificacoesViewModel();
+  return <NotificacoesView {...vm} />;
 }

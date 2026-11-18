@@ -1,5 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import { format } from "date-fns";
+import { differenceInCalendarDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 // Todo prazo do sistema conta em America/Sao_Paulo; a API devolve UTC.
@@ -46,4 +46,24 @@ export function formatarDiaPorExtenso(data: string | Date = new Date()): string 
     // "segunda-feira" → "segunda": o guia usa o nome curto do dia.
     .replace("-feira", "");
   return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+/** Chave do dia no fuso do sistema ("2026-11-16"), para agrupar itens por dia (chat, notificações). */
+export function chaveDia(dataUtc: string): string {
+  return format(paraFusoLocal(dataUtc), "yyyy-MM-dd");
+}
+
+/** Separador de dia: "Hoje", "Ontem", "2 de novembro" ou "2 de novembro de 2025" em outro ano. */
+export function rotuloDia(dataUtc: string, agora: Date = new Date()): string {
+  const dia = paraFusoLocal(dataUtc);
+  const hoje = paraFusoLocal(agora);
+  const diferenca = differenceInCalendarDays(hoje, dia);
+  if (diferenca === 0) {
+    return "Hoje";
+  }
+  if (diferenca === 1) {
+    return "Ontem";
+  }
+  const padrao = dia.getFullYear() === hoje.getFullYear() ? "d 'de' MMMM" : "d 'de' MMMM 'de' yyyy";
+  return format(dia, padrao, { locale: ptBR });
 }
