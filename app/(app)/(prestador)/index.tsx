@@ -10,13 +10,13 @@ export default function Mural() {
   // Especialidades, raio e cota vêm do perfil; a rota junta os dois módulos.
   const atuacao = useAtuacaoDoMuralViewModel();
   const vm = useMuralViewModel(atuacao);
-  const { faixa, aoAbrirCota } = useFaixaCotaViewModel();
+  const { faixa, ...faixaAcoes } = useFaixaCotaViewModel();
   // Tela 43 vale pros dois papéis: o Prestador também tem o sino.
   const sino = useSinoNotificacoesViewModel();
   return (
     <MuralView
       {...vm}
-      faixaCota={faixa ? <FaixaCotaView faixa={faixa} aoAbrirCota={aoAbrirCota} /> : null}
+      faixaCota={faixa ? <FaixaCotaView faixa={faixa} {...faixaAcoes} /> : null}
       sino={<SinoNotificacoesView {...sino} />}
     />
   );
