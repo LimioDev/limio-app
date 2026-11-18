@@ -2,8 +2,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback } from "react";
 
+import { chavesCota } from "../../../comum/servico/cota.chaves";
 import { formatarEscolhasUsadas, formatarRenovacao } from "../servico/cota.helpers";
-import { chavesCota, useCotaDoMesQuery } from "../servico/cota.queries";
+import { useCotaDoMesQuery } from "../servico/cota.queries";
 import { Plano } from "../tipos/cota.enums";
 
 export type FaixaCotaExibida =
