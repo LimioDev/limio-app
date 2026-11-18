@@ -1,20 +1,61 @@
 import {
   useInfiniteQuery,
   useMutation,
+  useQueryClient,
   type InfiniteData,
   type QueryClient,
 } from "@tanstack/react-query";
+import { useCallback } from "react";
 
+import type { PapelDoApp } from "../../../comum/tipos/papel";
 import { TipoEventoChat } from "../tipos/chat.enums";
-import type { Chat, Mensagem } from "../tipos/chat.types";
-import { abrirChat, enviarMensagem, marcarLidas } from "./chat.api";
+import type { Chat, ConversasResponse, Mensagem } from "../tipos/chat.types";
+import { abrirChat, enviarMensagem, listarConversas, marcarLidas } from "./chat.api";
 
 type PaginasChat = InfiniteData<Chat, string | undefined>;
+type PaginasConversas = InfiniteData<ConversasResponse, number>;
 
 export const chavesChat = {
   // Por candidatura: é por ela que o chat é aberto (a rota não conhece o id do chat).
   chat: (candidaturaId: string) => ["chat", "candidatura", candidaturaId] as const,
+  // Por papel: a API lista pelo papel ativo do token, então cada papel tem a
+  // sua lista e trocar de papel consulta de novo em vez de mostrar a do outro.
+  conversas: (papel: PapelDoApp) => ["chat", "conversas", papel] as const,
 };
+
+/** Tela 42/42b "Conversas": "Listar conversas", 20 por página. */
+export function useConversasQuery(papel: PapelDoApp) {
+  return useInfiniteQuery({
+    queryKey: chavesChat.conversas(papel),
+    queryFn: ({ pageParam }) => listarConversas(pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (ultima: ConversasResponse) =>
+      ultima.conversas.pagina + 1 < ultima.conversas.totalPaginas
+        ? ultima.conversas.pagina + 1
+        : undefined,
+    // Mensagem chega a qualquer momento: ao abrir a aba, consulta de novo.
+    staleTime: 0,
+  });
+}
+
+/**
+ * Consulta a lista de novo ao voltar pra aba. Antes, deixa só a primeira
+ * página no cache: o `refetch` de uma consulta infinita buscaria de novo, uma
+ * por vez, todas as páginas já roladas, e a ordem (pela última mensagem) muda
+ * entre uma consulta e outra.
+ */
+export function useConsultarConversasDeNovo(papel: PapelDoApp) {
+  const queryClient = useQueryClient();
+  return useCallback(() => {
+    const chave = chavesChat.conversas(papel);
+    queryClient.setQueryData<PaginasConversas>(chave, (dados) =>
+      dados && dados.pages.length > 1
+        ? { pages: dados.pages.slice(0, 1), pageParams: dados.pageParams.slice(0, 1) }
+        : dados,
+    );
+    return queryClient.refetchQueries({ queryKey: chave, exact: true });
+  }, [queryClient, papel]);
+}
 
 /**
  * Chat da candidatura com o histórico paginado. A primeira página traz as
