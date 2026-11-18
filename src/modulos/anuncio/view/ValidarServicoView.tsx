@@ -162,8 +162,8 @@ export function ValidarServicoView({
             <Text className="text-corpo font-bold text-alerta">Validar não paga o prestador</Text>
             {/* Texto da 27c: o valor combinado ainda não é guardado pela API. */}
             <Text className="text-rotulo text-alerta">
-              O LIMIO não retém nem transfere valores. Pague o valor combinado por PIX, dinheiro
-              ou transferência.
+              O LIMIO não retém nem transfere valores. Depois de validar, pague o valor combinado
+              por PIX, dinheiro ou transferência.
             </Text>
           </View>
         </View>

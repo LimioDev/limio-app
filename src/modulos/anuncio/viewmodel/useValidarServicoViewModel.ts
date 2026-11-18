@@ -177,22 +177,40 @@ export function useValidarServicoViewModel(anuncioId: string) {
         // Troca em vez de empilhar: o voltar da Avaliação cai na tela 25.
         router.replace({ pathname: "/(app)/avaliacao/[anuncioId]", params: { anuncioId } });
       },
-      onError: (falha) => {
-        enviando.current = false;
+      onError: async (falha) => {
         switch (erroApi(falha)?.codigo) {
-          // Ficou sem check-out entre abrir a tela e validar: a consulta do
-          // serviço recarrega (mutation) e a tela passa pra "Vi no local".
+          // Defesa pra cache desatualizado: o status não volta de
+          // `AGUARDANDO_VALIDACAO`, mas se a tela abriu com um status velho a
+          // consulta do serviço recarrega (mutation) e ela passa pra "Vi no local".
           case CodigoErro.VALIDACAO_SEM_CHECKOUT:
+            enviando.current = false;
             setErroEnvio(MENSAGEM_SEM_CHECKOUT);
             return;
-          // Já concluído ou cancelado entre abrir a tela e validar.
-          case CodigoErro.SERVICO_ESTADO_INVALIDO:
+          case CodigoErro.SERVICO_ESTADO_INVALIDO: {
+            // O check-out chegou com a tela aberta em "Vi no local": a API
+            // recusa o presencial, mas ainda dá pra validar pela foto. A trava
+            // fica até a consulta voltar, senão um novo toque manda outro 409.
+            const [{ data: atual }] = await Promise.all([
+              servicoQuery.refetch(),
+              validacaoQuery.refetch(),
+            ]);
+            enviando.current = false;
+            if (atual?.status === StatusAnuncio.AGUARDANDO_VALIDACAO) {
+              setErroEnvio(
+                `${maiusculaInicial(nome)} acabou de enviar o check-out. Confira a foto e valide.`,
+              );
+              return;
+            }
+            // Já concluído ou cancelado entre abrir a tela e validar.
             sairComAviso(MENSAGEM_JA_VALIDADO);
             return;
+          }
           case CodigoErro.SERVICO_NAO_ENCONTRADO:
+            enviando.current = false;
             sairComAviso("Este serviço não está mais disponível.");
             return;
           default:
+            enviando.current = false;
             setErroEnvio(mensagemErroApi(falha, "Não foi possível validar o serviço."));
         }
       },
