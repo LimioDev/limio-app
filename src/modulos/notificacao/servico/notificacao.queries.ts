@@ -114,3 +114,9 @@ export function useMarcarTodasComoLidasMutation() {
     onSuccess: ({ naoLidas }) => aplicarLeitura(queryClient, null, naoLidas),
   });
 }
+
+/** Push chegou com o app aberto: lista e sino consultam de novo. */
+export function useAtualizarNotificacoes() {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: chavesNotificacao.lista });
+}

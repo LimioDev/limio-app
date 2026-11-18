@@ -32,6 +32,7 @@ arquivo de dentro de `modulos/auth/`.
 |---|---|
 | `componentes/ui/` | Design system puro, sem noção de entidade: `Botao`, `Campo`, `Card`, `Badge`, `Carregando`, `Vazio` |
 | `lib/` | Infra técnica: `api.ts` (instância axios), `datas.ts`, `query.ts` (QueryClient) |
+| `servico/` | Chamada de API e hooks React Query usados por 2+ módulos, no mesmo formato do `servico/` de módulo (`<recurso>.api.ts` com `.parse()` na fronteira, `<recurso>.queries.ts`): `categoria`, `endereco`, `ibge`, `cep`, `aparelhoPush` (o `notificacao` registra e o `auth` remove no logout) |
 | `store/` | Estado global usado por mais de um módulo: `sessao.ts` (Zustand — token, usuário logado, papel) |
 | `hooks/` | Hook técnico reaproveitável sem regra de negócio: `useDebounce`, `useKeyboardVisible` |
 | `tipos/` | Contrato genérico: `PaginaResponse<T>`, `ErroResponse`, `erros.ts` (`CodigoErro` — espelha 1:1 o enum do backend) |
