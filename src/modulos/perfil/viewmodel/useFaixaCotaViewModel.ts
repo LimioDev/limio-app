@@ -61,6 +61,7 @@ export function useFaixaCotaViewModel() {
   return {
     faixa,
     aoAbrirCota: () => router.push("/(app)/cota"),
+    aoVerGold: () => router.push("/(app)/conta/assinatura"),
   };
 }
 

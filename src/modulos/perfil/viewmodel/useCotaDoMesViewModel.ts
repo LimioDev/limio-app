@@ -28,6 +28,8 @@ export interface CotaExibida {
   titulo: string;
   texto: string;
   escolhas: EscolhaExibida[];
+  /** Rodapé "Conhecer o GOLD": só no FREE. */
+  oferecerGold: boolean;
 }
 
 function plural(total: number, singular: string, pluralTexto: string): string {
@@ -54,6 +56,7 @@ function cotaParaExibicao(cota: CotaDoMesResponse): CotaExibida {
       segmentos: [],
       titulo: "GOLD ativo · escolhas ilimitadas",
       texto: "No plano GOLD, as escolhas do mês não têm limite.",
+      oferecerGold: false,
     };
   }
 
@@ -65,6 +68,7 @@ function cotaParaExibicao(cota: CotaDoMesResponse): CotaExibida {
     destaque: `${usadas} de ${teto}`,
     complemento: "escolhas usadas",
     segmentos: Array.from({ length: teto }, (_, indice) => indice < usadas),
+    oferecerGold: true,
     // Quem diz se esgotou é a API, não a conta acima.
     ...(cota.esgotada
       ? {
@@ -98,6 +102,7 @@ export function useCotaDoMesViewModel() {
     tentandoDeNovo: query.isRefetching,
     cota: query.data ? cotaParaExibicao(query.data) : null,
     aoTentarDeNovo: () => void query.refetch(),
+    aoConhecerGold: () => router.push("/(app)/conta/assinatura"),
     aoVoltar: () => {
       if (router.canGoBack()) {
         router.back();
