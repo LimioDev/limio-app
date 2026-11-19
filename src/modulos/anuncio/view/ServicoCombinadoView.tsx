@@ -19,10 +19,12 @@ import { Card } from "../../../comum/componentes/ui/Card";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { Icone } from "../../../comum/componentes/ui/Icone";
 import type {
+  ErroCancelamentoServico,
   EtapaServicoExibida,
   ServicoCombinadoExibido,
 } from "../viewmodel/useServicoCombinadoViewModel";
 import { CartaoConversa } from "./componentes/CartaoConversa";
+import { FolhaCancelarServico } from "./componentes/FolhaCancelarServico";
 
 interface ServicoCombinadoViewProps {
   servico: ServicoCombinadoExibido | null;
@@ -41,6 +43,15 @@ interface ServicoCombinadoViewProps {
   /** Tela 27 "Validar serviço" (ETI-93). */
   aoValidar: () => void;
   aoAvaliar: () => void;
+  /** Folha "Cancelar o serviço combinado" (tela 26, ETI-95). */
+  folhaCancelarAberta: boolean;
+  cancelando: boolean;
+  erroCancelamento: ErroCancelamentoServico | null;
+  aoCancelar: () => void;
+  aoConfirmarCancelar: () => void;
+  aoManterCombinado: () => void;
+  /** Tela 46 "Abrir denúncia" (ETI-115); sem função, o atalho não aparece. */
+  aoAbrirDenuncia?: () => void;
 }
 
 const TITULO = "Serviço combinado";
@@ -121,6 +132,13 @@ export function ServicoCombinadoView({
   aoConversar,
   aoValidar,
   aoAvaliar,
+  folhaCancelarAberta,
+  cancelando,
+  erroCancelamento,
+  aoCancelar,
+  aoConfirmarCancelar,
+  aoManterCombinado,
+  aoAbrirDenuncia,
 }: ServicoCombinadoViewProps) {
   if (!servico) {
     return (
@@ -264,8 +282,16 @@ export function ServicoCombinadoView({
             onPress={aoValidar}
           />
         ) : null}
-        {/* "Reagendar" (ETI-100) e "Cancelar" (ETI-95) entram com os cards
-            deles; as regras já estão em `servico.acoes`. */}
+        {/* Linha do protótipo com "Reagendar" e "Cancelar" lado a lado. O
+            "Reagendar" (ETI-100) entra aqui com o card dele; a regra já está em
+            `servico.acoes`. Sozinho, o "Cancelar" ocupa a linha toda. */}
+        {servico.acoes.cancelar ? (
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <Botao rotulo="Cancelar" variante="destrutivo" onPress={aoCancelar} />
+            </View>
+          </View>
+        ) : null}
         {servico.podeAvaliar ? (
           <Botao rotulo={servico.rotuloAvaliar} icone={Star} onPress={aoAvaliar} />
         ) : null}
@@ -280,6 +306,16 @@ export function ServicoCombinadoView({
           )
         ) : null}
       </ScrollView>
+
+      <FolhaCancelarServico
+        visivel={folhaCancelarAberta}
+        cancelamento={servico.cancelamento}
+        cancelando={cancelando}
+        erro={erroCancelamento}
+        aoConfirmar={aoConfirmarCancelar}
+        aoManter={aoManterCombinado}
+        aoAbrirDenuncia={aoAbrirDenuncia}
+      />
     </SafeAreaView>
   );
 }
