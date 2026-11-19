@@ -1,6 +1,9 @@
-import { Vazio } from "../../../src/comum/componentes/ui/Vazio";
+import { PapelUsuario } from "../../../src/comum/tipos/papel";
+import { ConversasView } from "../../../src/modulos/chat/view/ConversasView";
+import { useConversasViewModel } from "../../../src/modulos/chat/viewmodel/useConversasViewModel";
 
-// Placeholder até o card desta aba entrar (Aplicações: ETI-77/ETI-78; Chats: ETI-101/ETI-102).
+/** Tela 42b "Conversas" do Prestador (ETI-104). */
 export default function Chats() {
-  return <Vazio mensagem="Em breve" />;
+  const vm = useConversasViewModel(PapelUsuario.PRESTADOR);
+  return <ConversasView {...vm} />;
 }
