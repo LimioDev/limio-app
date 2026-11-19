@@ -1,6 +1,6 @@
 import * as Linking from "expo-linking";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { formatarDiaPorExtenso } from "../../../comum/lib/datas";
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
@@ -10,13 +10,15 @@ import { CodigoErro } from "../../../comum/tipos/erros";
 import {
   avisoPropostaPendente,
   dataEHora,
+  diaAsHora,
   emQuantosDias,
   estadoDoAnuncio,
+  faltamDias,
   horaPretendida,
   mensagensNovas,
   primeiroNome,
 } from "../servico/anuncio.helpers";
-import { useServicoQuery } from "../servico/anuncio.queries";
+import { useCancelarServicoMutation, useServicoQuery } from "../servico/anuncio.queries";
 import { StatusAnuncio } from "../tipos/anuncio.enums";
 import type { ServicoCombinado } from "../tipos/anuncio.types";
 
@@ -68,6 +70,29 @@ export interface ServicoCombinadoExibido {
   podeAvaliar: boolean;
   /** "Avaliar Rafael". */
   rotuloAvaliar: string;
+  /** Textos da folha "Cancelar" (tela 26); `null` sem prazo de cancelamento. */
+  cancelamento: CancelamentoServicoExibido | null;
+}
+
+/** Textos da tela 26, montados a partir da consulta do serviço (o app não calcula as 24h). */
+export interface CancelamentoServicoExibido {
+  /** "Cancelar o serviço combinado com Rafael?". */
+  titulo: string;
+  /** "Faltam 3 dias para 03/09 às 14:00." */
+  prazo: string;
+  /** "A partir de 02/09 às 14:00 o cancelamento é recusado. Dentro da carência..." */
+  aviso: string;
+}
+
+/**
+ * Tentativa de cancelar que não deu certo. `bloqueado`: a API recusou de vez
+ * (prazo esgotado ou serviço já começou) e "Cancelar serviço" some da folha.
+ */
+export interface ErroCancelamentoServico {
+  mensagem: string;
+  bloqueado: boolean;
+  /** `USE_DENUNCIA`: a folha mostra o atalho pra tela 46, quando ele existir. */
+  sugereDenuncia: boolean;
 }
 
 export interface AcoesDoEmpregador {
@@ -132,12 +157,23 @@ function etapasDoServico(servico: ServicoCombinado): EtapaServicoExibida[] {
   });
 }
 
-function rodape(servico: ServicoCombinado, nome: string): string | null {
+function rodape(
+  servico: ServicoCombinado,
+  nome: string,
+  acoes: AcoesDoEmpregador,
+): string | null {
   switch (servico.status) {
-    // "Cancelamento permitido até..." e "(nome) é GOLD, então não há cota a
-    // estornar." voltam com o "Cancelar" (ETI-95).
-    case StatusAnuncio.PUBLICADO:
-      return null;
+    // A consulta não diz se a escolha consumiu cota nem se está na carência de
+    // um reagendamento: só o Prestador GOLD tem certeza de "nada a estornar".
+    case StatusAnuncio.PUBLICADO: {
+      if (!acoes.cancelar || !servico.prazoCancelamentoEm) {
+        return null;
+      }
+      const prazo = `Cancelamento permitido até ${dataEHora(servico.prazoCancelamentoEm)}.`;
+      return servico.outraParte.gold === true
+        ? `${prazo} ${nome} é GOLD, então não há cota a estornar.`
+        : prazo;
+    }
     case StatusAnuncio.EM_ANDAMENTO:
       return "Vi o serviço pronto no local? Você já pode validar. O serviço já começou: não dá mais para cancelar nem reagendar.";
     case StatusAnuncio.AGUARDANDO_VALIDACAO: {
@@ -170,6 +206,23 @@ function acoesDoEmpregador(servico: ServicoCombinado, agora: Date): AcoesDoEmpre
   };
 }
 
+function cancelamentoParaExibicao(
+  servico: ServicoCombinado,
+  nome: string,
+  agora: Date,
+): CancelamentoServicoExibido | null {
+  const limite = servico.prazoCancelamentoEm;
+  if (!limite) {
+    return null;
+  }
+  const data = servico.dataHoraPretendida;
+  return {
+    titulo: `Cancelar o serviço combinado com ${nome}?`,
+    prazo: `${faltamDias(data, agora)} para ${diaAsHora(data)}.`,
+    aviso: `A partir de ${diaAsHora(limite)} o cancelamento é recusado. Dentro da carência de um reagendamento aceito, não há estorno.`,
+  };
+}
+
 function servicoParaExibicao(
   servico: ServicoCombinado,
   agora: Date = new Date(),
@@ -180,6 +233,7 @@ function servicoParaExibicao(
   const encerrado = servico.status === StatusAnuncio.ENCERRADO;
   const hora = horaPretendida(servico.dataHoraPretendida);
   const distancia = encerrado ? null : emQuantosDias(servico.dataHoraPretendida, agora);
+  const acoes = acoesDoEmpregador(servico, agora);
   return {
     // Aqui sempre existe Prestador escolhido: `PUBLICADO` é o "Combinado".
     estado: estadoDoAnuncio(servico.status, true),
@@ -207,17 +261,51 @@ function servicoParaExibicao(
       servico.propostaPendente && !encerrado
         ? avisoPropostaPendente(servico.propostaPendente.dataProposta)
         : null,
-    rodape: rodape(servico, nome),
-    acoes: acoesDoEmpregador(servico, agora),
+    rodape: rodape(servico, nome, acoes),
+    acoes,
     podeAvaliar: servico.status === StatusAnuncio.CONCLUIDO,
     rotuloAvaliar: `Avaliar ${nome}`,
+    cancelamento: cancelamentoParaExibicao(servico, nome, agora),
   };
+}
+
+const MENSAGEM_PRAZO_ESGOTADO = "Faltam menos de 24h. Não é possível cancelar.";
+const MENSAGEM_USE_DENUNCIA =
+  "O serviço já começou e não pode mais ser cancelado. Para relatar um problema, abra uma denúncia.";
+
+/** Erro do "Cancelar serviço" (tela 26) no formato da folha. */
+function erroDoCancelamento(falha: unknown): ErroCancelamentoServico {
+  switch (erroApi(falha)?.codigo) {
+    case CodigoErro.PRAZO_CANCELAMENTO_ESGOTADO:
+      return { mensagem: MENSAGEM_PRAZO_ESGOTADO, bloqueado: true, sugereDenuncia: false };
+    case CodigoErro.USE_DENUNCIA:
+      return {
+        mensagem: mensagemErroApi(falha, MENSAGEM_USE_DENUNCIA),
+        bloqueado: true,
+        sugereDenuncia: true,
+      };
+    case CodigoErro.SERVICO_ESTADO_INVALIDO:
+      return {
+        mensagem: "Este serviço já foi concluído ou cancelado.",
+        bloqueado: true,
+        sugereDenuncia: false,
+      };
+    default:
+      return {
+        mensagem: mensagemErroApi(falha, "Não foi possível cancelar o serviço. Tente de novo."),
+        bloqueado: false,
+        sugereDenuncia: false,
+      };
+  }
 }
 
 /** Tela 25 "Serviço combinado" do Empregador e as variantes 25b a 25e (ETI-87). */
 export function useServicoCombinadoViewModel(anuncioId: string) {
   const router = useRouter();
   const query = useServicoQuery(anuncioId);
+  const cancelar = useCancelarServicoMutation(anuncioId);
+  const [folhaCancelarAberta, setFolhaCancelarAberta] = useState(false);
+  const [erroCancelamento, setErroCancelamento] = useState<ErroCancelamentoServico | null>(null);
 
   // A tela continua montada embaixo do chat e da tela 45, e o React Query no
   // React Native não consulta de novo ao voltar o foco. O primeiro foco é
@@ -249,6 +337,33 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
   const telefone = dados?.outraParte.telefone ? telefoneNacional(dados.outraParte.telefone) : null;
   const candidaturaId = dados?.candidaturaId ?? null;
 
+  const abrirCancelar = () => {
+    setErroCancelamento(null);
+    setFolhaCancelarAberta(true);
+  };
+
+  const fecharCancelar = () => {
+    setFolhaCancelarAberta(false);
+    setErroCancelamento(null);
+  };
+
+  // Sucesso: a folha fecha e a tela já aparece cancelada (25d). Erro: a
+  // mutation consulta o serviço de novo e a folha mostra o motivo; com o
+  // serviço indisponível ela fecha, porque a tela troca pelo aviso.
+  const confirmarCancelar = () => {
+    setErroCancelamento(null);
+    cancelar.mutate(undefined, {
+      onSuccess: () => setFolhaCancelarAberta(false),
+      onError: (falha) => {
+        if (erroApi(falha)?.codigo === CodigoErro.SERVICO_NAO_ENCONTRADO) {
+          setFolhaCancelarAberta(false);
+          return;
+        }
+        setErroCancelamento(erroDoCancelamento(falha));
+      },
+    });
+  };
+
   // Aberta direto pelo link (sem tela antes), volta pro Início.
   const voltar = () =>
     router.canGoBack() ? router.back() : router.replace("/(app)/(contratante)");
@@ -278,5 +393,15 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
     // Tela 45 (ETI-108).
     aoAvaliar: () =>
       router.push({ pathname: "/(app)/avaliacao/[anuncioId]", params: { anuncioId } }),
+    // Tela 26 (ETI-95).
+    folhaCancelarAberta,
+    cancelando: cancelar.isPending,
+    erroCancelamento,
+    aoCancelar: abrirCancelar,
+    aoConfirmarCancelar: confirmarCancelar,
+    aoManterCombinado: fecharCancelar,
+    // Tela 46 "Abrir denúncia" (ETI-115) ainda não existe: sem função, o
+    // atalho do `USE_DENUNCIA` não aparece. Liga aqui quando a rota entrar.
+    aoAbrirDenuncia: undefined as (() => void) | undefined,
   };
 }

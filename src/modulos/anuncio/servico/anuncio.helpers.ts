@@ -110,6 +110,24 @@ export function dataEHora(dataHoraUtc: string): string {
   return format(paraFusoLocal(dataHoraUtc), "dd/MM, HH:mm");
 }
 
+/** "03/09 às 14:00" — prazos citados na tela 26. */
+export function diaAsHora(dataHoraUtc: string): string {
+  return format(paraFusoLocal(dataHoraUtc), "dd/MM 'às' HH:mm");
+}
+
+/**
+ * "Faltam 3 dias" ou "Falta 1 dia", contando dias de calendário no fuso do
+ * sistema; "Falta menos de 1 dia" no mesmo dia — tela 26. `agora` só existe
+ * pra teste.
+ */
+export function faltamDias(dataHoraUtc: string, agora: Date = new Date()): string {
+  const dias = differenceInCalendarDays(paraFusoLocal(dataHoraUtc), paraFusoLocal(agora));
+  if (dias <= 0) {
+    return "Falta menos de 1 dia";
+  }
+  return dias === 1 ? "Falta 1 dia" : `Faltam ${dias} dias`;
+}
+
 /** "2 mensagens novas", "1 mensagem nova" ou "Nenhuma mensagem nova" — card "Conversar com". */
 export function mensagensNovas(naoLidas: number): string {
   if (naoLidas === 0) {
