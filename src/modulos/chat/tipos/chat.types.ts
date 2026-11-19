@@ -38,6 +38,9 @@ export const ChatSchema = z.object({
   candidaturaId: z.string(),
   statusCandidatura: z.enum(StatusAplicacao),
   outraParte: z.object({
+    // Abre o perfil público pelo menu (tela 20b, ETI-106), limio-api#44. Vem
+    // mesmo com a conta encerrada: o perfil mostra "Conta encerrada".
+    usuarioId: z.string(),
     nome: z.string(),
     fotoUrl: z.string().nullable(),
     fotoExpiraEm: z.string().nullable(),

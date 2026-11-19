@@ -65,6 +65,8 @@ export const CodigoErro = {
   // Escolher o prestador (ETI-69), limio-api#32.
   ESCOLHA_CONFLITO: "ESCOLHA_CONFLITO",
   COTA_ESGOTADA_CANDIDATO: "COTA_ESGOTADA_CANDIDATO",
+  // Perfil público (ETI-105), limio-api#34.
+  PERFIL_NAO_ENCONTRADO: "PERFIL_NAO_ENCONTRADO",
   ERRO_INTERNO: "ERRO_INTERNO",
 } as const;
 
