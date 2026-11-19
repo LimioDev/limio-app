@@ -9,7 +9,12 @@ import {
   CamposEnderecoRequestSchema,
 } from "../../../comum/tipos/endereco";
 import { Uf } from "../../../comum/tipos/localidade";
-import { ModoValidacao, StatusAnuncio, type QuandoMural } from "./anuncio.enums";
+import {
+  ModoValidacao,
+  StatusAnuncio,
+  TipoCancelamento,
+  type QuandoMural,
+} from "./anuncio.enums";
 
 /**
  * Um anúncio da lista "Seus anúncios" (`AnuncioPainelResponse` do backend).
@@ -507,3 +512,17 @@ export const ServicoValidadoSchema = z.object({
 });
 
 export type ServicoValidado = z.infer<typeof ServicoValidadoSchema>;
+
+/**
+ * Espelha `CancelamentoServicoResponse` — `POST /anuncios/{anuncioId}/servico/cancelar`
+ * (ETI-94): `200` já em `ENCERRADO`. `cotaEstornada` só é `true` quando a
+ * escolha consumiu cota do Prestador FREE e o cancelamento foi `NORMAL`.
+ */
+export const CancelamentoServicoSchema = z.object({
+  anuncioId: z.string(),
+  status: z.enum(StatusAnuncio),
+  tipoCancelamento: z.enum(TipoCancelamento),
+  cotaEstornada: z.boolean(),
+});
+
+export type CancelamentoServico = z.infer<typeof CancelamentoServicoSchema>;
