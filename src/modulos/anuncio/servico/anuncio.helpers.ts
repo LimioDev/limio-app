@@ -95,6 +95,16 @@ export function emQuantosDias(dataHoraUtc: string, agora: Date = new Date()): st
   return dias === 1 ? "amanhã" : `em ${dias} dias`;
 }
 
+/**
+ * "Hoje às 16:38" ou "31/08 às 16:38", no fuso do sistema — quando o check-out
+ * foi feito, na tela 27. `agora` só existe pra teste.
+ */
+export function diaEHoraDoCheckout(dataHoraUtc: string, agora: Date = new Date()): string {
+  const data = paraFusoLocal(dataHoraUtc);
+  const ehHoje = format(data, "yyyy-MM-dd") === format(paraFusoLocal(agora), "yyyy-MM-dd");
+  return `${ehHoje ? "Hoje" : format(data, "dd/MM")} às ${format(data, "HH:mm")}`;
+}
+
 /** "02/09, 14:00" — momentos citados nos textos corridos (rodapés da tela 25). */
 export function dataEHora(dataHoraUtc: string): string {
   return format(paraFusoLocal(dataHoraUtc), "dd/MM, HH:mm");
