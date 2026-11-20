@@ -1,6 +1,9 @@
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 
+import { useEscolhaDeFotos } from "../../../comum/hooks/useEscolhaDeFotos";
+import type { FotoExibida } from "../../../comum/tipos/foto";
+import { MOTIVO_PERMISSAO_FOTO_ANUNCIO } from "../servico/anuncio.helpers";
 import { useRascunhoAnuncio, type ErrosAnuncio } from "../store/rascunhoAnuncio.store";
 import {
   DESCRICAO_MAX,
@@ -9,7 +12,6 @@ import {
   TITULO_MAX,
   TITULO_MIN,
 } from "../tipos/anuncio.types";
-import { useEscolhaDeFotos, type FotoExibida } from "./useEscolhaDeFotos";
 
 /** Tela 14 "Novo anúncio" (1 de 2): categoria, título, descrição e fotos. */
 export function useNovoAnuncioViewModel() {
@@ -28,7 +30,11 @@ export function useNovoAnuncioViewModel() {
 
   const vagas = FOTOS_MAX - rascunho.fotos.length;
 
-  const escolhaDeFotos = useEscolhaDeFotos({ vagas, aoEscolher: adicionarFotos });
+  const escolhaDeFotos = useEscolhaDeFotos({
+    vagas,
+    aoEscolher: adicionarFotos,
+    motivoPermissao: MOTIVO_PERMISSAO_FOTO_ANUNCIO,
+  });
 
   const aoContinuar = () => {
     const resultado = PassoUmSchema.safeParse({

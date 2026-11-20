@@ -2,12 +2,18 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 
+import { useEscolhaDeFotos } from "../../../comum/hooks/useEscolhaDeFotos";
 import { deDataHoraLocal, formatarDataHora } from "../../../comum/lib/datas";
 import { erroApi, errosPorCampo, mensagemErroApi } from "../../../comum/lib/erros";
 import { chavesCategoria } from "../../../comum/servico/categoria.queries";
 import { TipoToast, useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
-import { anuncioNaoEncontrado, mensagemFalhaFoto } from "../servico/anuncio.helpers";
+import type { FotoExibida } from "../../../comum/tipos/foto";
+import {
+  anuncioNaoEncontrado,
+  MOTIVO_PERMISSAO_FOTO_ANUNCIO,
+  mensagemFalhaFoto,
+} from "../servico/anuncio.helpers";
 import {
   chavesAnuncio,
   useAnexarFotoAnuncioMutation,
@@ -32,7 +38,6 @@ import {
   type AnuncioDetalheResponse,
   type EditarAnuncioRequest,
 } from "../tipos/anuncio.types";
-import { useEscolhaDeFotos, type FotoExibida } from "./useEscolhaDeFotos";
 
 type CampoErro = keyof ErrosEdicao;
 
@@ -131,7 +136,11 @@ export function useEditarAnuncioViewModel(id: string) {
 
   const pronto = anuncioDoFormulario === id;
   const vagas = FOTOS_MAX - formulario.fotos.length;
-  const escolhaDeFotos = useEscolhaDeFotos({ vagas, aoEscolher: adicionarFotos });
+  const escolhaDeFotos = useEscolhaDeFotos({
+    vagas,
+    aoEscolher: adicionarFotos,
+    motivoPermissao: MOTIVO_PERMISSAO_FOTO_ANUNCIO,
+  });
 
   const voltarPraTela16 = () =>
     router.canGoBack()

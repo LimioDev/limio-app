@@ -8,6 +8,12 @@ import { CodigoErro } from "../../../comum/tipos/erros";
 import { MENSAGEM_FOTO_INVALIDA } from "../../../comum/tipos/foto";
 import { StatusAnuncio } from "../tipos/anuncio.enums";
 
+/** Aviso de permissão negada nas telas 14 e 16a. */
+export const MOTIVO_PERMISSAO_FOTO_ANUNCIO = {
+  camera: "Para tirar fotos do anúncio",
+  galeria: "Para anexar fotos ao anúncio",
+};
+
 // Os rótulos do protótipo ("Qua") não batem com o `EEE` do ptBR ("qua.").
 const DIAS_SEMANA_CURTOS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 

@@ -3,15 +3,15 @@ import { Camera, Image as IconeGaleria } from "lucide-react-native";
 import { Modal, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Icone } from "../../../../comum/componentes/ui/Icone";
+import { Icone } from "./Icone";
 
 interface FolhaAdicionarFotoProps {
   visivel: boolean;
   aoTirarFoto: () => void;
   aoEscolherDaGaleria: () => void;
   aoFechar: () => void;
-  /** Subtítulo da folha; o padrão é o da tela 14c. */
-  descricao?: string;
+  /** Subtítulo da folha: "Escolha de onde vem a foto do anúncio.". */
+  descricao: string;
 }
 
 function Opcao({
@@ -43,13 +43,13 @@ function Opcao({
   );
 }
 
-/** Telas 14c e 38b: de onde vem a foto. Modal próprio porque `Alert` não abre no navegador. */
+/** Telas 14c e 38b (e a foto da denúncia, tela 46): de onde vem a foto. Modal próprio porque `Alert` não abre no navegador. */
 export function FolhaAdicionarFoto({
   visivel,
   aoTirarFoto,
   aoEscolherDaGaleria,
   aoFechar,
-  descricao = "Escolha de onde vem a foto do anúncio.",
+  descricao,
 }: FolhaAdicionarFotoProps) {
   return (
     <Modal
