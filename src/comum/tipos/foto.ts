@@ -33,3 +33,23 @@ export const ArquivoFotoSchema = z.object({
 });
 
 export type ArquivoFoto = z.infer<typeof ArquivoFotoSchema>;
+
+/**
+ * Foto escolhida na câmera ou na galeria, já preparada. Recusada no preparo:
+ * fica na tela com o motivo, sem `arquivo`.
+ */
+export interface FotoEscolhida {
+  chave: string;
+  /** URI da imagem pra miniatura (a original, antes do preparo). */
+  previewUri: string;
+  arquivo: ArquivoFoto | null;
+  erro: string | null;
+}
+
+/** Miniatura de foto escolhida na tela. */
+export interface FotoExibida {
+  chave: string;
+  uri: string;
+  /** Motivo da recusa; a foto recusada não é enviada. */
+  erro: string | null;
+}

@@ -1,6 +1,6 @@
 import * as Linking from "expo-linking";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { formatarDiaPorExtenso } from "../../../comum/lib/datas";
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
@@ -10,6 +10,7 @@ import { CodigoErro } from "../../../comum/tipos/erros";
 import {
   avisoPropostaPendente,
   dataEHora,
+  detalheServicoParaDenuncia,
   emQuantosDias,
   estadoDoAnuncio,
   horaPretendida,
@@ -68,6 +69,11 @@ export interface ServicoCombinadoExibido {
   podeAvaliar: boolean;
   /** "Avaliar Rafael". */
   rotuloAvaliar: string;
+  /**
+   * "Algo deu errado? Abrir denúncia" embaixo do rodapé: em andamento ou
+   * aguardando validação não dá mais pra cancelar (US43), e a saída é a denúncia.
+   */
+  orientarDenuncia: boolean;
 }
 
 export interface AcoesDoEmpregador {
@@ -211,6 +217,9 @@ function servicoParaExibicao(
     acoes: acoesDoEmpregador(servico, agora),
     podeAvaliar: servico.status === StatusAnuncio.CONCLUIDO,
     rotuloAvaliar: `Avaliar ${nome}`,
+    orientarDenuncia:
+      servico.status === StatusAnuncio.EM_ANDAMENTO ||
+      servico.status === StatusAnuncio.AGUARDANDO_VALIDACAO,
   };
 }
 
@@ -218,6 +227,7 @@ function servicoParaExibicao(
 export function useServicoCombinadoViewModel(anuncioId: string) {
   const router = useRouter();
   const query = useServicoQuery(anuncioId);
+  const [menuAberto, setMenuAberto] = useState(false);
 
   // A tela continua montada embaixo do chat e da tela 45, e o React Query no
   // React Native não consulta de novo ao voltar o foco. O primeiro foco é
@@ -278,5 +288,24 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
     // Tela 45 (ETI-108).
     aoAvaliar: () =>
       router.push({ pathname: "/(app)/avaliacao/[anuncioId]", params: { anuncioId } }),
+    // Menu "⋮" (tela 25f): só "Denunciar", que abre a tela 46 (ETI-115) contra
+    // o Prestador escolhido, pelo serviço.
+    menuAberto,
+    aoAbrirMenu: () => setMenuAberto(true),
+    aoFecharMenu: () => setMenuAberto(false),
+    aoDenunciar: () => {
+      setMenuAberto(false);
+      if (!dados) {
+        return;
+      }
+      router.push({
+        pathname: "/(app)/denuncia",
+        params: {
+          anuncioId,
+          titulo: dados.titulo,
+          detalhe: detalheServicoParaDenuncia(dados),
+        },
+      });
+    },
   };
 }
