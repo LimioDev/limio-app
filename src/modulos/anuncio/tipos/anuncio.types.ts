@@ -9,7 +9,13 @@ import {
   CamposEnderecoRequestSchema,
 } from "../../../comum/tipos/endereco";
 import { Uf } from "../../../comum/tipos/localidade";
-import { ModoValidacao, StatusAnuncio, type QuandoMural } from "./anuncio.enums";
+import {
+  DecisaoReagendamento,
+  ModoValidacao,
+  StatusAnuncio,
+  StatusReagendamento,
+  type QuandoMural,
+} from "./anuncio.enums";
 
 /**
  * Um anúncio da lista "Seus anúncios" (`AnuncioPainelResponse` do backend).
@@ -375,8 +381,15 @@ export const OutraParteServicoSchema = z.object({
 
 export type OutraParteServico = z.infer<typeof OutraParteServicoSchema>;
 
-/** Proposta de reagendamento pendente (ETI-86). Nenhum card cria propostas ainda (ETI-99). */
+/**
+ * Proposta de reagendamento pendente, resumida no serviço (ETI-86/99).
+ * `id` e `proponenteId` ainda não vêm na resposta (pedidos à limio-api#49):
+ * sem `id`, o aviso das telas 25/36 não abre a tela 41; sem `proponenteId`,
+ * o aviso não diz quem propôs.
+ */
 export const PropostaReagendamentoSchema = z.object({
+  id: z.string().nullish(),
+  proponenteId: z.string().nullish(),
   dataProposta: z.string(),
   justificativa: z.string().nullable(),
 });
@@ -405,6 +418,12 @@ export const ServicoCombinadoSchema = z.object({
   reagendamentosAceitos: z.number().int(),
   limiteReagendamentos: z.number().int(),
   propostaPendente: PropostaReagendamentoSchema.nullable(),
+  /**
+   * Prazo de resposta da contraparte (`anuncio.reagendamento.prazo-resposta-horas`).
+   * Ainda não vem na resposta (pedido à limio-api#49); sem ele, a tela 40 não
+   * cita as horas, já que o prazo não pode ficar fixo no app.
+   */
+  prazoRespostaReagendamentoHoras: z.number().int().positive().nullish(),
   chatId: z.string().nullable(),
   mensagensNaoLidas: z.number().int(),
   /**
@@ -507,3 +526,49 @@ export const ServicoValidadoSchema = z.object({
 });
 
 export type ServicoValidado = z.infer<typeof ServicoValidadoSchema>;
+
+/**
+ * Espelha `ReagendamentoResponse` (ETI-99, limio-api#49): `GET /reagendamentos/{id}`
+ * e a resposta de propor e de cancelar. `dataVigente` é a data do serviço
+ * agora; `dataAnterior`, a vigente quando a proposta foi feita.
+ * `respondidoEm` fica `null` enquanto pendente.
+ */
+export const ReagendamentoSchema = z.object({
+  id: z.string(),
+  anuncioId: z.string(),
+  status: z.enum(StatusReagendamento),
+  dataVigente: z.string(),
+  dataAnterior: z.string(),
+  dataProposta: z.string(),
+  justificativa: z.string().nullable(),
+  proponenteId: z.string(),
+  criadoEm: z.string(),
+  expiraEm: z.string(),
+  respondidoEm: z.string().nullable(),
+});
+
+export type Reagendamento = z.infer<typeof ReagendamentoSchema>;
+
+/** Corpo do `POST /anuncios/{anuncioId}/reagendamentos` (`ProporReagendamentoRequest`, ETI-99). */
+export const ProporReagendamentoRequestSchema = z.object({
+  /** Instante em UTC (ISO-8601), no futuro. */
+  novaDataHora: z.iso.datetime(),
+  justificativa: z.string().trim().min(1),
+});
+
+export type ProporReagendamentoRequest = z.infer<typeof ProporReagendamentoRequestSchema>;
+
+/** Corpo do `POST /reagendamentos/{id}/responder` (`ResponderReagendamentoRequest`, ETI-99). */
+export const ResponderReagendamentoRequestSchema = z.object({
+  decisao: z.enum(DecisaoReagendamento),
+});
+
+/**
+ * Formulário da tela 40 "Propor reagendamento". A data no futuro é conferida
+ * no ViewModel, depois de juntar data e hora.
+ */
+export const PropostaReagendamentoFormSchema = z.object({
+  data: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, "Informe a data (dd/mm/aaaa)"),
+  hora: z.string().regex(/^\d{2}:\d{2}$/, "Informe a hora (hh:mm)"),
+  justificativa: z.string().trim().min(1, "Informe a justificativa"),
+});
