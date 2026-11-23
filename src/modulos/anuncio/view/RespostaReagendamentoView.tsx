@@ -12,6 +12,7 @@ import type {
   AcaoEmAndamento,
   PropostaRecebidaExibida,
 } from "../viewmodel/useRespostaReagendamentoViewModel";
+import { Overline } from "./componentes/Overline";
 
 interface RespostaReagendamentoViewProps {
   proposta: PropostaRecebidaExibida | null;
@@ -30,12 +31,6 @@ interface RespostaReagendamentoViewProps {
 }
 
 const TITULO_PADRAO = "Proposta recebida";
-
-function Overline({ children, cor = "text-tinta-fraco" }: { children: string; cor?: string }) {
-  return (
-    <Text className={`text-overline font-bold uppercase tracking-[0.8px] ${cor}`}>{children}</Text>
-  );
-}
 
 /** Tela 41 "Proposta recebida" (ETI-100); pro proponente, "Proposta enviada" com "Cancelar proposta". */
 export function RespostaReagendamentoView({

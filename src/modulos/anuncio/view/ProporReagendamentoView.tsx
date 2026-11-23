@@ -22,6 +22,7 @@ import {
   type PropostaReagendamentoExibida,
 } from "../viewmodel/useProporReagendamentoViewModel";
 import { CampoContador } from "./componentes/CampoContador";
+import { Overline } from "./componentes/Overline";
 
 const MASCARA_HORA: Mask = [/\d/, /\d/, ":", /\d/, /\d/];
 
@@ -54,11 +55,6 @@ interface ProporReagendamentoViewProps {
   aoVoltar: () => void;
 }
 
-function Overline({ children, cor = "text-tinta-fraco" }: { children: string; cor?: string }) {
-  return (
-    <Text className={`text-overline font-bold uppercase tracking-[0.8px] ${cor}`}>{children}</Text>
-  );
-}
 
 /** Tela 40 "Propor reagendamento" (ETI-100). */
 export function ProporReagendamentoView({
