@@ -507,3 +507,12 @@ export const ServicoValidadoSchema = z.object({
 });
 
 export type ServicoValidado = z.infer<typeof ServicoValidadoSchema>;
+
+/** Resposta do "Cancelar serviço (Prestador)" (`CancelamentoPeloPrestadorResponse`, ETI-96). */
+export const CancelamentoPeloPrestadorSchema = z.object({
+  anuncioId: z.string(),
+  status: z.enum(StatusAnuncio),
+  encerradoEm: z.string(),
+});
+
+export type CancelamentoPeloPrestador = z.infer<typeof CancelamentoPeloPrestadorSchema>;
