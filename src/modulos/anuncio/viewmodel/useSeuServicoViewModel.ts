@@ -1,9 +1,8 @@
 import * as Linking from "expo-linking";
 import { useFocusEffect, useRouter } from "expo-router";
-import { format } from "date-fns";
 import { useCallback, useRef, useState } from "react";
 
-import { paraFusoLocal } from "../../../comum/lib/datas";
+import { formatarDataHora } from "../../../comum/lib/datas";
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { formatarTelefone, telefoneNacional } from "../../../comum/lib/telefone";
 import { useSessao } from "../../../comum/store/sessao";
@@ -220,7 +219,7 @@ function cancelamentoInfoDoPrestador(
   const { escolhidaEm } = servico;
   if (!escolhidaEm) return null;
   const nome = primeiroNome(servico.outraParte.nome);
-  const data = format(paraFusoLocal(escolhidaEm), "dd/MM");
+  const data = formatarDataHora(escolhidaEm, "dd/MM");
   return {
     subtitulo: `Você foi escolhido por ${nome} em ${data}.`,
     mostrarCota: !ehGold,
