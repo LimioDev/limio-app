@@ -16,11 +16,14 @@ import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { Icone } from "../../../comum/componentes/ui/Icone";
 import type {
+  CancelamentoServicoPrestadorExibido,
+  ErroCancelamentoServicoPrestador,
   FolhaIniciarExibida,
   PassoServicoExibido,
   ServicoExibido,
 } from "../viewmodel/useSeuServicoViewModel";
 import { CartaoConversa } from "./componentes/CartaoConversa";
+import { FolhaCancelarServicoPrestador } from "./componentes/FolhaCancelarServicoPrestador";
 import { FolhaIniciarServico } from "./componentes/FolhaIniciarServico";
 
 interface SeuServicoViewProps {
@@ -43,6 +46,14 @@ interface SeuServicoViewProps {
   aoFinalizarComFoto: () => void;
   aoConfirmarInicio: () => void;
   aoFecharFolha: () => void;
+  /** Tela 39 (ETI-97). */
+  cancelamentoInfoPrestador: CancelamentoServicoPrestadorExibido | null;
+  folhaCancelarAberta: boolean;
+  cancelandoPrestador: boolean;
+  erroCancelarPrestador: ErroCancelamentoServicoPrestador | null;
+  aoCancelarServico: () => void;
+  aoConfirmarCancelarServico: () => void;
+  aoManterServico: () => void;
 }
 
 function Aviso({ titulo, texto }: { titulo: string; texto?: string }) {
@@ -115,6 +126,13 @@ export function SeuServicoView({
   aoFinalizarComFoto,
   aoConfirmarInicio,
   aoFecharFolha,
+  cancelamentoInfoPrestador,
+  folhaCancelarAberta,
+  cancelandoPrestador,
+  erroCancelarPrestador,
+  aoCancelarServico,
+  aoConfirmarCancelarServico,
+  aoManterServico,
 }: SeuServicoViewProps) {
   if (!servico) {
     return (
@@ -227,7 +245,6 @@ export function SeuServicoView({
           </View>
         ) : null}
 
-        {/* "Você ainda pode cancelar o serviço." do protótipo entra com o ETI-97. */}
         {servico.emAndamento ? (
           <Aviso titulo="O Empregador não pode mais cancelar e ninguém pode reagendar." />
         ) : servico.podeIniciar ? (
@@ -238,23 +255,40 @@ export function SeuServicoView({
         ) : null}
       </ScrollView>
 
-      {/* "Propor novo horário" (ETI-100) e "Cancelar serviço" (ETI-97) entram
-          com os cards deles. */}
+      {/* "Propor novo horário" entra com o ETI-100. */}
       {servico.podeFinalizar ? (
         <SafeAreaView edges={["bottom"]} className="border-t border-borda bg-superficie">
-          <View className="px-margem py-3">
+          <View className="px-margem py-3 gap-1">
             <Botao rotulo="Finalizar com foto" icone={Camera} onPress={aoFinalizarComFoto} />
+            {servico.podeCancelar ? (
+              <Pressable
+                onPress={aoCancelarServico}
+                accessibilityRole="button"
+                className="h-botao items-center justify-center active:opacity-70"
+              >
+                <Text className="text-corpo font-semibold text-perigo">Cancelar serviço</Text>
+              </Pressable>
+            ) : null}
           </View>
         </SafeAreaView>
       ) : servico.podeIniciar ? (
         <SafeAreaView edges={["bottom"]} className="border-t border-borda bg-superficie">
-          <View className="px-margem py-3">
+          <View className="px-margem py-3 gap-1">
             <Botao
               rotulo="Iniciar serviço"
               icone={CircleCheck}
               disabled={folha.enviando}
               onPress={aoIniciar}
             />
+            {servico.podeCancelar ? (
+              <Pressable
+                onPress={aoCancelarServico}
+                accessibilityRole="button"
+                className="h-botao items-center justify-center active:opacity-70"
+              >
+                <Text className="text-corpo font-semibold text-perigo">Cancelar serviço</Text>
+              </Pressable>
+            ) : null}
           </View>
         </SafeAreaView>
       ) : null}
@@ -263,6 +297,15 @@ export function SeuServicoView({
         folha={folha}
         aoConfirmar={aoConfirmarInicio}
         aoFechar={aoFecharFolha}
+      />
+
+      <FolhaCancelarServicoPrestador
+        visivel={folhaCancelarAberta}
+        cancelamento={cancelamentoInfoPrestador}
+        cancelando={cancelandoPrestador}
+        erro={erroCancelarPrestador}
+        aoConfirmar={aoConfirmarCancelarServico}
+        aoManter={aoManterServico}
       />
     </SafeAreaView>
   );
