@@ -16,12 +16,6 @@ export const MOTIVO_PERMISSAO_FOTO_ANUNCIO = {
   galeria: "Para anexar fotos ao anúncio",
 };
 
-/** Aviso de permissão negada nas telas 14 e 16a. */
-export const MOTIVO_PERMISSAO_FOTO_ANUNCIO = {
-  camera: "Para tirar fotos do anúncio",
-  galeria: "Para anexar fotos ao anúncio",
-};
-
 // Os rótulos do protótipo ("Qua") não batem com o `EEE` do ptBR ("qua.").
 const DIAS_SEMANA_CURTOS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -75,7 +69,7 @@ export function primeiroNome(nome: string): string {
 
 /** "Marcos Vieira" → "Marcos V."; um nome só fica como está. */
 export function nomeComInicial(nome: string): string {
-  const partes = nome.trim().split(/s+/);
+  const partes = nome.trim().split(/\s+/);
   const ultimo = partes.length > 1 ? partes[partes.length - 1] : "";
   return ultimo ? `${partes[0]} ${ultimo.charAt(0).toUpperCase()}.` : nome.trim();
 }
