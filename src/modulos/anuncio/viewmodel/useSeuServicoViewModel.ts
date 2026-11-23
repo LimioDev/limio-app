@@ -1,7 +1,9 @@
 import * as Linking from "expo-linking";
 import { useFocusEffect, useRouter } from "expo-router";
+import { format } from "date-fns";
 import { useCallback, useRef, useState } from "react";
 
+import { paraFusoLocal } from "../../../comum/lib/datas";
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { formatarTelefone, telefoneNacional } from "../../../comum/lib/telefone";
 import { useSessao } from "../../../comum/store/sessao";
@@ -15,7 +17,11 @@ import {
   mensagensNovas,
   momentoDoPasso,
 } from "../servico/anuncio.helpers";
-import { useIniciarServicoMutation, useServicoQuery } from "../servico/anuncio.queries";
+import {
+  useCancelarServicoPeloPrestadorMutation,
+  useIniciarServicoMutation,
+  useServicoQuery,
+} from "../servico/anuncio.queries";
 import { StatusAnuncio } from "../tipos/anuncio.enums";
 import type { ServicoCombinado } from "../tipos/anuncio.types";
 
@@ -62,6 +68,8 @@ export interface ServicoExibido {
    * API também aceita check-out de `PUBLICADO`, mas pelo card o acesso é só a 37.
    */
   podeFinalizar: boolean;
+  /** "Cancelar serviço" (tela 39): telas 36 (PUBLICADO) e 37 (EM_ANDAMENTO). */
+  podeCancelar: boolean;
 }
 
 export interface FolhaIniciarExibida {
@@ -73,6 +81,23 @@ export interface FolhaIniciarExibida {
   /** Chamada em andamento: botões travados e a folha não fecha. */
   enviando: boolean;
   erro: string | null;
+}
+
+/** Conteúdo da tela 39 "Cancelar este serviço?" (Prestador). */
+export interface CancelamentoServicoPrestadorExibido {
+  /** "Você foi escolhido por Marina em 03/09." */
+  subtitulo: string;
+  /** `true` → item de cota aparece; `false` → Prestador GOLD, sem cota. */
+  mostrarCota: boolean;
+  /** Primeiro nome do Empregador, para personalizar o terceiro item. */
+  nomeEmpregador: string;
+}
+
+/** Erro do "Cancelar serviço" (tela 39) no formato da folha. */
+export interface ErroCancelamentoServicoPrestador {
+  mensagem: string;
+  /** `true` → `SERVICO_ESTADO_INVALIDO`: botão some e só mostra a mensagem. */
+  bloqueado: boolean;
 }
 
 const EMPREGADOR_SEM_CONTA = "Conta encerrada";
@@ -181,18 +206,40 @@ function servicoParaExibicao(servico: ServicoCombinado, ehPrestador: boolean): S
     // com o papel de Prestador ativo, quem vê a tela é o escolhido.
     podeIniciar: ehPrestador && servico.status === StatusAnuncio.PUBLICADO,
     podeFinalizar: ehPrestador && servico.status === StatusAnuncio.EM_ANDAMENTO,
+    podeCancelar:
+      ehPrestador &&
+      (servico.status === StatusAnuncio.PUBLICADO ||
+        servico.status === StatusAnuncio.EM_ANDAMENTO),
+  };
+}
+
+function cancelamentoInfoDoPrestador(
+  servico: ServicoCombinado,
+  ehGold: boolean,
+): CancelamentoServicoPrestadorExibido | null {
+  const { escolhidaEm } = servico;
+  if (!escolhidaEm) return null;
+  const nome = primeiroNome(servico.outraParte.nome);
+  const data = format(paraFusoLocal(escolhidaEm), "dd/MM");
+  return {
+    subtitulo: `Você foi escolhido por ${nome} em ${data}.`,
+    mostrarCota: !ehGold,
+    nomeEmpregador: nome,
   };
 }
 
 /** Telas 36 e 37 "Seu serviço" do Prestador escolhido, com "Iniciar serviço" (ETI-89). */
-export function useSeuServicoViewModel(anuncioId: string) {
+export function useSeuServicoViewModel(anuncioId: string, ehGold: boolean = false) {
   const router = useRouter();
   const query = useServicoQuery(anuncioId);
   const iniciar = useIniciarServicoMutation(anuncioId);
+  const cancelarPrestador = useCancelarServicoPeloPrestadorMutation(anuncioId);
   const ehPrestador = useSessao((estado) => estado.papelAtivo === PapelUsuario.PRESTADOR);
   const mostrarToast = useToast((estado) => estado.mostrar);
   const [folhaAberta, setFolhaAberta] = useState(false);
   const [erroFolha, setErroFolha] = useState<string | null>(null);
+  const [folhaCancelarAberta, setFolhaCancelarAberta] = useState(false);
+  const [erroCancelar, setErroCancelar] = useState<ErroCancelamentoServicoPrestador | null>(null);
 
   // A tela continua montada embaixo do chat, e o React Query no
   // React Native não consulta de novo ao voltar o foco. O primeiro foco é
@@ -224,6 +271,7 @@ export function useSeuServicoViewModel(anuncioId: string) {
   }
 
   const servico = dados ? servicoParaExibicao(dados, ehPrestador) : null;
+  const cancelamentoInfoPrestador = dados ? cancelamentoInfoDoPrestador(dados, ehGold) : null;
   const candidaturaId = dados?.candidaturaId ?? null;
   const telefoneNacionalEmpregador = dados?.outraParte.telefone
     ? telefoneNacional(dados.outraParte.telefone)
@@ -254,6 +302,46 @@ export function useSeuServicoViewModel(anuncioId: string) {
             return;
           default:
             setErroFolha(mensagemErroApi(falha, "Não foi possível iniciar o serviço."));
+        }
+      },
+    });
+  }
+
+  function abrirCancelar() {
+    setErroCancelar(null);
+    setFolhaCancelarAberta(true);
+  }
+
+  function fecharCancelar() {
+    setFolhaCancelarAberta(false);
+    setErroCancelar(null);
+  }
+
+  function confirmarCancelar() {
+    setErroCancelar(null);
+    cancelarPrestador.mutate(undefined, {
+      onSuccess: () => {
+        setFolhaCancelarAberta(false);
+        router.replace("/(app)/(prestador)");
+      },
+      onError: (falha) => {
+        switch (erroApi(falha)?.codigo) {
+          case CodigoErro.SERVICO_ESTADO_INVALIDO:
+            setErroCancelar({
+              mensagem: "O serviço está aguardando validação e não pode ser cancelado.",
+              bloqueado: true,
+            });
+            return;
+          case CodigoErro.SERVICO_NAO_ENCONTRADO:
+            setFolhaCancelarAberta(false);
+            mostrarToast("Este serviço não está mais disponível.", TipoToast.ERRO);
+            router.back();
+            return;
+          default:
+            setErroCancelar({
+              mensagem: mensagemErroApi(falha, "Não foi possível cancelar o serviço. Tente de novo."),
+              bloqueado: false,
+            });
         }
       },
     });
@@ -298,5 +386,13 @@ export function useSeuServicoViewModel(anuncioId: string) {
       router.push({ pathname: "/(app)/servico/checkout/[id]", params: { id: anuncioId } }),
     aoConfirmarInicio: confirmarInicio,
     aoFecharFolha: fecharFolha,
+    // Tela 39 (ETI-97).
+    cancelamentoInfoPrestador,
+    folhaCancelarAberta,
+    cancelandoPrestador: cancelarPrestador.isPending,
+    erroCancelarPrestador: erroCancelar,
+    aoCancelarServico: abrirCancelar,
+    aoConfirmarCancelarServico: confirmarCancelar,
+    aoManterServico: fecharCancelar,
   };
 }
