@@ -14,6 +14,7 @@ import type { AbaCandidatura, ModoValidacao } from "../tipos/anuncio.enums";
 import type {
   CandidatosResponse,
   DetalheAnuncioMural,
+  FiltroHistorico,
   FiltrosMural,
   MinhasCandidaturasResponse,
   ServicoCombinado,
@@ -35,6 +36,7 @@ import {
   enviarCheckout,
   escolherPrestador,
   iniciarServico,
+  listarHistorico,
   listarMinhasCandidaturas,
   listarMural,
   removerFotoAnuncio,
@@ -53,6 +55,7 @@ export const chavesAnuncio = {
   minhasCandidaturas: ["anuncio", "minhas-candidaturas"] as const,
   minhasCandidaturasDaAba: (aba: AbaCandidatura) =>
     ["anuncio", "minhas-candidaturas", aba] as const,
+  historico: (filtro: FiltroHistorico) => ["anuncio", "historico", filtro] as const,
 };
 
 /** Tela 36/37 "Seu serviço". Os links da foto são temporários e o estado muda fora da tela. */
@@ -392,5 +395,20 @@ export function useValidarServicoMutation(anuncioId: string) {
       }
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
     },
+  });
+}
+
+/**
+ * Tela 44 "Histórico": uma lista paginada por aba e período. `staleTime: 0`
+ * faz trocar de aba ou de período consultar de novo, como pede o card.
+ */
+export function useHistoricoQuery(filtro: FiltroHistorico) {
+  return useInfiniteQuery({
+    queryKey: chavesAnuncio.historico(filtro),
+    queryFn: ({ pageParam }) => listarHistorico(filtro, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (ultima) =>
+      ultima.pagina + 1 < ultima.totalPaginas ? ultima.pagina + 1 : undefined,
+    staleTime: 0,
   });
 }

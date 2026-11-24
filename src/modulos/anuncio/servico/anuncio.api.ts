@@ -15,6 +15,7 @@ import {
   EditarAnuncioRequestSchema,
   EscolhaResponseSchema,
   FotoAnuncioResponseSchema,
+  HistoricoResponseSchema,
   MinhasCandidaturasResponseSchema,
   MuralResponseSchema,
   PainelEmpregadorResponseSchema,
@@ -32,8 +33,10 @@ import {
   type DetalheAnuncioMural,
   type EditarAnuncioRequest,
   type EscolhaResponse,
+  type FiltroHistorico,
   type FiltrosMural,
   type FotoAnuncioResponse,
+  type HistoricoResponse,
   type MinhasCandidaturasResponse,
   type MuralResponse,
   type PainelEmpregadorResponse,
@@ -300,4 +303,20 @@ export async function validarServico({
   const corpo = ValidarServicoRequestSchema.parse(request);
   const { data } = await api.post(`/anuncios/${anuncioId}/validar`, corpo);
   return ServicoValidadoSchema.parse(data);
+}
+
+/**
+ * Tela 44 "Histórico" (ETI-71, `HistoricoController`): anúncios em estado
+ * final do papel ativo do token, no status e no período pedidos, 20 por
+ * página. Período invertido responde `400 VALIDACAO_FALHOU` (o app já valida
+ * antes); sem resultado, `200` com a lista vazia.
+ */
+export async function listarHistorico(
+  filtro: FiltroHistorico,
+  pagina: number,
+): Promise<HistoricoResponse> {
+  const { data } = await api.get("/anuncios/historico", {
+    params: { ...filtro, pagina },
+  });
+  return HistoricoResponseSchema.parse(data);
 }
