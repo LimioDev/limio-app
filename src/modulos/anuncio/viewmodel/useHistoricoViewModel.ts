@@ -158,6 +158,9 @@ export function useHistoricoViewModel() {
   // A aba da barra continua montada: ao voltar pra ela (da tela 45, do
   // Início), consulta de novo, porque "Avaliar" e a nota mudam fora da tela.
   // O primeiro foco é pulado porque o mount já consultou.
+  // Os atalhos ("Últimos 3 meses") são relativos a hoje: o intervalo é
+  // recalculado a cada foco, senão depois da meia-noite a consulta para em
+  // "ontem". Mesmo dia devolve o mesmo estado (sem render nem consulta extra).
   const { refetch } = query;
   const primeiroFoco = useRef(true);
   useFocusEffect(
@@ -166,6 +169,15 @@ export function useHistoricoViewModel() {
         primeiroFoco.current = false;
         return;
       }
+      setPeriodo((atual) => {
+        if (atual.tipo === PeriodoHistorico.PERSONALIZADO) {
+          return atual;
+        }
+        const hoje = periodoDoAtalho(atual.tipo);
+        return hoje.dataInicio === atual.dataInicio && hoje.dataFim === atual.dataFim
+          ? atual
+          : hoje;
+      });
       void refetch();
     }, [refetch]),
   );
