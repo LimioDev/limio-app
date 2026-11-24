@@ -6,9 +6,12 @@ import { useSessao } from "../../../comum/store/sessao";
 import { PapelUsuario, rotuloPapel, type PapelDoApp } from "../../../comum/tipos/papel";
 import { resumoAtuacao } from "../servico/atuacao.helpers";
 import { usePerfilAtuacaoQuery } from "../servico/atuacao.queries";
+import { resumoPlanoECota } from "../servico/cota.helpers";
+import { useCotaDoMesQuery } from "../servico/cota.queries";
 import { resumoEnderecos } from "../servico/endereco.helpers";
 import { useEnderecosQuery } from "../../../comum/servico/endereco.queries";
 import { useMeuPerfilQuery } from "../servico/perfil.queries";
+import { Plano } from "../tipos/cota.enums";
 import type { PerfilEmpregadorResponse } from "../tipos/perfil.types";
 import { useTrocarFotoPerfilViewModel } from "./useTrocarFotoPerfilViewModel";
 
@@ -49,6 +52,7 @@ export function useMeuPerfilViewModel() {
   const query = useMeuPerfilQuery();
   const ehPrestador = papelAtivo === PapelUsuario.PRESTADOR;
   const atuacao = usePerfilAtuacaoQuery({ habilitado: ehPrestador });
+  const cota = useCotaDoMesQuery({ habilitado: ehPrestador });
   // Endereços salvos são só do Empregador. O resumo vem da lista: o `GET` do
   // perfil ainda devolve `enderecos` vazio (fora do escopo do card do back).
   const enderecos = useEnderecosQuery({ habilitado: !ehPrestador });
@@ -66,6 +70,7 @@ export function useMeuPerfilViewModel() {
       aoAtualizarFoto();
       if (ehPrestador) {
         void atuacao.refetch();
+        void cota.refetch();
       } else {
         void enderecos.refetch();
       }
@@ -83,6 +88,14 @@ export function useMeuPerfilViewModel() {
           incompleto: atuacao.data ? !atuacao.data.completo : false,
         }
       : null,
+    // Só no papel Prestador. Sem a cota ainda, a linha abre a tela 33.
+    planoECota: ehPrestador
+      ? cota.data
+        ? resumoPlanoECota(cota.data)
+        : cota.isError
+          ? "Ver plano e cota"
+          : "Carregando..."
+      : null,
     // Só no papel Empregador. Sem resposta ainda, não afirma "nenhum endereço".
     enderecos: ehPrestador
       ? null
@@ -95,6 +108,11 @@ export function useMeuPerfilViewModel() {
     aoTrocarPapel: () => router.push("/(app)/trocar-papel"),
     aoEditarContato: () => router.push("/(app)/conta/dados-contato"),
     aoAbrirAtuacao: () => router.push("/(app)/conta/atuacao"),
+    // GOLD abre a tela 35 (gerenciar); FREE, a tela 33 (cota), que leva ao GOLD.
+    aoAbrirPlano: () =>
+      router.push(
+        cota.data?.plano === Plano.GOLD ? "/(app)/conta/assinatura-gold" : "/(app)/cota",
+      ),
     aoAbrirEnderecos: () => router.push("/(app)/conta/enderecos"),
     ...foto,
   };

@@ -19,12 +19,15 @@ interface MeuPerfilViewProps {
   papelAtivo: { rotulo: string; descricao: string };
   /** `null` fora do papel Prestador. */
   atuacao: { resumo: string; incompleto: boolean } | null;
+  /** Resumo da linha "Plano e cota"; `null` fora do papel Prestador. */
+  planoECota: string | null;
   /** Resumo dos endereços salvos; `null` fora do papel Empregador. */
   enderecos: string | null;
   aoAbrirAjustes: () => void;
   aoTrocarPapel: () => void;
   aoEditarContato: () => void;
   aoAbrirAtuacao: () => void;
+  aoAbrirPlano: () => void;
   aoAbrirEnderecos: () => void;
   /** Link temporário da foto; `null` mostra as iniciais. */
   fotoUrl: string | null;
@@ -49,11 +52,13 @@ export function MeuPerfilView({
   aoAtualizar,
   papelAtivo,
   atuacao,
+  planoECota,
   enderecos,
   aoAbrirAjustes,
   aoTrocarPapel,
   aoEditarContato,
   aoAbrirAtuacao,
+  aoAbrirPlano,
   aoAbrirEnderecos,
   fotoUrl,
   fotoCacheKey,
@@ -166,6 +171,21 @@ export function MeuPerfilView({
                 </View>
                 <Icone icone={ChevronRight} tamanho={20} cor="suave" />
               </Pressable>
+              {planoECota !== null ? (
+                <Pressable
+                  onPress={aoAbrirPlano}
+                  accessibilityRole="button"
+                  className="flex-row items-center gap-3 rounded-campo border border-borda bg-superficie px-4 py-3.5 active:opacity-70"
+                >
+                  <View className="flex-1 gap-0.5">
+                    <Text className="text-corpo font-bold text-tinta">Plano e cota</Text>
+                    <Text className="text-rotulo text-tinta-fraco" numberOfLines={2}>
+                      {planoECota}
+                    </Text>
+                  </View>
+                  <Icone icone={ChevronRight} tamanho={20} cor="suave" />
+                </Pressable>
+              ) : null}
             </View>
           ) : null}
 
