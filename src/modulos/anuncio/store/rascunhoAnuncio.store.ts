@@ -2,17 +2,11 @@ import { create } from "zustand";
 
 import type { Categoria } from "../../../comum/tipos/categoria";
 import type { CamposEnderecoForm } from "../../../comum/tipos/endereco";
-import type { ArquivoFoto } from "../../../comum/tipos/foto";
+import type { FotoEscolhida } from "../../../comum/tipos/foto";
 import type { MunicipioEscolhido } from "../../../comum/tipos/localidade";
 
 /** Foto escolhida no passo 1. Recusada no preparo: fica na tela com o motivo, sem `arquivo`. */
-export interface FotoRascunho {
-  chave: string;
-  /** URI da imagem pra miniatura (a original, antes do preparo). */
-  previewUri: string;
-  arquivo: ArquivoFoto | null;
-  erro: string | null;
-}
+export type FotoRascunho = FotoEscolhida;
 
 /** Endereço só deste anúncio; o apelido (opcional) dá nome à opção na tela 15. */
 export type EnderecoAvulso = CamposEnderecoForm & { apelido: string };

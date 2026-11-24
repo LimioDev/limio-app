@@ -4,11 +4,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Botao } from "../../../comum/componentes/ui/Botao";
 import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
+import { FolhaAdicionarFoto } from "../../../comum/componentes/ui/FolhaAdicionarFoto";
 import { Icone } from "../../../comum/componentes/ui/Icone";
+import type { FotoExibida } from "../../../comum/tipos/foto";
 import type { FolhaRemoverFotoExibida } from "../viewmodel/useCheckoutViewModel";
-import type { FotoExibida } from "../viewmodel/useEscolhaDeFotos";
 import { CampoContador } from "./componentes/CampoContador";
-import { FolhaAdicionarFoto } from "./componentes/FolhaAdicionarFoto";
 import { FolhaRemoverFoto } from "./componentes/FolhaRemoverFoto";
 import { GradeFotosCheckout } from "./componentes/GradeFotosCheckout";
 
