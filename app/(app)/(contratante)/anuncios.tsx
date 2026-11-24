@@ -1,9 +1,8 @@
-import { Text, View } from "react-native";
+import { HistoricoView } from "../../../src/modulos/anuncio/view/HistoricoView";
+import { useHistoricoViewModel } from "../../../src/modulos/anuncio/viewmodel/useHistoricoViewModel";
 
+/** Tela 44 "Histórico" do Empregador (ETI-72), aberta pelo "Ver histórico" da tela 13. */
 export default function Anuncios() {
-  return (
-    <View>
-      <Text>(contratante)/anuncios</Text>
-    </View>
-  );
+  const vm = useHistoricoViewModel();
+  return <HistoricoView {...vm} />;
 }

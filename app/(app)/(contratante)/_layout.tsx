@@ -12,7 +12,7 @@ export default function ContratanteLayout() {
       />
       <Tabs.Screen
         name="anuncios"
-        options={{ title: "Anúncios", tabBarIcon: iconeAba(LayoutGrid) }}
+        options={{ title: "Anúncios", headerShown: false, tabBarIcon: iconeAba(LayoutGrid) }}
       />
       <Tabs.Screen
         name="chats"
