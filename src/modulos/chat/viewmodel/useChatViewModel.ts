@@ -342,7 +342,7 @@ export function useChatViewModel(candidaturaId: string, anuncioId?: string) {
       }
     },
 
-    // Menu "⋮" (tela 21b): o perfil abre a tela 20b (ETI-106); a denúncia (ETI-115) ainda não existe.
+    // Menu "⋮" (tela 21b): o perfil abre a tela 20b (ETI-106) e a denúncia, a tela 46 (ETI-115).
     menuAberto,
     aoAbrirMenu: () => setMenuAberto(true),
     aoFecharMenu: () => setMenuAberto(false),
@@ -364,9 +364,20 @@ export function useChatViewModel(candidaturaId: string, anuncioId?: string) {
         },
       });
     },
+    // Denúncia pela candidatura (o chat é 1:1 por ela): o back tira a outra parte dela.
     aoDenunciar: () => {
       setMenuAberto(false);
-      mostrarToast(EM_BREVE);
+      if (!chat) {
+        return;
+      }
+      router.push({
+        pathname: "/(app)/denuncia",
+        params: {
+          candidaturaId: chat.candidaturaId,
+          titulo: chat.anuncio.titulo,
+          detalhe: `Conversa com ${chat.outraParte.nome}`,
+        },
+      });
     },
 
     // Rodapé da tela 22: o Prestador volta ao mural; o Empregador, aos candidatos (22c).

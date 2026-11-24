@@ -1,14 +1,14 @@
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 
+import { useEscolhaDeFotos, type MotivoPermissao } from "../../../comum/hooks/useEscolhaDeFotos";
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { TipoToast, useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
-import type { ArquivoFoto } from "../../../comum/tipos/foto";
+import type { ArquivoFoto, FotoExibida } from "../../../comum/tipos/foto";
 import { useCheckoutMutation, useServicoQuery } from "../servico/anuncio.queries";
 import type { FotoRascunho } from "../store/rascunhoAnuncio.store";
 import { FOTOS_CHECKOUT_MAX } from "../tipos/anuncio.types";
-import { useEscolhaDeFotos, type FotoExibida, type MotivoPermissao } from "./useEscolhaDeFotos";
 
 /** Folha "Remover foto?" ao tocar numa miniatura. */
 export interface FolhaRemoverFotoExibida {

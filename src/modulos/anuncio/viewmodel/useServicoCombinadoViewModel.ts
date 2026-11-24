@@ -11,6 +11,7 @@ import {
   avisoPropostaPendente,
   dataEHora,
   diaAsHora,
+  detalheServicoParaDenuncia,
   emQuantosDias,
   estadoDoAnuncio,
   faltamDias,
@@ -62,8 +63,8 @@ export interface ServicoCombinadoExibido {
   rodape: string | null;
   /**
    * Ações do Empregador derivadas do status. "Validar serviço" (tela 27,
-   * ETI-93) já aparece; "Reagendar" (ETI-100) e "Cancelar" (ETI-95) são
-   * calculadas aqui, mas só aparecem quando os cards deles entrarem.
+   * ETI-93) e "Cancelar" (tela 26, ETI-95) já aparecem; "Reagendar" (ETI-100)
+   * é calculado aqui, mas só aparece quando o card dele entrar.
    */
   acoes: AcoesDoEmpregador;
   /** "Avaliar Rafael" (tela 45, ETI-108): só com o serviço concluído. */
@@ -72,6 +73,11 @@ export interface ServicoCombinadoExibido {
   rotuloAvaliar: string;
   /** Textos da folha "Cancelar" (tela 26); `null` sem prazo de cancelamento. */
   cancelamento: CancelamentoServicoExibido | null;
+  /**
+   * "Algo deu errado? Abrir denúncia" embaixo do rodapé: em andamento ou
+   * aguardando validação não dá mais pra cancelar (US43), e a saída é a denúncia.
+   */
+  orientarDenuncia: boolean;
 }
 
 /** Textos da tela 26, montados a partir da consulta do serviço (o app não calcula as 24h). */
@@ -91,7 +97,7 @@ export interface CancelamentoServicoExibido {
 export interface ErroCancelamentoServico {
   mensagem: string;
   bloqueado: boolean;
-  /** `USE_DENUNCIA`: a folha mostra o atalho pra tela 46, quando ele existir. */
+  /** `USE_DENUNCIA`: a folha mostra o atalho pra tela 46. */
   sugereDenuncia: boolean;
 }
 
@@ -266,6 +272,9 @@ function servicoParaExibicao(
     podeAvaliar: servico.status === StatusAnuncio.CONCLUIDO,
     rotuloAvaliar: `Avaliar ${nome}`,
     cancelamento: cancelamentoParaExibicao(servico, nome, agora),
+    orientarDenuncia:
+      servico.status === StatusAnuncio.EM_ANDAMENTO ||
+      servico.status === StatusAnuncio.AGUARDANDO_VALIDACAO,
   };
 }
 
@@ -306,6 +315,7 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
   const cancelar = useCancelarServicoMutation(anuncioId);
   const [folhaCancelarAberta, setFolhaCancelarAberta] = useState(false);
   const [erroCancelamento, setErroCancelamento] = useState<ErroCancelamentoServico | null>(null);
+  const [menuAberto, setMenuAberto] = useState(false);
 
   // A tela continua montada embaixo do chat e da tela 45, e o React Query no
   // React Native não consulta de novo ao voltar o foco. O primeiro foco é
@@ -364,6 +374,22 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
     });
   };
 
+  // Tela 46 (ETI-115) contra o Prestador escolhido, pelo serviço. Usada pelo
+  // menu "⋮", pelo "Algo deu errado?" e pelo `USE_DENUNCIA` da folha.
+  const abrirDenuncia = () => {
+    if (!dados) {
+      return;
+    }
+    router.push({
+      pathname: "/(app)/denuncia",
+      params: {
+        anuncioId,
+        titulo: dados.titulo,
+        detalhe: detalheServicoParaDenuncia(dados),
+      },
+    });
+  };
+
   // Aberta direto pelo link (sem tela antes), volta pro Início.
   const voltar = () =>
     router.canGoBack() ? router.back() : router.replace("/(app)/(contratante)");
@@ -400,8 +426,19 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
     aoCancelar: abrirCancelar,
     aoConfirmarCancelar: confirmarCancelar,
     aoManterCombinado: fecharCancelar,
-    // Tela 46 "Abrir denúncia" (ETI-115) ainda não existe: sem função, o
-    // atalho do `USE_DENUNCIA` não aparece. Liga aqui quando a rota entrar.
-    aoAbrirDenuncia: undefined as (() => void) | undefined,
+    // `USE_DENUNCIA`: fecha a folha e abre a mesma tela 46 do menu "⋮".
+    aoAbrirDenuncia: () => {
+      fecharCancelar();
+      abrirDenuncia();
+    },
+    // Menu "⋮" (tela 25f): só "Denunciar", que abre a tela 46 (ETI-115) contra
+    // o Prestador escolhido, pelo serviço.
+    menuAberto,
+    aoAbrirMenu: () => setMenuAberto(true),
+    aoFecharMenu: () => setMenuAberto(false),
+    aoDenunciar: () => {
+      setMenuAberto(false);
+      abrirDenuncia();
+    },
   };
 }
