@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { somenteDigitos } from "../../../comum/lib/telefone";
+
 import { CicloPlano, StatusAssinatura, StatusCobranca } from "./gold.enums";
 
 /** Espelha `CartaoSalvoResponse` do backend: só bandeira e últimos 4 dígitos. */
@@ -105,3 +107,43 @@ export interface TrocarCartaoRequest {
 export const TrocarCartaoResponseSchema = CartaoSalvoSchema;
 
 export type TrocarCartaoResponse = z.infer<typeof TrocarCartaoResponseSchema>;
+
+/** Validade "MM/AA" ainda não vencida (o cartão vale até o fim do mês). */
+function validadeOk(valor: string, agora: Date = new Date()): boolean {
+  const partes = /^(\d{2})\/(\d{2})$/.exec(valor);
+  if (!partes) {
+    return false;
+  }
+  const mes = Number(partes[1]);
+  const ano = 2000 + Number(partes[2]);
+  if (mes < 1 || mes > 12) {
+    return false;
+  }
+  return ano * 12 + mes >= agora.getFullYear() * 12 + agora.getMonth() + 1;
+}
+
+/**
+ * Formulário da tela "Cartão" (trocar ou adicionar). Os campos chegam com
+ * máscara; a conversão para o `TrocarCartaoRequest` tira a pontuação.
+ * Nada daqui é salvo no aparelho.
+ */
+export const CartaoFormSchema = z.object({
+  nomeTitular: z.string().trim().min(3, "Informe o nome como está no cartão."),
+  numero: z
+    .string()
+    .refine((v) => /^\d{13,19}$/.test(somenteDigitos(v)), "Confira o número do cartão."),
+  validade: z.string().refine((v) => validadeOk(v), "Validade inválida ou vencida."),
+  cvv: z.string().regex(/^\d{3,4}$/, "O CVV tem 3 ou 4 dígitos."),
+  cpf: z.string().refine((v) => somenteDigitos(v).length === 11, "Informe o CPF do titular."),
+  email: z.email("Informe um e-mail válido."),
+  telefone: z
+    .string()
+    .refine(
+      (v) => somenteDigitos(v).length >= 10 && somenteDigitos(v).length <= 11,
+      "Informe o telefone com DDD.",
+    ),
+  cep: z.string().refine((v) => somenteDigitos(v).length === 8, "O CEP tem 8 dígitos."),
+  numeroEndereco: z.string().trim().min(1, "Informe o número do endereço."),
+});
+
+export type CartaoForm = z.infer<typeof CartaoFormSchema>;

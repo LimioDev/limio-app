@@ -64,7 +64,6 @@ export function AssinarGoldView({
   enviando,
   erroEnvio,
   recusado,
-  avisoCartao,
   aoAssinar,
   aoTrocarCartao,
   aoVoltar,
@@ -155,9 +154,6 @@ export function AssinarGoldView({
               </Text>
             </Pressable>
           </Card>
-          {avisoCartao ? (
-            <Text className="text-rotulo text-tinta-suave">{avisoCartao}</Text>
-          ) : null}
         </View>
       </ScrollView>
 

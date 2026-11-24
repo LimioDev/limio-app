@@ -1,6 +1,12 @@
 import { formatarDataHora, paraFusoLocal } from "../../../comum/lib/datas";
+import { somenteDigitos } from "../../../comum/lib/telefone";
 import { StatusCobranca } from "../tipos/gold.enums";
-import type { CartaoSalvo, Cobranca } from "../tipos/gold.types";
+import type {
+  CartaoForm,
+  CartaoSalvo,
+  Cobranca,
+  TrocarCartaoRequest,
+} from "../tipos/gold.types";
 
 /** 2990 + "BRL" → "R$ 29,90". Moeda fora do padrão ISO cai no número puro. */
 export function formatarPreco(centavos: number, moeda: string): string {
@@ -72,4 +78,23 @@ export function novaTentativaPendente(cobrancas: Cobranca[]): string | null {
     return null;
   }
   return formatarDataHora(ultima.proximaTentativaEm, "dd/MM");
+}
+
+/** Formulário da tela "Cartão" → `TrocarCartaoRequest`, sem máscara. */
+export function paraTrocarCartaoRequest(form: CartaoForm): TrocarCartaoRequest {
+  const [mes, ano] = form.validade.split("/");
+  const nome = form.nomeTitular.trim();
+  return {
+    holderName: nome,
+    numero: somenteDigitos(form.numero),
+    expiryMonth: mes,
+    expiryYear: `20${ano}`,
+    ccv: form.cvv,
+    holderNome: nome,
+    holderEmail: form.email.trim(),
+    holderCpf: somenteDigitos(form.cpf),
+    holderCep: somenteDigitos(form.cep),
+    holderNumeroEndereco: form.numeroEndereco.trim(),
+    holderTelefone: somenteDigitos(form.telefone),
+  };
 }
