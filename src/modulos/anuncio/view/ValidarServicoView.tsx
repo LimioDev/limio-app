@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { CircleCheck, DollarSign, ImageIcon } from "lucide-react-native";
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Badge } from "../../../comum/componentes/ui/Badge";
@@ -27,6 +27,8 @@ interface ValidarServicoViewProps {
   erroEnvio: string | null;
   aoValidar: () => void;
   aoVoltar: () => void;
+  /** "Algo deu errado? Abrir denúncia" (tela 46). */
+  aoDenunciar: () => void;
 }
 
 const TITULO = "Validar serviço";
@@ -107,6 +109,7 @@ export function ValidarServicoView({
   erroEnvio,
   aoValidar,
   aoVoltar,
+  aoDenunciar,
 }: ValidarServicoViewProps) {
   if (!validacao) {
     return (
@@ -180,7 +183,16 @@ export function ValidarServicoView({
           disabled={enviando}
           carregando={enviando}
         />
-        {/* "Algo deu errado? Abrir denúncia" (tela 46) entra com o ETI-115. */}
+        <Pressable
+          onPress={aoDenunciar}
+          disabled={enviando}
+          accessibilityRole="link"
+          className="h-toque items-center justify-center active:opacity-70"
+        >
+          <Text className="text-rotulo font-semibold text-tinta-suave">
+            Algo deu errado? Abrir denúncia
+          </Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );

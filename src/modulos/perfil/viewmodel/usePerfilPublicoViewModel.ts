@@ -11,7 +11,6 @@ import { ehPapelDoApp, PapelUsuario, type PapelDoApp } from "../../../comum/tipo
 import { usePerfilPublicoQuery } from "../servico/perfilPublico.queries";
 import type { AvaliacaoRecente, PerfilPublico } from "../tipos/perfilPublico.types";
 
-const EM_BREVE = "Em breve";
 const PERFIL_NAO_ENCONTRADO = "Este perfil não existe mais.";
 
 /** Parâmetros da rota `perfil/[usuarioId]`. */
@@ -120,6 +119,7 @@ export function usePerfilPublicoViewModel({
 }: ParametrosPerfilPublico) {
   const router = useRouter();
   const papelAtivo = useSessao((estado) => estado.papelAtivo);
+  const meuUsuarioId = useSessao((estado) => estado.usuarioId);
   const mostrarToast = useToast((estado) => estado.mostrar);
   const papel: PapelDoApp | null = papelDaRota && ehPapelDoApp(papelDaRota) ? papelDaRota : null;
   const query = usePerfilPublicoQuery(usuarioId, papel);
@@ -164,8 +164,21 @@ export function usePerfilPublicoViewModel({
     aoAtualizar: () => void query.refetch(),
     perfil: query.data ? perfilParaExibicao(query.data) : null,
     aoVoltar: voltar,
-    // Denúncia (tela 46, US57) ainda não existe.
-    aoDenunciar: () => mostrarToast(EM_BREVE),
+    // Bandeira: tela 46 (ETI-115) com a denúncia do perfil. Sem ela no próprio
+    // perfil (a API recusa) e antes de carregar (o card precisa do nome).
+    aoDenunciar:
+      query.data && papel && usuarioId !== meuUsuarioId
+        ? () =>
+            router.push({
+              pathname: "/(app)/denuncia",
+              params: {
+                denunciadoId: usuarioId,
+                titulo: query.data.nomeExibicao,
+                detalhe:
+                  papel === PapelUsuario.PRESTADOR ? "Perfil de Prestador" : "Perfil de Empregador",
+              },
+            })
+        : undefined,
     acoes: comoCandidato
       ? {
           // O chat da tela 21 é aberto pela candidatura, como na tela 18. O

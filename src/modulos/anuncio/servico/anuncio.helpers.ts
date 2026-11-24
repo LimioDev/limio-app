@@ -1,12 +1,20 @@
 import { isAxiosError } from "axios";
 import { differenceInCalendarDays, format, isToday, isTomorrow } from "date-fns";
 
-import { paraFusoLocal } from "../../../comum/lib/datas";
+import { rotuloEstado } from "../../../comum/componentes/ui/Badge";
+import { formatarDataHora, paraFusoLocal } from "../../../comum/lib/datas";
 import { erroApi } from "../../../comum/lib/erros";
 import type { Estado } from "../../../comum/tipos/api";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import { MENSAGEM_FOTO_INVALIDA } from "../../../comum/tipos/foto";
 import { StatusAnuncio } from "../tipos/anuncio.enums";
+import type { ServicoCombinado } from "../tipos/anuncio.types";
+
+/** Aviso de permissão negada nas telas 14 e 16a. */
+export const MOTIVO_PERMISSAO_FOTO_ANUNCIO = {
+  camera: "Para tirar fotos do anúncio",
+  galeria: "Para anexar fotos ao anúncio",
+};
 
 // Os rótulos do protótipo ("Qua") não batem com o `EEE` do ptBR ("qua.").
 const DIAS_SEMANA_CURTOS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -57,6 +65,27 @@ export function estadoDoAnuncio(status: StatusAnuncio, temPrestadorEscolhido: bo
 /** "Rafael" de "Rafael S.": nome usado nos textos corridos das folhas. */
 export function primeiroNome(nome: string): string {
   return nome.trim().split(/\s+/)[0] || nome;
+}
+
+/** "Marcos Vieira" → "Marcos V."; um nome só fica como está. */
+export function nomeComInicial(nome: string): string {
+  const partes = nome.trim().split(/\s+/);
+  const ultimo = partes.length > 1 ? partes[partes.length - 1] : "";
+  return ultimo ? `${partes[0]} ${ultimo.charAt(0).toUpperCase()}.` : nome.trim();
+}
+
+/**
+ * Linha de baixo do card do alvo na tela 46 (ETI-115): "Concluído em 31/08 ·
+ * com Marcos V.". Sem nome (conta encerrada), só o status.
+ */
+export function detalheServicoParaDenuncia(servico: ServicoCombinado): string {
+  const estado = rotuloEstado(estadoDoAnuncio(servico.status, true));
+  const status =
+    servico.status === StatusAnuncio.CONCLUIDO && servico.validadoEm
+      ? `${estado} em ${formatarDataHora(servico.validadoEm, "dd/MM")}`
+      : estado;
+  const nome = servico.outraParte.nome;
+  return nome ? `${status} · com ${nomeComInicial(nome)}` : status;
 }
 
 /** "02/09 é amanhã", "02/09 é hoje" ou só "02/09" — dica "Rever a data" da tela 19. */

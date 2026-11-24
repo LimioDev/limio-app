@@ -21,7 +21,8 @@ interface PerfilPublicoViewProps {
   aoAtualizar: () => void;
   perfil: PerfilPublicoExibido | null;
   aoVoltar: () => void;
-  aoDenunciar: () => void;
+  /** Bandeira da tela 46; sem ela no próprio perfil e antes de carregar. */
+  aoDenunciar?: () => void;
   /** Tela 20a; `null` é a 20b, sem botões. */
   acoes: { aoConversar: () => void; aoEscolher?: () => void } | null;
   mostrarAvisoConsulta: boolean;
