@@ -16,7 +16,7 @@ export default function ContratanteLayout() {
       />
       <Tabs.Screen
         name="chats"
-        options={{ title: "Chats", tabBarIcon: iconeAba(MessageSquare) }}
+        options={{ title: "Chats", headerShown: false, tabBarIcon: iconeAba(MessageSquare) }}
       />
       <Tabs.Screen
         name="perfil"

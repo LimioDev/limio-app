@@ -3,7 +3,7 @@ import { Camera, Check, CircleAlert } from "lucide-react-native";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
 import { CORES_ICONE, Icone } from "../../../../comum/componentes/ui/Icone";
-import type { FotoExibida } from "../../viewmodel/useEscolhaDeFotos";
+import type { FotoExibida } from "../../../../comum/tipos/foto";
 
 interface GradeFotosCheckoutProps {
   fotos: FotoExibida[];

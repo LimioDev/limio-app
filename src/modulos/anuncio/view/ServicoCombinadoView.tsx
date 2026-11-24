@@ -5,7 +5,9 @@ import {
   ChevronRight,
   CircleCheck,
   DollarSign,
+  Flag,
   MapPin,
+  MoreVertical,
   RefreshCw,
   Smartphone,
   Star,
@@ -20,6 +22,7 @@ import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
 import { Card } from "../../../comum/componentes/ui/Card";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { Icone } from "../../../comum/componentes/ui/Icone";
+import { MenuSuspenso } from "../../../comum/componentes/ui/MenuSuspenso";
 import type {
   EtapaServicoExibida,
   ServicoCombinadoExibido,
@@ -47,6 +50,11 @@ interface ServicoCombinadoViewProps {
   /** Tela 41; sem função (a API não mandou o id da proposta), o aviso não abre nada. */
   aoAbrirProposta?: () => void;
   aoAvaliar: () => void;
+  /** Menu "⋮" (tela 25f) com "Denunciar" (tela 46). */
+  menuAberto: boolean;
+  aoAbrirMenu: () => void;
+  aoFecharMenu: () => void;
+  aoDenunciar: () => void;
 }
 
 const TITULO = "Serviço combinado";
@@ -129,6 +137,10 @@ export function ServicoCombinadoView({
   aoReagendar,
   aoAbrirProposta,
   aoAvaliar,
+  menuAberto,
+  aoAbrirMenu,
+  aoFecharMenu,
+  aoDenunciar,
 }: ServicoCombinadoViewProps) {
   if (!servico) {
     return (
@@ -156,8 +168,26 @@ export function ServicoCombinadoView({
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-fundo">
-      {/* Menu "⋮" com "Denunciar" (tela 25f) entra com o ETI-115. */}
-      <CabecalhoVoltar titulo={TITULO} aoVoltar={aoVoltar} />
+      <CabecalhoVoltar
+        titulo={TITULO}
+        aoVoltar={aoVoltar}
+        direita={
+          <Pressable
+            onPress={aoAbrirMenu}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Mais opções"
+            className="h-toque w-8 items-center justify-center"
+          >
+            <Icone icone={MoreVertical} tamanho={20} cor="suave" />
+          </Pressable>
+        }
+      />
+      <MenuSuspenso
+        aberto={menuAberto}
+        aoFechar={aoFecharMenu}
+        itens={[{ icone: Flag, rotulo: "Denunciar", aoPressionar: aoDenunciar }]}
+      />
 
       <ScrollView
         className="flex-1"
@@ -301,6 +331,17 @@ export function ServicoCombinadoView({
           ) : (
             <Text className="text-rotulo text-tinta-fraco">{servico.rodape}</Text>
           )
+        ) : null}
+        {servico.orientarDenuncia ? (
+          <Pressable
+            onPress={aoDenunciar}
+            accessibilityRole="link"
+            className="h-toque items-center justify-center active:opacity-70"
+          >
+            <Text className="text-rotulo font-semibold text-tinta-suave">
+              Algo deu errado? Abrir denúncia
+            </Text>
+          </Pressable>
         ) : null}
       </ScrollView>
     </SafeAreaView>

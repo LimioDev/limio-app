@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { respostaPaginadaSchema } from "../../../comum/tipos/api";
 import { StatusAplicacao } from "../../../comum/tipos/aplicacao";
 import { MotivoSomenteLeitura, PapelNoChat, TipoEventoChat } from "./chat.enums";
 
@@ -82,3 +83,51 @@ export const EventoChatSchema = z.object({
 });
 
 export type EventoChat = z.infer<typeof EventoChatSchema>;
+
+/** Conversas por página da tela 42 (padrão da API, de 1 a 50). */
+export const TAMANHO_PAGINA_CONVERSAS = 20;
+
+/**
+ * Item de `GET /chats` (`ConversaResponse`, ETI-103). `candidaturaId` abre o
+ * chat (telas 21 e 22). `ultimaMensagem` é `null` enquanto ninguém escreveu;
+ * `motivoSomenteLeitura`, enquanto o chat recebe mensagens. Conta encerrada
+ * vem como "Usuário excluído", sem foto.
+ */
+export const ConversaSchema = z.object({
+  chatId: z.string(),
+  candidaturaId: z.string(),
+  outraParte: z.object({
+    nome: z.string(),
+    fotoUrl: z.string().nullable(),
+    fotoExpiraEm: z.string().nullable(),
+    papel: z.enum(PapelNoChat),
+  }),
+  tituloAnuncio: z.string(),
+  // Vem como texto do back: um status que o app ainda não conhece vira `null`
+  // (o selo sai pelo somente leitura) em vez de invalidar a lista inteira.
+  statusCandidatura: z.enum(StatusAplicacao).nullable().catch(null),
+  ultimaMensagem: z
+    .object({
+      texto: z.string(),
+      enviadaEm: z.string(),
+      enviadaPorMim: z.boolean(),
+    })
+    .nullable(),
+  mensagensNaoLidas: z.number().int(),
+  isSomenteLeitura: z.boolean(),
+  motivoSomenteLeitura: z.enum(MotivoSomenteLeitura).nullable().catch(null),
+});
+
+export type Conversa = z.infer<typeof ConversaSchema>;
+
+/**
+ * Resposta de `GET /chats` (`ConversasResponse`): a página, da última mensagem
+ * mais recente pra mais antiga, e `totalComNaoLidas`, as conversas do papel
+ * ativo com mensagem não lida em todas as páginas ("N não lidas").
+ */
+export const ConversasResponseSchema = z.object({
+  conversas: respostaPaginadaSchema(ConversaSchema),
+  totalComNaoLidas: z.number().int(),
+});
+
+export type ConversasResponse = z.infer<typeof ConversasResponseSchema>;
