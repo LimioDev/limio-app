@@ -99,7 +99,7 @@ export type ModoValidacao = (typeof ModoValidacao)[keyof typeof ModoValidacao];
  * cancelado pelo Empregador.
  */
 export const TipoCancelamento = {
-  /** Com 24h ou mais: a escolha volta pra cota do Prestador FREE. */
+  /** Fora da carência de reagendamento: a escolha volta pra cota do Prestador FREE. */
   NORMAL: "NORMAL",
   /** Dentro da carência de um reagendamento aceito: sem estorno da cota. */
   TARDIO: "TARDIO",
