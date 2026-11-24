@@ -2,11 +2,13 @@ import {
   CalendarClock,
   CalendarDays,
   Check,
+  ChevronRight,
   CircleCheck,
   DollarSign,
   Flag,
   MapPin,
   MoreVertical,
+  RefreshCw,
   Smartphone,
   Star,
 } from "lucide-react-native";
@@ -43,6 +45,10 @@ interface ServicoCombinadoViewProps {
   aoConversar?: () => void;
   /** Tela 27 "Validar serviço" (ETI-93). */
   aoValidar: () => void;
+  /** Tela 40 "Propor reagendamento" (ETI-100). */
+  aoReagendar: () => void;
+  /** Tela 41; sem função (a API não mandou o id da proposta), o aviso não abre nada. */
+  aoAbrirProposta?: () => void;
   aoAvaliar: () => void;
   /** Menu "⋮" (tela 25f) com "Denunciar" (tela 46). */
   menuAberto: boolean;
@@ -128,6 +134,8 @@ export function ServicoCombinadoView({
   aoLigar,
   aoConversar,
   aoValidar,
+  aoReagendar,
+  aoAbrirProposta,
   aoAvaliar,
   menuAberto,
   aoAbrirMenu,
@@ -279,10 +287,17 @@ export function ServicoCombinadoView({
         </View>
 
         {servico.propostaPendente ? (
-          <View className="flex-row gap-3 rounded-card bg-alerta-fundo p-4">
+          <Pressable
+            onPress={aoAbrirProposta}
+            disabled={!aoAbrirProposta}
+            accessibilityRole={aoAbrirProposta ? "button" : "summary"}
+            accessibilityHint={aoAbrirProposta ? "Abre a proposta de reagendamento" : undefined}
+            className="flex-row items-center gap-3 rounded-card bg-alerta-fundo p-4 active:opacity-70"
+          >
             <Icone icone={CalendarClock} tamanho={18} cor="alerta" />
             <Text className="flex-1 text-rotulo text-alerta">{servico.propostaPendente}</Text>
-          </View>
+            {aoAbrirProposta ? <Icone icone={ChevronRight} tamanho={16} cor="alerta" /> : null}
+          </Pressable>
         ) : null}
 
         {/* Tela 27: cheio aguardando validação, contornado (presencial) antes do check-out. */}
@@ -294,8 +309,16 @@ export function ServicoCombinadoView({
             onPress={aoValidar}
           />
         ) : null}
-        {/* "Reagendar" (ETI-100) e "Cancelar" (ETI-95) entram com os cards
-            deles; as regras já estão em `servico.acoes`. */}
+        {/* "Cancelar" (ETI-95) entra com o card dele, ao lado do "Reagendar";
+            a regra já está em `servico.acoes`. */}
+        {servico.acoes.reagendar ? (
+          <Botao
+            rotulo="Reagendar"
+            icone={RefreshCw}
+            variante="contorno"
+            onPress={aoReagendar}
+          />
+        ) : null}
         {servico.podeAvaliar ? (
           <Botao rotulo={servico.rotuloAvaliar} icone={Star} onPress={aoAvaliar} />
         ) : null}
