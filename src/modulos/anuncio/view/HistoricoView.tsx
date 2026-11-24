@@ -1,4 +1,4 @@
-import { Calendar, CircleCheck, CircleX, Clock, ListFilter } from "lucide-react-native";
+import { Calendar, CircleCheck, CircleX, Clock, Funnel } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -136,7 +136,7 @@ export function HistoricoView({
             accessibilityLabel="Filtrar por período"
             className="h-toque w-8 items-center justify-center active:opacity-70"
           >
-            <Icone icone={ListFilter} tamanho={22} cor="tinta" />
+            <Icone icone={Funnel} tamanho={22} cor="tinta" />
           </Pressable>
         }
       />
