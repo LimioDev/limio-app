@@ -77,12 +77,12 @@ export function useAssinarGoldViewModel() {
 
   const plano = query.data;
 
-  /** Troca em vez de empilhar: o voltar da tela 35 cai em quem abriu a 34. */
-  const abrirAssinaturaAtiva = (renovaEm?: string) => {
-    router.replace({
-      pathname: "/(app)/conta/assinatura-gold",
-      params: renovaEm ? { renovaEm } : {},
-    });
+  /**
+   * Troca em vez de empilhar: o voltar da tela 35 cai em quem abriu a 34. A
+   * 35 consulta a assinatura ao abrir, então não leva a data por parâmetro.
+   */
+  const abrirAssinaturaAtiva = () => {
+    router.replace("/(app)/conta/assinatura-gold");
   };
 
   const aoAssinar = () => {
@@ -96,10 +96,10 @@ export function useAssinarGoldViewModel() {
     assinar.mutate(
       { codigoPlano: plano.codigoPlano },
       {
-        onSuccess: (assinatura) => {
+        onSuccess: () => {
           // A trava fica: a tela está saindo.
           mostrarToast("GOLD ativo! Suas escolhas agora são ilimitadas.", TipoToast.SUCESSO);
-          abrirAssinaturaAtiva(assinatura.renovaEm);
+          abrirAssinaturaAtiva();
         },
         onError: (falha) => {
           switch (erroApi(falha)?.codigo) {

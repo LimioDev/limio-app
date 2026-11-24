@@ -32,11 +32,6 @@ export function textoDiaCobranca(agora: Date = new Date()): string {
   return `Cobrança todo dia ${paraFusoLocal(agora).getDate()}`;
 }
 
-/** "renova em 18/12": fim do ciclo pago. */
-export function textoRenovacao(renovaEm: string): string {
-  return `renova em ${formatarDataHora(renovaEm, "dd/MM")}`;
-}
-
 export interface LinhaCobranca {
   /** "30/08/2026". */
   data: string;
