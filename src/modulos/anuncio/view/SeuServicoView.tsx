@@ -68,6 +68,26 @@ function Aviso({ titulo, texto }: { titulo: string; texto?: string }) {
   );
 }
 
+function BotaoCancelarServico({
+  aoPressionar,
+  desabilitado = false,
+}: {
+  aoPressionar: () => void;
+  desabilitado?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={aoPressionar}
+      disabled={desabilitado}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: desabilitado }}
+      className={`h-botao items-center justify-center active:opacity-70 ${desabilitado ? "opacity-50" : ""}`}
+    >
+      <Text className="text-corpo font-semibold text-perigo">Cancelar serviço</Text>
+    </Pressable>
+  );
+}
+
 function Passo({ passo, ultimo }: { passo: PassoServicoExibido; ultimo: boolean }) {
   const feito = passo.situacao === "feito";
   const atual = passo.situacao === "atual";
@@ -261,13 +281,7 @@ export function SeuServicoView({
           <View className="px-margem py-3 gap-1">
             <Botao rotulo="Finalizar com foto" icone={Camera} onPress={aoFinalizarComFoto} />
             {servico.podeCancelar ? (
-              <Pressable
-                onPress={aoCancelarServico}
-                accessibilityRole="button"
-                className="h-botao items-center justify-center active:opacity-70"
-              >
-                <Text className="text-corpo font-semibold text-perigo">Cancelar serviço</Text>
-              </Pressable>
+              <BotaoCancelarServico aoPressionar={aoCancelarServico} />
             ) : null}
           </View>
         </SafeAreaView>
@@ -281,13 +295,10 @@ export function SeuServicoView({
               onPress={aoIniciar}
             />
             {servico.podeCancelar ? (
-              <Pressable
-                onPress={aoCancelarServico}
-                accessibilityRole="button"
-                className="h-botao items-center justify-center active:opacity-70"
-              >
-                <Text className="text-corpo font-semibold text-perigo">Cancelar serviço</Text>
-              </Pressable>
+              <BotaoCancelarServico
+                aoPressionar={aoCancelarServico}
+                desabilitado={folha.enviando}
+              />
             ) : null}
           </View>
         </SafeAreaView>

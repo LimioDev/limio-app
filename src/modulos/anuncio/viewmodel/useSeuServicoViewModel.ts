@@ -21,7 +21,7 @@ import {
   useIniciarServicoMutation,
   useServicoQuery,
 } from "../servico/anuncio.queries";
-import { StatusAnuncio } from "../tipos/anuncio.enums";
+import { AbaCandidatura, StatusAnuncio } from "../tipos/anuncio.enums";
 import type { ServicoCombinado } from "../tipos/anuncio.types";
 
 export type SituacaoPasso = "feito" | "atual" | "futuro";
@@ -86,7 +86,7 @@ export interface FolhaIniciarExibida {
 export interface CancelamentoServicoPrestadorExibido {
   /** "Você foi escolhido por Marina em 03/09." */
   subtitulo: string;
-  /** `true` → item de cota aparece; `false` → Prestador GOLD, sem cota. */
+  /** `true` → item de cota aparece; `false` → Prestador GOLD ou plano ainda desconhecido. */
   mostrarCota: boolean;
   /** Primeiro nome do Empregador, para personalizar o terceiro item. */
   nomeEmpregador: string;
@@ -214,7 +214,7 @@ function servicoParaExibicao(servico: ServicoCombinado, ehPrestador: boolean): S
 
 function cancelamentoInfoDoPrestador(
   servico: ServicoCombinado,
-  ehGold: boolean,
+  ehGold: boolean | null,
 ): CancelamentoServicoPrestadorExibido | null {
   const { escolhidaEm } = servico;
   if (!escolhidaEm) return null;
@@ -222,13 +222,14 @@ function cancelamentoInfoDoPrestador(
   const data = formatarDataHora(escolhidaEm, "dd/MM");
   return {
     subtitulo: `Você foi escolhido por ${nome} em ${data}.`,
-    mostrarCota: !ehGold,
+    // Sem saber o plano (carregando ou falhou), não promete nem nega o desconto da cota.
+    mostrarCota: ehGold === false,
     nomeEmpregador: nome,
   };
 }
 
 /** Telas 36 e 37 "Seu serviço" do Prestador escolhido, com "Iniciar serviço" (ETI-89). */
-export function useSeuServicoViewModel(anuncioId: string, ehGold: boolean = false) {
+export function useSeuServicoViewModel(anuncioId: string, ehGold: boolean | null = null) {
   const router = useRouter();
   const query = useServicoQuery(anuncioId);
   const iniciar = useIniciarServicoMutation(anuncioId);
@@ -321,7 +322,11 @@ export function useSeuServicoViewModel(anuncioId: string, ehGold: boolean = fals
     cancelarPrestador.mutate(undefined, {
       onSuccess: () => {
         setFolhaCancelarAberta(false);
-        router.replace("/(app)/(prestador)");
+        // O serviço cancelado fica no Histórico das Aplicações (ETI-97).
+        router.replace({
+          pathname: "/(app)/(prestador)/aplicacoes",
+          params: { aba: AbaCandidatura.HISTORICO },
+        });
       },
       onError: (falha) => {
         switch (erroApi(falha)?.codigo) {

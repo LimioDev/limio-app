@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { TipoToast, useToast } from "../../../comum/store/toast";
@@ -145,9 +145,26 @@ function primeiroNome(nome: string | null): string {
  * Histórico, com "Cancelar" (desistir, 32d) e "Ver Detalhes" (tela 36). A aba
  * de cada candidatura quem decide é a API.
  */
-export function useAplicacoesViewModel() {
+export function useAplicacoesViewModel(abaPedida?: string) {
   const router = useRouter();
   const [aba, setAba] = useState<AbaCandidatura>(AbaCandidatura.PENDENTES);
+
+  // Quem chega com `aba` (ex.: Histórico depois de cancelar o serviço, ETI-97)
+  // abre nela. A aba da barra continua montada, então o parâmetro é aplicado a
+  // cada chegada e limpo em seguida, pra uma nova chegada com o mesmo valor valer.
+  const [abaPedidaVista, setAbaPedidaVista] = useState<string | undefined>(undefined);
+  if (abaPedida !== abaPedidaVista) {
+    setAbaPedidaVista(abaPedida);
+    const valida = OPCOES_ABA_CANDIDATURA.find((opcao) => opcao === abaPedida);
+    if (valida) {
+      setAba(valida);
+    }
+  }
+  useEffect(() => {
+    if (abaPedida !== undefined) {
+      router.setParams({ aba: undefined });
+    }
+  }, [abaPedida, router]);
   const query = useMinhasCandidaturasQuery(aba);
   const desistir = useDesistirCandidaturaMutation();
   const mostrarToast = useToast((estado) => estado.mostrar);
