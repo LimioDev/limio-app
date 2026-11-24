@@ -136,6 +136,10 @@ function candidaturaParaExibicao(candidatura: MinhaCandidatura): CandidaturaExib
   };
 }
 
+function abaValida(valor: string | undefined): AbaCandidatura | undefined {
+  return OPCOES_ABA_CANDIDATURA.find((opcao) => opcao === valor);
+}
+
 function primeiroNome(nome: string | null): string {
   return nome?.trim().split(/\s+/)[0] || "o Empregador";
 }
@@ -147,15 +151,17 @@ function primeiroNome(nome: string | null): string {
  */
 export function useAplicacoesViewModel(abaPedida?: string) {
   const router = useRouter();
-  const [aba, setAba] = useState<AbaCandidatura>(AbaCandidatura.PENDENTES);
-
   // Quem chega com `aba` (ex.: Histórico depois de cancelar o serviço, ETI-97)
-  // abre nela. A aba da barra continua montada, então o parâmetro é aplicado a
-  // cada chegada e limpo em seguida, pra uma nova chegada com o mesmo valor valer.
-  const [abaPedidaVista, setAbaPedidaVista] = useState<string | undefined>(undefined);
+  // abre nela. A aba da barra continua montada, então o parâmetro também vale
+  // numa nova chegada (ajuste no render, sem efeito) e é limpo em seguida, pra
+  // uma chegada seguinte com o mesmo valor valer de novo.
+  const [aba, setAba] = useState<AbaCandidatura>(
+    () => abaValida(abaPedida) ?? AbaCandidatura.PENDENTES,
+  );
+  const [abaPedidaVista, setAbaPedidaVista] = useState(abaPedida);
   if (abaPedida !== abaPedidaVista) {
     setAbaPedidaVista(abaPedida);
-    const valida = OPCOES_ABA_CANDIDATURA.find((opcao) => opcao === abaPedida);
+    const valida = abaValida(abaPedida);
     if (valida) {
       setAba(valida);
     }
