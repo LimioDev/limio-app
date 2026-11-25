@@ -33,6 +33,7 @@ import {
   buscarReagendamento,
   cancelarReagendamento,
   cancelarAnuncio,
+  cancelarServico,
   criarAnuncio,
   desistirCandidatura,
   editarAnuncio,
@@ -388,6 +389,35 @@ export function useValidarServicoMutation(anuncioId: string) {
       queryClient.setQueryData<ServicoCombinado>(
         chavesAnuncio.servico(anuncioId),
         (atual) => (atual ? { ...atual, status, validadoEm } : atual),
+      );
+    },
+    onSettled: (_dados, falha) => {
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalhe(anuncioId) });
+      if (erroApi(falha)?.codigo === CodigoErro.SERVICO_NAO_ENCONTRADO) {
+        void queryClient.resetQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+        return;
+      }
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+    },
+  });
+}
+
+/**
+ * "Cancelar serviço" da tela 26 (ETI-95). No sucesso a tela 25 já volta
+ * cancelada (25d) com o `status` da resposta, e a consulta confirma em
+ * seguida. Qualquer resposta consulta o serviço de novo: com
+ * `PRAZO_CANCELAMENTO_ESGOTADO` ou `USE_DENUNCIA` o status ou a data mudaram
+ * por fora e o "Cancelar" precisa sumir. Com `SERVICO_NAO_ENCONTRADO` o
+ * serviço é zerado (`reset`), igual ao "Validar serviço".
+ */
+export function useCancelarServicoMutation(anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => cancelarServico(anuncioId),
+    onSuccess: ({ status }) => {
+      queryClient.setQueryData<ServicoCombinado>(chavesAnuncio.servico(anuncioId), (atual) =>
+        atual ? { ...atual, status, propostaPendente: null } : atual,
       );
     },
     onSettled: (_dados, falha) => {

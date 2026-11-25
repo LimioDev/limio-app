@@ -24,10 +24,12 @@ import { Carregando } from "../../../comum/componentes/ui/Carregando";
 import { Icone } from "../../../comum/componentes/ui/Icone";
 import { MenuSuspenso } from "../../../comum/componentes/ui/MenuSuspenso";
 import type {
+  ErroCancelamentoServico,
   EtapaServicoExibida,
   ServicoCombinadoExibido,
 } from "../viewmodel/useServicoCombinadoViewModel";
 import { CartaoConversa } from "./componentes/CartaoConversa";
+import { FolhaCancelarServico } from "./componentes/FolhaCancelarServico";
 
 interface ServicoCombinadoViewProps {
   servico: ServicoCombinadoExibido | null;
@@ -50,6 +52,15 @@ interface ServicoCombinadoViewProps {
   /** Tela 41; sem função (a API não mandou o id da proposta), o aviso não abre nada. */
   aoAbrirProposta?: () => void;
   aoAvaliar: () => void;
+  /** Folha "Cancelar o serviço combinado" (tela 26, ETI-95). */
+  folhaCancelarAberta: boolean;
+  cancelando: boolean;
+  erroCancelamento: ErroCancelamentoServico | null;
+  aoCancelar: () => void;
+  aoConfirmarCancelar: () => void;
+  aoManterCombinado: () => void;
+  /** Tela 46 "Abrir denúncia" (ETI-115); sem função, o atalho não aparece. */
+  aoAbrirDenuncia?: () => void;
   /** Menu "⋮" (tela 25f) com "Denunciar" (tela 46). */
   menuAberto: boolean;
   aoAbrirMenu: () => void;
@@ -137,6 +148,13 @@ export function ServicoCombinadoView({
   aoReagendar,
   aoAbrirProposta,
   aoAvaliar,
+  folhaCancelarAberta,
+  cancelando,
+  erroCancelamento,
+  aoCancelar,
+  aoConfirmarCancelar,
+  aoManterCombinado,
+  aoAbrirDenuncia,
   menuAberto,
   aoAbrirMenu,
   aoFecharMenu,
@@ -309,15 +327,26 @@ export function ServicoCombinadoView({
             onPress={aoValidar}
           />
         ) : null}
-        {/* "Cancelar" (ETI-95) entra com o card dele, ao lado do "Reagendar";
-            a regra já está em `servico.acoes`. */}
-        {servico.acoes.reagendar ? (
-          <Botao
-            rotulo="Reagendar"
-            icone={RefreshCw}
-            variante="contorno"
-            onPress={aoReagendar}
-          />
+        {/* Linha do protótipo com "Reagendar" e "Cancelar" lado a lado; sozinho,
+            cada um ocupa a linha toda. */}
+        {servico.acoes.reagendar || servico.acoes.cancelar ? (
+          <View className="flex-row gap-3">
+            {servico.acoes.reagendar ? (
+              <View className="flex-1">
+                <Botao
+                  rotulo="Reagendar"
+                  icone={RefreshCw}
+                  variante="contorno"
+                  onPress={aoReagendar}
+                />
+              </View>
+            ) : null}
+            {servico.acoes.cancelar ? (
+              <View className="flex-1">
+                <Botao rotulo="Cancelar" variante="destrutivo" onPress={aoCancelar} />
+              </View>
+            ) : null}
+          </View>
         ) : null}
         {servico.podeAvaliar ? (
           <Botao rotulo={servico.rotuloAvaliar} icone={Star} onPress={aoAvaliar} />
@@ -344,6 +373,16 @@ export function ServicoCombinadoView({
           </Pressable>
         ) : null}
       </ScrollView>
+
+      <FolhaCancelarServico
+        visivel={folhaCancelarAberta}
+        cancelamento={servico.cancelamento}
+        cancelando={cancelando}
+        erro={erroCancelamento}
+        aoConfirmar={aoConfirmarCancelar}
+        aoManter={aoManterCombinado}
+        aoAbrirDenuncia={aoAbrirDenuncia}
+      />
     </SafeAreaView>
   );
 }

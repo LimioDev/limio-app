@@ -19,6 +19,7 @@ import {
   MinhasCandidaturasResponseSchema,
   MuralResponseSchema,
   PainelEmpregadorResponseSchema,
+  CancelamentoServicoSchema,
   ProporReagendamentoRequestSchema,
   ReagendamentoSchema,
   ResponderReagendamentoRequestSchema,
@@ -29,6 +30,7 @@ import {
   type AnuncioCriadoResponse,
   type AnuncioDetalheResponse,
   type AnuncioRequest,
+  type CancelamentoServico,
   type CancelamentoPeloPrestador,
   type CandidatosResponse,
   type CandidaturaCriada,
@@ -223,6 +225,18 @@ export async function escolherPrestador({
 export async function buscarServico(anuncioId: string): Promise<ServicoCombinado> {
   const { data } = await api.get(`/anuncios/${anuncioId}/servico`);
   return ServicoCombinadoSchema.parse(data);
+}
+
+/**
+ * "Cancelar serviço (Empregador)" (ETI-94, `CancelarServicoController`), sem
+ * corpo. Erros: `409 PRAZO_CANCELAMENTO_ESGOTADO` (menos de 24h pra data
+ * vigente), `409 USE_DENUNCIA` (em andamento ou aguardando validação),
+ * `409 SERVICO_ESTADO_INVALIDO` (já concluído ou cancelado) e
+ * `404 SERVICO_NAO_ENCONTRADO` (inexistente ou de outro Empregador).
+ */
+export async function cancelarServico(anuncioId: string): Promise<CancelamentoServico> {
+  const { data } = await api.post(`/anuncios/${anuncioId}/servico/cancelar`);
+  return CancelamentoServicoSchema.parse(data);
 }
 
 /**
