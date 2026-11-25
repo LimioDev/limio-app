@@ -49,7 +49,7 @@ export interface ServicoExibido {
     /** "2 mensagens novas", "Nenhuma mensagem nova" ou "Conversa em somente leitura". */
     detalhe: string;
   };
-  /** "Há uma proposta de reagendamento para 05/09, 10:00." (ETI-100 traz o atalho). */
+  /** "Marina propôs remarcar o serviço para 05/09, 10:00."; abre a tela 41. */
   propostaPendente: string | null;
   /** Tela 37: o serviço já foi iniciado. */
   emAndamento: boolean;
@@ -62,6 +62,11 @@ export interface ServicoExibido {
    * API também aceita check-out de `PUBLICADO`, mas pelo card o acesso é só a 37.
    */
   podeFinalizar: boolean;
+  /**
+   * "Propor novo horário" (tela 40, ETI-100): combinado, abaixo do limite de
+   * reagendamentos aceitos e sem proposta pendente (aí o caminho é o aviso).
+   */
+  podeReagendar: boolean;
 }
 
 export interface FolhaIniciarExibida {
@@ -149,7 +154,11 @@ function passosDoServico(servico: ServicoCombinado): PassoServicoExibido[] {
   return passos;
 }
 
-function servicoParaExibicao(servico: ServicoCombinado, ehPrestador: boolean): ServicoExibido {
+function servicoParaExibicao(
+  servico: ServicoCombinado,
+  ehPrestador: boolean,
+  usuarioId: string | null,
+): ServicoExibido {
   const { outraParte } = servico;
   return {
     selo: rotuloSelo(servico.status),
@@ -173,7 +182,7 @@ function servicoParaExibicao(servico: ServicoCombinado, ehPrestador: boolean): S
     },
     propostaPendente:
       servico.propostaPendente && servico.status !== StatusAnuncio.ENCERRADO
-        ? avisoPropostaPendente(servico.propostaPendente.dataProposta)
+        ? avisoPropostaPendente(servico.propostaPendente, usuarioId, primeiroNome(outraParte.nome))
         : null,
     emAndamento: servico.status === StatusAnuncio.EM_ANDAMENTO,
     andamento: passosDoServico(servico),
@@ -181,6 +190,11 @@ function servicoParaExibicao(servico: ServicoCombinado, ehPrestador: boolean): S
     // com o papel de Prestador ativo, quem vê a tela é o escolhido.
     podeIniciar: ehPrestador && servico.status === StatusAnuncio.PUBLICADO,
     podeFinalizar: ehPrestador && servico.status === StatusAnuncio.EM_ANDAMENTO,
+    podeReagendar:
+      ehPrestador &&
+      servico.status === StatusAnuncio.PUBLICADO &&
+      servico.propostaPendente === null &&
+      servico.reagendamentosAceitos < servico.limiteReagendamentos,
   };
 }
 
@@ -190,6 +204,7 @@ export function useSeuServicoViewModel(anuncioId: string) {
   const query = useServicoQuery(anuncioId);
   const iniciar = useIniciarServicoMutation(anuncioId);
   const ehPrestador = useSessao((estado) => estado.papelAtivo === PapelUsuario.PRESTADOR);
+  const usuarioId = useSessao((estado) => estado.usuarioId);
   const mostrarToast = useToast((estado) => estado.mostrar);
   const [folhaAberta, setFolhaAberta] = useState(false);
   const [erroFolha, setErroFolha] = useState<string | null>(null);
@@ -223,8 +238,11 @@ export function useSeuServicoViewModel(anuncioId: string) {
     erro = mensagemErroApi(query.error, "Não foi possível carregar o serviço.");
   }
 
-  const servico = dados ? servicoParaExibicao(dados, ehPrestador) : null;
+  const servico = dados ? servicoParaExibicao(dados, ehPrestador, usuarioId) : null;
   const candidaturaId = dados?.candidaturaId ?? null;
+  // Sem o id da proposta (a API ainda não manda), o aviso aparece sem abrir a tela 41.
+  const propostaAbrivel =
+    Boolean(dados?.propostaPendente?.id) && dados?.status !== StatusAnuncio.ENCERRADO;
   const telefoneNacionalEmpregador = dados?.outraParte.telefone
     ? telefoneNacional(dados.outraParte.telefone)
     : null;
@@ -296,6 +314,17 @@ export function useSeuServicoViewModel(anuncioId: string) {
     aoIniciar: () => setFolhaAberta(true),
     aoFinalizarComFoto: () =>
       router.push({ pathname: "/(app)/servico/checkout/[id]", params: { id: anuncioId } }),
+    // Tela 40 (ETI-100).
+    aoReagendar: () =>
+      router.push({ pathname: "/(app)/servico/reagendar/[id]", params: { id: anuncioId } }),
+    // Tela 41 (ETI-100).
+    aoAbrirProposta: propostaAbrivel
+      ? () =>
+          router.push({
+            pathname: "/(app)/servico/reagendamento/[id]",
+            params: { id: anuncioId },
+          })
+      : undefined,
     aoConfirmarInicio: confirmarInicio,
     aoFecharFolha: fecharFolha,
   };

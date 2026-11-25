@@ -6,6 +6,7 @@ import { formatarDiaPorExtenso } from "../../../comum/lib/datas";
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { formatarTelefone, telefoneNacional } from "../../../comum/lib/telefone";
 import type { Estado } from "../../../comum/tipos/api";
+import { useSessao } from "../../../comum/store/sessao";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import {
   avisoPropostaPendente,
@@ -57,14 +58,13 @@ export interface ServicoCombinadoExibido {
   encerrado: boolean;
   /** Linha "Andamento": Combinado, Iniciado, Check-out e Validado. */
   etapas: EtapaServicoExibida[];
-  /** "Há uma proposta de reagendamento para 05/09, 10:00." (ETI-100 traz o atalho). */
+  /** "Rafael propôs remarcar o serviço para 05/09, 10:00."; abre a tela 41. */
   propostaPendente: string | null;
   /** Texto de baixo dos botões (ou do aviso de cancelado). */
   rodape: string | null;
   /**
    * Ações do Empregador derivadas do status. "Validar serviço" (tela 27,
-   * ETI-93) e "Cancelar" (tela 26, ETI-95) já aparecem; "Reagendar" (ETI-100)
-   * é calculado aqui, mas só aparece quando o card dele entrar.
+   * ETI-93), "Reagendar" (tela 40, ETI-100) e "Cancelar" (tela 26, ETI-95).
    */
   acoes: AcoesDoEmpregador;
   /** "Avaliar Rafael" (tela 45, ETI-108): só com o serviço concluído. */
@@ -108,7 +108,10 @@ export interface AcoesDoEmpregador {
    * aguardando validação. `null` nos outros status.
    */
   validar: "presencial" | "checkout" | null;
-  /** Só combinado e abaixo do limite de reagendamentos aceitos ("1 de 2"). */
+  /**
+   * Só combinado, abaixo do limite de reagendamentos aceitos ("1 de 2") e sem
+   * proposta pendente (aí o caminho é o aviso, que abre a tela 41).
+   */
   reagendar: boolean;
   /** Só combinado e até o prazo que a API devolve (data vigente menos 24h). */
   cancelar: boolean;
@@ -207,7 +210,10 @@ function acoesDoEmpregador(servico: ServicoCombinado, agora: Date): AcoesDoEmpre
   }
   return {
     validar,
-    reagendar: combinado && servico.reagendamentosAceitos < servico.limiteReagendamentos,
+    reagendar:
+      combinado &&
+      servico.propostaPendente === null &&
+      servico.reagendamentosAceitos < servico.limiteReagendamentos,
     cancelar: combinado && prazo !== null && new Date(prazo) > agora,
   };
 }
@@ -231,6 +237,7 @@ function cancelamentoParaExibicao(
 
 function servicoParaExibicao(
   servico: ServicoCombinado,
+  usuarioId: string | null,
   agora: Date = new Date(),
 ): ServicoCombinadoExibido {
   const { outraParte } = servico;
@@ -265,7 +272,7 @@ function servicoParaExibicao(
     etapas: etapasDoServico(servico),
     propostaPendente:
       servico.propostaPendente && !encerrado
-        ? avisoPropostaPendente(servico.propostaPendente.dataProposta)
+        ? avisoPropostaPendente(servico.propostaPendente, usuarioId, nome)
         : null,
     rodape: rodape(servico, nome, acoes),
     acoes,
@@ -315,6 +322,7 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
   const cancelar = useCancelarServicoMutation(anuncioId);
   const [folhaCancelarAberta, setFolhaCancelarAberta] = useState(false);
   const [erroCancelamento, setErroCancelamento] = useState<ErroCancelamentoServico | null>(null);
+  const usuarioId = useSessao((estado) => estado.usuarioId);
   const [menuAberto, setMenuAberto] = useState(false);
 
   // A tela continua montada embaixo do chat e da tela 45, e o React Query no
@@ -346,6 +354,9 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
 
   const telefone = dados?.outraParte.telefone ? telefoneNacional(dados.outraParte.telefone) : null;
   const candidaturaId = dados?.candidaturaId ?? null;
+  // Sem o id da proposta (a API ainda não manda), o aviso aparece sem abrir a tela 41.
+  const propostaAbrivel =
+    Boolean(dados?.propostaPendente?.id) && dados?.status !== StatusAnuncio.ENCERRADO;
 
   const abrirCancelar = () => {
     setErroCancelamento(null);
@@ -395,7 +406,7 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
     router.canGoBack() ? router.back() : router.replace("/(app)/(contratante)");
 
   return {
-    servico: dados ? servicoParaExibicao(dados) : null,
+    servico: dados ? servicoParaExibicao(dados, usuarioId) : null,
     carregando: query.isPending,
     erro,
     // `SERVICO_NAO_ENCONTRADO`: mensagem e volta pra tela anterior, sem "Tentar de novo".
@@ -416,6 +427,17 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
     // Tela 27 (ETI-93).
     aoValidar: () =>
       router.push({ pathname: "/(app)/servico/validar/[id]", params: { id: anuncioId } }),
+    // Tela 40 (ETI-100).
+    aoReagendar: () =>
+      router.push({ pathname: "/(app)/servico/reagendar/[id]", params: { id: anuncioId } }),
+    // Tela 41 (ETI-100).
+    aoAbrirProposta: propostaAbrivel
+      ? () =>
+          router.push({
+            pathname: "/(app)/servico/reagendamento/[id]",
+            params: { id: anuncioId },
+          })
+      : undefined,
     // Tela 45 (ETI-108).
     aoAvaliar: () =>
       router.push({ pathname: "/(app)/avaliacao/[anuncioId]", params: { anuncioId } }),

@@ -115,3 +115,29 @@ export function rotuloModoValidacao(modo: ModoValidacao): string {
       return "Pela foto";
   }
 }
+
+/**
+ * Espelha `StatusReagendamento` do backend (ETI-99, limio-api#49). `PENDENTE`
+ * é o único estado aberto; os outros são finais.
+ */
+export const StatusReagendamento = {
+  PENDENTE: "PENDENTE",
+  ACEITO: "ACEITO",
+  RECUSADO: "RECUSADO",
+  /** O próprio proponente desistiu antes da resposta. */
+  CANCELADO: "CANCELADO",
+  /** O prazo de resposta terminou sem manifestação. */
+  EXPIRADO: "EXPIRADO",
+  /** O serviço deixou de estar combinado (iniciado, cancelado...) com a proposta pendente. */
+  SEM_EFEITO: "SEM_EFEITO",
+} as const;
+
+export type StatusReagendamento = (typeof StatusReagendamento)[keyof typeof StatusReagendamento];
+
+/** Espelha `DecisaoReagendamento` do backend (ETI-99): resposta da contraparte na tela 41. */
+export const DecisaoReagendamento = {
+  ACEITAR: "ACEITAR",
+  RECUSAR: "RECUSAR",
+} as const;
+
+export type DecisaoReagendamento = (typeof DecisaoReagendamento)[keyof typeof DecisaoReagendamento];

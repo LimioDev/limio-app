@@ -2,11 +2,13 @@ import {
   CalendarClock,
   CalendarDays,
   Check,
+  ChevronRight,
   CircleCheck,
   DollarSign,
   Flag,
   MapPin,
   MoreVertical,
+  RefreshCw,
   Smartphone,
   Star,
 } from "lucide-react-native";
@@ -45,6 +47,10 @@ interface ServicoCombinadoViewProps {
   aoConversar?: () => void;
   /** Tela 27 "Validar serviço" (ETI-93). */
   aoValidar: () => void;
+  /** Tela 40 "Propor reagendamento" (ETI-100). */
+  aoReagendar: () => void;
+  /** Tela 41; sem função (a API não mandou o id da proposta), o aviso não abre nada. */
+  aoAbrirProposta?: () => void;
   aoAvaliar: () => void;
   /** Folha "Cancelar o serviço combinado" (tela 26, ETI-95). */
   folhaCancelarAberta: boolean;
@@ -139,6 +145,8 @@ export function ServicoCombinadoView({
   aoLigar,
   aoConversar,
   aoValidar,
+  aoReagendar,
+  aoAbrirProposta,
   aoAvaliar,
   folhaCancelarAberta,
   cancelando,
@@ -297,10 +305,17 @@ export function ServicoCombinadoView({
         </View>
 
         {servico.propostaPendente ? (
-          <View className="flex-row gap-3 rounded-card bg-alerta-fundo p-4">
+          <Pressable
+            onPress={aoAbrirProposta}
+            disabled={!aoAbrirProposta}
+            accessibilityRole={aoAbrirProposta ? "button" : "summary"}
+            accessibilityHint={aoAbrirProposta ? "Abre a proposta de reagendamento" : undefined}
+            className="flex-row items-center gap-3 rounded-card bg-alerta-fundo p-4 active:opacity-70"
+          >
             <Icone icone={CalendarClock} tamanho={18} cor="alerta" />
             <Text className="flex-1 text-rotulo text-alerta">{servico.propostaPendente}</Text>
-          </View>
+            {aoAbrirProposta ? <Icone icone={ChevronRight} tamanho={16} cor="alerta" /> : null}
+          </Pressable>
         ) : null}
 
         {/* Tela 27: cheio aguardando validação, contornado (presencial) antes do check-out. */}
@@ -312,14 +327,25 @@ export function ServicoCombinadoView({
             onPress={aoValidar}
           />
         ) : null}
-        {/* Linha do protótipo com "Reagendar" e "Cancelar" lado a lado. O
-            "Reagendar" (ETI-100) entra aqui com o card dele; a regra já está em
-            `servico.acoes`. Sozinho, o "Cancelar" ocupa a linha toda. */}
-        {servico.acoes.cancelar ? (
+        {/* Linha do protótipo com "Reagendar" e "Cancelar" lado a lado; sozinho,
+            cada um ocupa a linha toda. */}
+        {servico.acoes.reagendar || servico.acoes.cancelar ? (
           <View className="flex-row gap-3">
-            <View className="flex-1">
-              <Botao rotulo="Cancelar" variante="destrutivo" onPress={aoCancelar} />
-            </View>
+            {servico.acoes.reagendar ? (
+              <View className="flex-1">
+                <Botao
+                  rotulo="Reagendar"
+                  icone={RefreshCw}
+                  variante="contorno"
+                  onPress={aoReagendar}
+                />
+              </View>
+            ) : null}
+            {servico.acoes.cancelar ? (
+              <View className="flex-1">
+                <Botao rotulo="Cancelar" variante="destrutivo" onPress={aoCancelar} />
+              </View>
+            ) : null}
           </View>
         ) : null}
         {servico.podeAvaliar ? (
