@@ -26,6 +26,7 @@ import {
   buscarServico,
   buscarValidacao,
   candidatarAoAnuncio,
+  cancelarServicoPeloPrestador,
   listarCandidatos,
   recusarCandidato,
   buscarPainelEmpregador,
@@ -422,6 +423,31 @@ export function useCancelarServicoMutation(anuncioId: string) {
     onSettled: (_dados, falha) => {
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalhe(anuncioId) });
+      if (erroApi(falha)?.codigo === CodigoErro.SERVICO_NAO_ENCONTRADO) {
+        void queryClient.resetQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+        return;
+      }
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+    },
+  });
+}
+
+/**
+ * "Cancelar serviço (Prestador)" (ETI-97). No sucesso as telas 36/37 já voltam
+ * canceladas com o `status` da resposta, e a consulta confirma em seguida.
+ * Com `SERVICO_NAO_ENCONTRADO` o serviço é zerado (`reset`), igual ao checkout.
+ */
+export function useCancelarServicoPeloPrestadorMutation(anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => cancelarServicoPeloPrestador(anuncioId),
+    onSuccess: ({ status }) => {
+      queryClient.setQueryData<ServicoCombinado>(chavesAnuncio.servico(anuncioId), (atual) =>
+        atual ? { ...atual, status } : atual,
+      );
+    },
+    onSettled: (_dados, falha) => {
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.minhasCandidaturas });
       if (erroApi(falha)?.codigo === CodigoErro.SERVICO_NAO_ENCONTRADO) {
         void queryClient.resetQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
         return;
