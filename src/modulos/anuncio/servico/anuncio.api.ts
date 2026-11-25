@@ -19,6 +19,9 @@ import {
   MinhasCandidaturasResponseSchema,
   MuralResponseSchema,
   PainelEmpregadorResponseSchema,
+  ProporReagendamentoRequestSchema,
+  ReagendamentoSchema,
+  ResponderReagendamentoRequestSchema,
   ServicoCombinadoSchema,
   ServicoIniciadoSchema,
   ServicoValidadoSchema,
@@ -40,12 +43,14 @@ import {
   type MinhasCandidaturasResponse,
   type MuralResponse,
   type PainelEmpregadorResponse,
+  type ProporReagendamentoRequest,
+  type Reagendamento,
   type ServicoCombinado,
   type ServicoIniciado,
   type ServicoValidado,
   type ValidarServicoRequest,
 } from "../tipos/anuncio.types";
-import type { AbaCandidatura } from "../tipos/anuncio.enums";
+import type { AbaCandidatura, DecisaoReagendamento } from "../tipos/anuncio.enums";
 
 /** Resumo dos anúncios do Empregador logado — só os do perfil dele (ETI-52). */
 export async function buscarPainelEmpregador(): Promise<PainelEmpregadorResponse> {
@@ -319,4 +324,56 @@ export async function listarHistorico(
     params: { ...filtro, pagina },
   });
   return HistoricoResponseSchema.parse(data);
+}
+
+/**
+ * "Enviar proposta" da tela 40 (ETI-99, limio-api#49). Só o Empregador dono e
+ * o Prestador escolhido, com o serviço combinado; data no passado é
+ * `422 DATA_NO_PASSADO` e as regras de proposta pendente e de limite são `409`.
+ */
+export async function proporReagendamento({
+  anuncioId,
+  request,
+}: {
+  anuncioId: string;
+  request: ProporReagendamentoRequest;
+}): Promise<Reagendamento> {
+  const { data } = await api.post(
+    `/anuncios/${anuncioId}/reagendamentos`,
+    ProporReagendamentoRequestSchema.parse(request),
+  );
+  return ReagendamentoSchema.parse(data);
+}
+
+/**
+ * Tela 41: a proposta, pelas duas partes. Quem não é parte recebe
+ * `404 REAGENDAMENTO_NAO_ENCONTRADO`.
+ */
+export async function buscarReagendamento(reagendamentoId: string): Promise<Reagendamento> {
+  const { data } = await api.get(`/reagendamentos/${reagendamentoId}`);
+  return ReagendamentoSchema.parse(data);
+}
+
+/** "Cancelar proposta": só o proponente (a outra parte recebe `403 ACESSO_NEGADO`). */
+export async function cancelarReagendamento(reagendamentoId: string): Promise<Reagendamento> {
+  const { data } = await api.post(`/reagendamentos/${reagendamentoId}/cancelar`);
+  return ReagendamentoSchema.parse(data);
+}
+
+/**
+ * "Aceitar" e "Recusar" da tela 41: só a contraparte. Devolve o serviço já
+ * atualizado (com a data nova, no aceite).
+ */
+export async function responderReagendamento({
+  reagendamentoId,
+  decisao,
+}: {
+  reagendamentoId: string;
+  decisao: DecisaoReagendamento;
+}): Promise<ServicoCombinado> {
+  const { data } = await api.post(
+    `/reagendamentos/${reagendamentoId}/responder`,
+    ResponderReagendamentoRequestSchema.parse({ decisao }),
+  );
+  return ServicoCombinadoSchema.parse(data);
 }

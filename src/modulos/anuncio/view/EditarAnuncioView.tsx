@@ -12,6 +12,7 @@ import type { FotoExibida } from "../../../comum/tipos/foto";
 import type { ErrosEdicao } from "../store/edicaoAnuncio.store";
 import { CampoContador } from "./componentes/CampoContador";
 import { CartaoCategoria } from "./componentes/CartaoCategoria";
+import { Overline } from "./componentes/Overline";
 import { GradeFotos } from "./componentes/GradeFotos";
 
 const MASCARA_HORA: Mask = [/\d/, /\d/, ":", /\d/, /\d/];
@@ -57,13 +58,6 @@ interface EditarAnuncioViewProps {
   aoVoltar: () => void;
 }
 
-function Overline({ children }: { children: string }) {
-  return (
-    <Text className="text-overline font-bold uppercase tracking-[0.8px] text-tinta-fraco">
-      {children}
-    </Text>
-  );
-}
 
 /** Tela 16a "Editar anúncio": os campos da criação numa tela só, sem o endereço. */
 export function EditarAnuncioView({
