@@ -74,6 +74,8 @@ export const CodigoErro = {
   PAGAMENTO_RECUSADO: "PAGAMENTO_RECUSADO",
   GATEWAY_INDISPONIVEL: "GATEWAY_INDISPONIVEL",
   CARTAO_INVALIDO: "CARTAO_INVALIDO",
+  // Assinar sem cartão salvo (limio-api#50).
+  CARTAO_NAO_CADASTRADO: "CARTAO_NAO_CADASTRADO",
   // Perfil público (ETI-105), limio-api#34.
   PERFIL_NAO_ENCONTRADO: "PERFIL_NAO_ENCONTRADO",
   // Registrar denúncia (ETI-114), limio-api#48.

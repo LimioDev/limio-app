@@ -28,7 +28,10 @@ export function rotuloCartao(cartao: CartaoSalvo): string {
  * da cobrança é o de hoje (fuso do sistema).
  */
 export function textoDiaCobranca(agora: Date = new Date()): string {
-  return `Cobrança todo dia ${paraFusoLocal(agora).getDate()}`;
+  const dia = paraFusoLocal(agora).getDate();
+  // Do dia 29 em diante o back soma um mês (`plusMonths(1)`) e cai no último
+  // dia dos meses mais curtos: "todo dia 31" não seria verdade.
+  return dia > 28 ? "Cobrança todo mês, a partir de hoje" : `Cobrança todo dia ${dia}`;
 }
 
 /** "renova em 18/12": fim do ciclo pago. */

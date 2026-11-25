@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { BackHandler } from "react-native";
 
@@ -50,6 +50,7 @@ function planoParaExibicao(plano: PlanoGoldResponse): PlanoGoldExibido {
  */
 export function useAssinarGoldViewModel() {
   const router = useRouter();
+  const navigation = useNavigation();
   const mostrarToast = useToast((estado) => estado.mostrar);
   // O card pede consultar ao abrir: preço e cartão podem ter mudado.
   const query = usePlanoGoldQuery({ sempreAoAbrir: true });
@@ -64,6 +65,12 @@ export function useAssinarGoldViewModel() {
   const enviando = useRef(false);
 
   const pendente = assinar.isPending;
+
+  // Durante a cobrança o gesto de voltar do iOS fica desligado: se a tela
+  // saísse, os callbacks do `mutate` não rodariam (sem toast nem tela 35).
+  useEffect(() => {
+    navigation.setOptions({ gestureEnabled: !pendente });
+  }, [navigation, pendente]);
 
   // Durante a cobrança o voltar do Android não fecha a tela: o resultado
   // ainda decide pra onde ir.
@@ -112,13 +119,22 @@ export function useAssinarGoldViewModel() {
               setRecusado(true);
               setErroEnvio("Pagamento recusado. Seu plano continua FREE.");
               return;
+            // Pode ser falha antes da cobrança ou resultado incerto (timeout,
+            // 5xx do gateway): o texto não promete que a nova tentativa passa.
             case CodigoErro.GATEWAY_INDISPONIVEL:
               enviando.current = false;
               setErroEnvio(
-                "Não foi possível processar o pagamento agora. Tente de novo mais tarde.",
+                "Não foi possível confirmar o pagamento agora. Se o GOLD não aparecer em alguns minutos, tente de novo ou fale com o suporte.",
               );
               return;
-            // `COBRANCA_EM_ANDAMENTO` e o resto: a mensagem da API já orienta.
+            // Uma cobrança anterior ficou sem resultado (limio-api#50): tentar de
+            // novo cai no mesmo erro até a reconciliação (ETI-85).
+            case CodigoErro.COBRANCA_EM_ANDAMENTO:
+              enviando.current = false;
+              setErroEnvio(
+                "Seu pagamento está sendo processado. Se o GOLD não aparecer em alguns minutos, fale com o suporte.",
+              );
+              return;
             default:
               enviando.current = false;
               setErroEnvio(mensagemErroApi(falha, "Não foi possível assinar o GOLD."));

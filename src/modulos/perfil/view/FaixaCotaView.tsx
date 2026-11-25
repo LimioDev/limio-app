@@ -35,6 +35,16 @@ export function FaixaCotaView({ faixa, aoAbrirCota, aoVerGold }: FaixaCotaViewPr
       onPress={aoAbrirCota}
       accessibilityRole="button"
       accessibilityLabel={`Plano FREE, ${faixa.usadas}. Ver cota do mês`}
+      // Com leitor de tela a faixa vira um elemento só e o "Ver GOLD" de dentro
+      // some: a ação fica exposta no próprio elemento.
+      accessibilityActions={[{ name: "activate" }, { name: "verGold", label: "Ver plano GOLD" }]}
+      onAccessibilityAction={(evento) => {
+        if (evento.nativeEvent.actionName === "verGold") {
+          aoVerGold();
+        } else {
+          aoAbrirCota();
+        }
+      }}
       className="gap-2 rounded-card border border-borda bg-superficie px-4 py-3 active:opacity-80"
     >
       <View className="flex-row items-center justify-between gap-3">
