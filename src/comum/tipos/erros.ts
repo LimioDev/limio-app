@@ -52,6 +52,8 @@ export const CodigoErro = {
   // Serviço combinado (ETI-86) e iniciar o serviço (ETI-88), PRs #29 e #26 do back.
   SERVICO_NAO_ENCONTRADO: "SERVICO_NAO_ENCONTRADO",
   SERVICO_ESTADO_INVALIDO: "SERVICO_ESTADO_INVALIDO",
+  // Validar o serviço pela foto antes do check-out (ETI-92), limio-api#31.
+  VALIDACAO_SEM_CHECKOUT: "VALIDACAO_SEM_CHECKOUT",
   // Minhas candidaturas e desistir (ETI-77), já na develop do back. Também
   // usados por listar e recusar candidatos (ETI-67).
   CANDIDATURA_NAO_ENCONTRADA: "CANDIDATURA_NAO_ENCONTRADA",
@@ -74,6 +76,19 @@ export const CodigoErro = {
   CARTAO_INVALIDO: "CARTAO_INVALIDO",
   // Gerenciar a assinatura GOLD (ETI-83), contrato proposto no card.
   ASSINATURA_NAO_ENCONTRADA: "ASSINATURA_NAO_ENCONTRADA",
+  // Assinar sem cartão salvo (limio-api#50).
+  CARTAO_NAO_CADASTRADO: "CARTAO_NAO_CADASTRADO",
+  // Perfil público (ETI-105), limio-api#34.
+  PERFIL_NAO_ENCONTRADO: "PERFIL_NAO_ENCONTRADO",
+  // Registrar denúncia (ETI-114), limio-api#48.
+  ALVO_NAO_ACESSIVEL: "ALVO_NAO_ACESSIVEL",
+  // Reagendamento (ETI-99), limio-api#49.
+  REAGENDAMENTO_NAO_ENCONTRADO: "REAGENDAMENTO_NAO_ENCONTRADO",
+  PROPOSTA_PENDENTE_EXISTENTE: "PROPOSTA_PENDENTE_EXISTENTE",
+  LIMITE_REAGENDAMENTOS: "LIMITE_REAGENDAMENTOS",
+  REAGENDAMENTO_NAO_PERMITIDO: "REAGENDAMENTO_NAO_PERMITIDO",
+  PROPOSTA_EXPIRADA: "PROPOSTA_EXPIRADA",
+  PROPOSTA_ENCERRADA: "PROPOSTA_ENCERRADA",
   ERRO_INTERNO: "ERRO_INTERNO",
 } as const;
 

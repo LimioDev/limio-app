@@ -1,6 +1,8 @@
 import {
+  CalendarClock,
   Camera,
   Check,
+  ChevronRight,
   CircleCheck,
   MapPin,
   MessageCircle,
@@ -41,6 +43,10 @@ interface SeuServicoViewProps {
   aoIniciar: () => void;
   /** Abre a tela 38 "Checkout". */
   aoFinalizarComFoto: () => void;
+  /** Tela 40 "Propor reagendamento" (ETI-100). */
+  aoReagendar: () => void;
+  /** Tela 41; sem função (a API não mandou o id da proposta), o aviso não abre nada. */
+  aoAbrirProposta?: () => void;
   aoConfirmarInicio: () => void;
   aoFecharFolha: () => void;
 }
@@ -54,6 +60,23 @@ function Aviso({ titulo, texto }: { titulo: string; texto?: string }) {
         {texto ? <Text className="text-rotulo text-alerta">{texto}</Text> : null}
       </View>
     </View>
+  );
+}
+
+/** Aviso de proposta de reagendamento pendente; com `aoAbrir`, toca pra abrir a tela 41. */
+function AvisoProposta({ texto, aoAbrir }: { texto: string; aoAbrir?: () => void }) {
+  return (
+    <Pressable
+      onPress={aoAbrir}
+      disabled={!aoAbrir}
+      accessibilityRole={aoAbrir ? "button" : "summary"}
+      accessibilityHint={aoAbrir ? "Abre a proposta de reagendamento" : undefined}
+      className="flex-row items-center gap-3 rounded-card bg-alerta-fundo p-4 active:opacity-70"
+    >
+      <Icone icone={CalendarClock} tamanho={18} cor="alerta" />
+      <Text className="flex-1 text-rotulo font-bold text-alerta">{texto}</Text>
+      {aoAbrir ? <Icone icone={ChevronRight} tamanho={16} cor="alerta" /> : null}
+    </Pressable>
   );
 }
 
@@ -113,6 +136,8 @@ export function SeuServicoView({
   folha,
   aoIniciar,
   aoFinalizarComFoto,
+  aoReagendar,
+  aoAbrirProposta,
   aoConfirmarInicio,
   aoFecharFolha,
 }: SeuServicoViewProps) {
@@ -208,7 +233,9 @@ export function SeuServicoView({
           aoConversar={aoConversar}
         />
 
-        {servico.propostaPendente ? <Aviso titulo={servico.propostaPendente} /> : null}
+        {servico.propostaPendente ? (
+          <AvisoProposta texto={servico.propostaPendente} aoAbrir={aoAbrirProposta} />
+        ) : null}
 
         {servico.andamento.length > 0 ? (
           <View className="gap-3">
@@ -238,8 +265,8 @@ export function SeuServicoView({
         ) : null}
       </ScrollView>
 
-      {/* "Propor novo horário" (ETI-100) e "Cancelar serviço" (ETI-97) entram
-          com os cards deles. */}
+      {/* "Cancelar serviço" (ETI-97) entra com o card dele, ao lado do
+          "Propor novo horário". */}
       {servico.podeFinalizar ? (
         <SafeAreaView edges={["bottom"]} className="border-t border-borda bg-superficie">
           <View className="px-margem py-3">
@@ -248,13 +275,22 @@ export function SeuServicoView({
         </SafeAreaView>
       ) : servico.podeIniciar ? (
         <SafeAreaView edges={["bottom"]} className="border-t border-borda bg-superficie">
-          <View className="px-margem py-3">
+          <View className="gap-3 px-margem py-3">
             <Botao
               rotulo="Iniciar serviço"
               icone={CircleCheck}
               disabled={folha.enviando}
               onPress={aoIniciar}
             />
+            {servico.podeReagendar ? (
+              <Botao
+                rotulo="Propor novo horário"
+                variante="contorno"
+                tamanho="padrao"
+                disabled={folha.enviando}
+                onPress={aoReagendar}
+              />
+            ) : null}
           </View>
         </SafeAreaView>
       ) : null}

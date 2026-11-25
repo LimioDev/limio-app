@@ -9,6 +9,7 @@ import { useSessao } from "../../../comum/store/sessao";
 import { useToast } from "../../../comum/store/toast";
 import { StatusAplicacao } from "../../../comum/tipos/aplicacao";
 import { CodigoErro } from "../../../comum/tipos/erros";
+import { PapelUsuario } from "../../../comum/tipos/papel";
 import { marcarEntregues } from "../servico/chat.api";
 import { avisoSomenteLeitura, horaMensagem, primeiroNome } from "../servico/chat.helpers";
 import {
@@ -341,17 +342,42 @@ export function useChatViewModel(candidaturaId: string, anuncioId?: string) {
       }
     },
 
-    // Menu "⋮" (tela 21b): perfil (ETI-106) e denúncia (ETI-115) ainda não existem.
+    // Menu "⋮" (tela 21b): o perfil abre a tela 20b (ETI-106) e a denúncia, a tela 46 (ETI-115).
     menuAberto,
     aoAbrirMenu: () => setMenuAberto(true),
     aoFecharMenu: () => setMenuAberto(false),
     aoVerPerfil: () => {
       setMenuAberto(false);
-      mostrarToast(EM_BREVE);
+      if (!chat) {
+        return;
+      }
+      router.push({
+        pathname: "/(app)/perfil/[usuarioId]",
+        params: {
+          usuarioId: chat.outraParte.usuarioId,
+          papel:
+            chat.outraParte.papel === PapelNoChat.CANDIDATO
+              ? PapelUsuario.PRESTADOR
+              : PapelUsuario.EMPREGADOR,
+          // Sem o aviso da 20b: quem abriu já está conversando com a pessoa.
+          origem: "chat",
+        },
+      });
     },
+    // Denúncia pela candidatura (o chat é 1:1 por ela): o back tira a outra parte dela.
     aoDenunciar: () => {
       setMenuAberto(false);
-      mostrarToast(EM_BREVE);
+      if (!chat) {
+        return;
+      }
+      router.push({
+        pathname: "/(app)/denuncia",
+        params: {
+          candidaturaId: chat.candidaturaId,
+          titulo: chat.anuncio.titulo,
+          detalhe: `Conversa com ${chat.outraParte.nome}`,
+        },
+      });
     },
 
     // Rodapé da tela 22: o Prestador volta ao mural; o Empregador, aos candidatos (22c).

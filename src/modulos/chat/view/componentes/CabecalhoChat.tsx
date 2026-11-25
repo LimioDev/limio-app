@@ -1,9 +1,9 @@
-import { ChevronLeft, Flag, MoreVertical, User, type LucideIcon } from "lucide-react-native";
-import { Modal, Pressable, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ChevronLeft, Flag, MoreVertical, User } from "lucide-react-native";
+import { Pressable, Text, View } from "react-native";
 
 import { Avatar } from "../../../../comum/componentes/ui/Avatar";
 import { Icone } from "../../../../comum/componentes/ui/Icone";
+import { MenuSuspenso } from "../../../../comum/componentes/ui/MenuSuspenso";
 import type { CabecalhoChatExibido } from "../../viewmodel/useChatViewModel";
 
 interface CabecalhoChatProps {
@@ -71,61 +71,15 @@ export function CabecalhoChat({
         <View className="flex-1" />
       )}
 
-      <MenuChat
+      {/* Tela 21b. */}
+      <MenuSuspenso
         aberto={menuAberto}
         aoFechar={aoFecharMenu}
-        aoVerPerfil={aoVerPerfil}
-        aoDenunciar={aoDenunciar}
+        itens={[
+          { icone: User, rotulo: "Ver perfil", aoPressionar: aoVerPerfil },
+          { icone: Flag, rotulo: "Denunciar", aoPressionar: aoDenunciar },
+        ]}
       />
     </View>
-  );
-}
-
-interface MenuChatProps {
-  aberto: boolean;
-  aoFechar: () => void;
-  aoVerPerfil: () => void;
-  aoDenunciar: () => void;
-}
-
-/** Tela 21b: menu do "⋮", ancorado no canto superior direito. */
-function MenuChat({ aberto, aoFechar, aoVerPerfil, aoDenunciar }: MenuChatProps) {
-  const { top } = useSafeAreaInsets();
-
-  return (
-    <Modal visible={aberto} transparent animationType="fade" onRequestClose={aoFechar}>
-      <Pressable
-        className="flex-1 bg-marca-900/20"
-        onPress={aoFechar}
-        accessibilityLabel="Fechar menu"
-      >
-        <View
-          style={{ top: top + 56 }}
-          className="absolute right-margem w-[190px] rounded-campo bg-superficie py-1 shadow-lg"
-        >
-          <ItemMenu icone={User} rotulo="Ver perfil" aoPressionar={aoVerPerfil} />
-          <ItemMenu icone={Flag} rotulo="Denunciar" aoPressionar={aoDenunciar} />
-        </View>
-      </Pressable>
-    </Modal>
-  );
-}
-
-interface ItemMenuProps {
-  icone: LucideIcon;
-  rotulo: string;
-  aoPressionar: () => void;
-}
-
-function ItemMenu({ icone, rotulo, aoPressionar }: ItemMenuProps) {
-  return (
-    <Pressable
-      onPress={aoPressionar}
-      accessibilityRole="menuitem"
-      className="flex-row items-center gap-3 px-4 py-3 active:bg-fundo"
-    >
-      <Icone icone={icone} tamanho={20} cor="tinta" />
-      <Text className="text-corpo font-semibold text-tinta">{rotulo}</Text>
-    </Pressable>
   );
 }

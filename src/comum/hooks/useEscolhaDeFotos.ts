@@ -3,17 +3,9 @@ import * as Linking from "expo-linking";
 import { useRef, useState } from "react";
 import { Alert } from "react-native";
 
-import { prepararFoto } from "../../../comum/lib/foto";
-import { TipoToast, useToast } from "../../../comum/store/toast";
-import type { FotoRascunho } from "../store/rascunhoAnuncio.store";
-
-/** Miniatura nas telas 14 e 16a. */
-export interface FotoExibida {
-  chave: string;
-  uri: string;
-  /** Motivo da recusa; a foto recusada não é enviada. */
-  erro: string | null;
-}
+import { prepararFoto } from "../lib/foto";
+import { TipoToast, useToast } from "../store/toast";
+import type { FotoEscolhida } from "../tipos/foto";
 
 const MENSAGEM_FALHA_GALERIA = "Não foi possível abrir suas fotos. Tente de novo.";
 const MENSAGEM_FALHA_PREPARO = "Não foi possível ler essa imagem. Escolha outra.";
@@ -30,11 +22,6 @@ export interface MotivoPermissao {
   camera: string;
   galeria: string;
 }
-
-const MOTIVO_ANUNCIO: MotivoPermissao = {
-  camera: "Para tirar fotos do anúncio",
-  galeria: "Para anexar fotos ao anúncio",
-};
 
 function avisarPermissaoNegada(origem: Origem, motivo: MotivoPermissao): void {
   const camera = origem === Origem.CAMERA;
@@ -53,8 +40,8 @@ function avisarPermissaoNegada(origem: Origem, motivo: MotivoPermissao): void {
 let contadorChave = 0;
 
 /** Prepara cada imagem escolhida (JPEG reduzido + conferência). A recusada volta com o motivo. */
-async function prepararEscolhidas(imagens: ImagePicker.ImagePickerAsset[]): Promise<FotoRascunho[]> {
-  const fotos: FotoRascunho[] = [];
+async function prepararEscolhidas(imagens: ImagePicker.ImagePickerAsset[]): Promise<FotoEscolhida[]> {
+  const fotos: FotoEscolhida[] = [];
   for (const imagem of imagens) {
     contadorChave += 1;
     const chave = `foto-${Date.now()}-${contadorChave}`;
@@ -70,19 +57,19 @@ async function prepararEscolhidas(imagens: ImagePicker.ImagePickerAsset[]): Prom
 }
 
 /**
- * Folha "Adicionar foto" (telas 14c e 38b) das telas 14, 16a e 38: câmera
+ * Folha "Adicionar foto" (telas 14c e 38b) das telas 14, 16a, 38 e 46: câmera
  * (uma foto) ou galeria (várias, até as `vagas`). As escolhidas chegam já
  * preparadas em `aoEscolher`; nada é enviado à API aqui.
  */
 export function useEscolhaDeFotos({
   vagas,
   aoEscolher,
-  motivoPermissao = MOTIVO_ANUNCIO,
+  motivoPermissao,
 }: {
   vagas: number;
-  aoEscolher: (fotos: FotoRascunho[]) => void;
-  /** Texto do aviso de permissão negada; o padrão fala do anúncio. */
-  motivoPermissao?: MotivoPermissao;
+  aoEscolher: (fotos: FotoEscolhida[]) => void;
+  /** Começo do aviso de permissão negada: "Para tirar fotos do anúncio". */
+  motivoPermissao: MotivoPermissao;
 }) {
   const mostrarToast = useToast((estado) => estado.mostrar);
   // Trava desde o toque: a galeria e o preparo têm esperas em que um segundo toque passaria.
@@ -111,7 +98,7 @@ export function useEscolhaDeFotos({
           ? await ImagePicker.launchCameraAsync({ mediaTypes: "images", quality: 1 })
           : await ImagePicker.launchImageLibraryAsync({
               mediaTypes: "images",
-              allowsMultipleSelection: true,
+              allowsMultipleSelection: vagas > 1,
               selectionLimit: vagas,
               quality: 1,
             });

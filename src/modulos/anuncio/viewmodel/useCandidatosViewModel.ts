@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { TipoToast, useToast } from "../../../comum/store/toast";
 import { CodigoErro } from "../../../comum/tipos/erros";
+import { PapelUsuario } from "../../../comum/tipos/papel";
 import { dataComProximidade, primeiroNome } from "../servico/anuncio.helpers";
 import {
   useAnuncioQuery,
@@ -60,9 +61,9 @@ function candidatoParaExibicao(candidato: Candidato): CandidatoExibido {
 /**
  * Telas 18 "Candidatos" e 19 "Candidatos vazio", abertas pelo "Ver todos" da
  * tela 16. O título e a categoria vêm do detalhe do anúncio, já em cache.
- * "Escolher" abre a tela 23 (ETI-70). O perfil do candidato (ETI-106) e as
- * dicas que levam a "Editar anúncio" (ETI-61/62) ficam desligados até os
- * cards deles.
+ * Tocar no candidato abre o perfil dele (tela 20a, ETI-106) e "Escolher" abre
+ * a tela 23 (ETI-70). As dicas que levam a "Editar anúncio" (ETI-61/62) ficam
+ * desligadas até os cards deles.
  */
 export function useCandidatosViewModel(anuncioId: string) {
   const router = useRouter();
@@ -186,8 +187,22 @@ export function useCandidatosViewModel(anuncioId: string) {
     // Tela 23 "Escolher (nome)?" (ETI-70), por cima desta tela.
     aoEscolher: (candidaturaId: string) =>
       router.push({ pathname: "/(app)/escolher-prestador", params: { anuncioId, candidaturaId } }),
-    // Perfil público (tela 20a) chega com o ETI-106; a API ainda não manda o id do Prestador.
-    aoVerPerfil: undefined as ((candidaturaId: string) => void) | undefined,
+    // Tela 20a: perfil do candidato, com "Conversar" e "Escolher" pela candidatura.
+    aoVerPerfil: (candidaturaId: string) => {
+      const candidato = query.data?.candidatos.find((c) => c.candidaturaId === candidaturaId);
+      if (!candidato) {
+        return;
+      }
+      router.push({
+        pathname: "/(app)/perfil/[usuarioId]",
+        params: {
+          usuarioId: candidato.usuarioId,
+          papel: PapelUsuario.PRESTADOR,
+          candidaturaId,
+          anuncioId,
+        },
+      });
+    },
     // "Editar anúncio" (tela 16a) chega com o ETI-61/62.
     aoEditarAnuncio: undefined as (() => void) | undefined,
     folha,

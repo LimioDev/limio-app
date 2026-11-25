@@ -10,12 +10,13 @@ import {
 import { erroApi } from "../../../comum/lib/erros";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import type { ArquivoFoto } from "../../../comum/tipos/foto";
-import type { AbaCandidatura } from "../tipos/anuncio.enums";
+import type { AbaCandidatura, DecisaoReagendamento, ModoValidacao } from "../tipos/anuncio.enums";
 import type {
   CandidatosResponse,
   DetalheAnuncioMural,
   FiltrosMural,
   MinhasCandidaturasResponse,
+  ProporReagendamentoRequest,
   ServicoCombinado,
 } from "../tipos/anuncio.types";
 import {
@@ -23,10 +24,13 @@ import {
   buscarAnuncio,
   buscarDetalheAnuncioMural,
   buscarServico,
+  buscarValidacao,
   candidatarAoAnuncio,
   listarCandidatos,
   recusarCandidato,
   buscarPainelEmpregador,
+  buscarReagendamento,
+  cancelarReagendamento,
   cancelarAnuncio,
   criarAnuncio,
   desistirCandidatura,
@@ -36,7 +40,10 @@ import {
   iniciarServico,
   listarMinhasCandidaturas,
   listarMural,
+  proporReagendamento,
   removerFotoAnuncio,
+  responderReagendamento,
+  validarServico,
 } from "./anuncio.api";
 
 export const chavesAnuncio = {
@@ -47,6 +54,8 @@ export const chavesAnuncio = {
   detalhe: (id: string) => ["anuncio", "detalhe", id] as const,
   candidatos: (id: string) => ["anuncio", "candidatos", id] as const,
   servico: (id: string) => ["anuncio", "servico", id] as const,
+  validacao: (id: string) => ["anuncio", "validacao", id] as const,
+  reagendamento: (id: string) => ["anuncio", "reagendamento", id] as const,
   minhasCandidaturas: ["anuncio", "minhas-candidaturas"] as const,
   minhasCandidaturasDaAba: (aba: AbaCandidatura) =>
     ["anuncio", "minhas-candidaturas", aba] as const,
@@ -347,5 +356,118 @@ export function useCheckoutMutation(anuncioId: string) {
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.minhasCandidaturas });
     },
+  });
+}
+
+/**
+ * Tela 27 "Validar serviço" (ETI-92/ETI-93). Os links das fotos do check-out
+ * são temporários: consulta de novo a cada abertura.
+ */
+export function useValidacaoQuery(anuncioId: string) {
+  return useQuery({
+    queryKey: chavesAnuncio.validacao(anuncioId),
+    queryFn: () => buscarValidacao(anuncioId),
+    staleTime: 0,
+  });
+}
+
+/**
+ * "Validar serviço" (tela 27, ETI-92). No sucesso a tela 25, que fica embaixo,
+ * já volta "Concluído" com o `validadoEm` da resposta, e a consulta confirma em
+ * seguida; o painel e o detalhe do anúncio também mudam de status. Com
+ * `SERVICO_NAO_ENCONTRADO` o serviço é zerado e consultado de novo (`reset`,
+ * não `remove`), porque a tela 25 continua montada embaixo com contato e
+ * endereço; a nova consulta devolve o 404 e ela troca pelo "não disponível".
+ */
+export function useValidarServicoMutation(anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (modo: ModoValidacao) => validarServico({ anuncioId, request: { modo } }),
+    onSuccess: ({ status, validadoEm }) => {
+      queryClient.setQueryData<ServicoCombinado>(
+        chavesAnuncio.servico(anuncioId),
+        (atual) => (atual ? { ...atual, status, validadoEm } : atual),
+      );
+    },
+    onSettled: (_dados, falha) => {
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalhe(anuncioId) });
+      if (erroApi(falha)?.codigo === CodigoErro.SERVICO_NAO_ENCONTRADO) {
+        void queryClient.resetQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+        return;
+      }
+      void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+    },
+  });
+}
+
+/**
+ * Tela 41: a proposta muda fora da tela (resposta, cancelamento, expiração),
+ * então toda abertura consulta de novo.
+ */
+export function useReagendamentoQuery(reagendamentoId: string | null) {
+  return useQuery({
+    queryKey: chavesAnuncio.reagendamento(reagendamentoId ?? ""),
+    queryFn: () => buscarReagendamento(reagendamentoId!),
+    enabled: reagendamentoId !== null,
+    staleTime: 0,
+  });
+}
+
+/**
+ * Encerrar ou criar uma proposta muda o aviso das telas 25/36 (e, no aceite,
+ * a data do serviço e do painel). Na falha também recarrega: os `409` querem
+ * dizer que o serviço ou a proposta mudaram.
+ */
+function recarregarDepoisDoReagendamento(
+  queryClient: ReturnType<typeof useQueryClient>,
+  anuncioId: string,
+) {
+  void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+  void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
+  void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalhe(anuncioId) });
+  void queryClient.invalidateQueries({ queryKey: chavesAnuncio.minhasCandidaturas });
+}
+
+/** "Enviar proposta" da tela 40 (ETI-99). */
+export function useProporReagendamentoMutation(anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: ProporReagendamentoRequest) =>
+      proporReagendamento({ anuncioId, request }),
+    onSuccess: (proposta) => {
+      queryClient.setQueryData(chavesAnuncio.reagendamento(proposta.id), proposta);
+    },
+    onSettled: () => recarregarDepoisDoReagendamento(queryClient, anuncioId),
+  });
+}
+
+/** "Aceitar" e "Recusar" da tela 41: a resposta já é o serviço atualizado. */
+export function useResponderReagendamentoMutation(reagendamentoId: string, anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (decisao: DecisaoReagendamento) =>
+      responderReagendamento({ reagendamentoId, decisao }),
+    onSuccess: (servico) => {
+      queryClient.setQueryData<ServicoCombinado>(chavesAnuncio.servico(anuncioId), servico);
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: chavesAnuncio.reagendamento(reagendamentoId),
+      });
+      recarregarDepoisDoReagendamento(queryClient, anuncioId);
+    },
+  });
+}
+
+/** "Cancelar proposta" do proponente, na tela 41. */
+export function useCancelarReagendamentoMutation(reagendamentoId: string, anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => cancelarReagendamento(reagendamentoId),
+    onSuccess: (proposta) => {
+      queryClient.setQueryData(chavesAnuncio.reagendamento(reagendamentoId), proposta);
+    },
+    onSettled: () => recarregarDepoisDoReagendamento(queryClient, anuncioId),
   });
 }
