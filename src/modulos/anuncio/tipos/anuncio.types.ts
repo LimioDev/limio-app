@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { deDataHoraLocal } from "../../../comum/lib/datas";
 import { respostaPaginadaSchema } from "../../../comum/tipos/api";
 import { StatusAplicacao } from "../../../comum/tipos/aplicacao";
 import { CategoriaSchema } from "../../../comum/tipos/categoria";
@@ -13,6 +14,7 @@ import {
   DecisaoReagendamento,
   ModoValidacao,
   StatusAnuncio,
+  StatusHistorico,
   StatusReagendamento,
   TipoCancelamento,
   type QuandoMural,
@@ -468,6 +470,91 @@ export type MinhaCandidatura = z.infer<typeof MinhaCandidaturaSchema>;
 export const MinhasCandidaturasResponseSchema = respostaPaginadaSchema(MinhaCandidaturaSchema);
 
 export type MinhasCandidaturasResponse = z.infer<typeof MinhasCandidaturasResponseSchema>;
+
+/**
+ * Espelha `AvaliacaoHistoricoResponse` (ETI-71), do ponto de vista de quem
+ * consulta. `notaRecebida` é a nota (1 a 5) que a OUTRA parte deu a quem
+ * consulta, `null` se ela não avaliou; o card do front fala em "nota dada",
+ * mas a API não devolve essa (decisão de 24/11: seguir a API). `podeAvaliar`
+ * já traz a janela de 7 dias: o app não calcula.
+ */
+export const AvaliacaoHistoricoSchema = z.object({
+  notaRecebida: z.number().int().min(1).max(5).nullable(),
+  podeAvaliar: z.boolean(),
+});
+
+/**
+ * Espelha `HistoricoItemResponse` — item do `GET /anuncios/historico`
+ * (ETI-71), tela 44. Sem contato nem endereço. `data` é o desfecho
+ * (conclusão, cancelamento ou expiração) e pode vir `null` no concluído por
+ * silêncio, que ainda não grava a data (dúvida aberta no back). `outraParte`
+ * é `null` sem ninguém escolhido. `avaliacao` só vem no `CONCLUIDO`.
+ */
+export const ItemHistoricoSchema = z.object({
+  anuncioId: z.string(),
+  titulo: z.string(),
+  data: z.string().nullable(),
+  status: z.enum(StatusHistorico),
+  outraParte: z.string().nullable(),
+  avaliacao: AvaliacaoHistoricoSchema.nullable(),
+});
+
+export type ItemHistorico = z.infer<typeof ItemHistoricoSchema>;
+
+/** Página do histórico (20 por página), desfecho mais recente primeiro. */
+export const HistoricoResponseSchema = respostaPaginadaSchema(ItemHistoricoSchema);
+
+export type HistoricoResponse = z.infer<typeof HistoricoResponseSchema>;
+
+/**
+ * Filtro do `GET /anuncios/historico`: dias de Brasília no formato
+ * `yyyy-MM-dd`, os dois inclusos (a API aceita início igual ao fim).
+ */
+export interface FiltroHistorico {
+  status: StatusHistorico;
+  dataInicio: string;
+  dataFim: string;
+}
+
+const DATA_DIGITADA = /^\d{2}\/\d{2}\/\d{4}$/;
+
+/** "31/02/2026" passa no formato, mas não existe. */
+function dataExiste(data: string): boolean {
+  return deDataHoraLocal(data, "00:00") !== null;
+}
+
+/** "03/09/2026" → "2026-09-03" (só depois de validada). */
+function chaveDataDigitada(data: string): string {
+  const [dia, mes, ano] = data.split("/");
+  return `${ano}-${mes}-${dia}`;
+}
+
+/**
+ * Período "Personalizado" da folha da tela 44: duas datas dd/mm/aaaa, com a
+ * inicial antes da final (o mesmo dia vale, como na API). A saída já vem no
+ * formato da API.
+ */
+export const PeriodoPersonalizadoFormSchema = z
+  .object({
+    dataInicio: z
+      .string()
+      .regex(DATA_DIGITADA, "Informe a data (dd/mm/aaaa)")
+      .refine(dataExiste, "Data inválida"),
+    dataFim: z
+      .string()
+      .regex(DATA_DIGITADA, "Informe a data (dd/mm/aaaa)")
+      .refine(dataExiste, "Data inválida"),
+  })
+  .refine(
+    ({ dataInicio, dataFim }) => chaveDataDigitada(dataInicio) <= chaveDataDigitada(dataFim),
+    { path: ["dataInicio"], message: "A data inicial precisa ser antes da data final" },
+  )
+  .transform(({ dataInicio, dataFim }) => ({
+    dataInicio: chaveDataDigitada(dataInicio),
+    dataFim: chaveDataDigitada(dataFim),
+  }));
+
+export type PeriodoPersonalizadoFormEntrada = z.input<typeof PeriodoPersonalizadoFormSchema>;
 
 /**
  * Fotos do check-out (ETI-90): a API usa os mesmos limites das fotos do

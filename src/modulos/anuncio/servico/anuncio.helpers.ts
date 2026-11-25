@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import { differenceInCalendarDays, format, isToday, isTomorrow } from "date-fns";
+import { differenceInCalendarDays, format, isToday, isTomorrow, subMonths } from "date-fns";
 
 import { rotuloEstado } from "../../../comum/componentes/ui/Badge";
 import { formatarDataHora, formatarDiaPorExtenso, paraFusoLocal } from "../../../comum/lib/datas";
@@ -7,7 +7,7 @@ import { erroApi } from "../../../comum/lib/erros";
 import type { Estado } from "../../../comum/tipos/api";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import { MENSAGEM_FOTO_INVALIDA } from "../../../comum/tipos/foto";
-import { StatusAnuncio } from "../tipos/anuncio.enums";
+import { PeriodoHistorico, StatusAnuncio } from "../tipos/anuncio.enums";
 import type { ServicoCombinado } from "../tipos/anuncio.types";
 
 /** Aviso de permissão negada nas telas 14 e 16a. */
@@ -230,4 +230,44 @@ export function anuncioNaoEncontrado(erro: unknown): boolean {
     erroApi(erro)?.codigo === CodigoErro.ANUNCIO_NAO_ENCONTRADO ||
     (isAxiosError(erro) && erro.response?.status === 404)
   );
+}
+
+/** Meses de cada atalho de período da tela 44. */
+const MESES_DO_PERIODO = {
+  [PeriodoHistorico.TRES_MESES]: 3,
+  [PeriodoHistorico.SEIS_MESES]: 6,
+  [PeriodoHistorico.DOZE_MESES]: 12,
+} as const;
+
+/**
+ * Intervalo de um atalho de período ("Últimos 3 meses"), em dias de Brasília
+ * (`yyyy-MM-dd`, os dois inclusos): de hoje menos N meses até hoje.
+ */
+export function intervaloDoAtalho(
+  periodo: Exclude<PeriodoHistorico, typeof PeriodoHistorico.PERSONALIZADO>,
+  agora: Date = new Date(),
+): { dataInicio: string; dataFim: string } {
+  const hoje = paraFusoLocal(agora);
+  return {
+    dataInicio: format(subMonths(hoje, MESES_DO_PERIODO[periodo]), "yyyy-MM-dd"),
+    dataFim: format(hoje, "yyyy-MM-dd"),
+  };
+}
+
+/** "2026-06-01" → "01/06/2026". */
+export function diaDigitado(dia: string): string {
+  const [ano, mes, d] = dia.split("-");
+  return `${d}/${mes}/${ano}`;
+}
+
+/** "01/06/2026 — 31/08/2026", o período da tela 44. */
+export function textoPeriodo(dataInicio: string, dataFim: string): string {
+  return `${diaDigitado(dataInicio)} — ${diaDigitado(dataFim)}`;
+}
+
+/** "28/08" no ano corrente, "28/08/2025" em outro: data do item do histórico. */
+export function dataCurtaHistorico(dataUtc: string, agora: Date = new Date()): string {
+  const data = paraFusoLocal(dataUtc);
+  const mesmoAno = data.getFullYear() === paraFusoLocal(agora).getFullYear();
+  return format(data, mesmoAno ? "dd/MM" : "dd/MM/yyyy");
 }

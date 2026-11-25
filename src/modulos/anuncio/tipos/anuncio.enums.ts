@@ -117,6 +117,68 @@ export function rotuloModoValidacao(modo: ModoValidacao): string {
 }
 
 /**
+ * Espelha `StatusHistorico` do backend (ETI-71): como um anúncio em estado
+ * final aparece no histórico. Não é status persistido: "cancelado" e
+ * "expirado" são ambos `ENCERRADO`, separados pela causa. Abas da tela 44.
+ */
+export const StatusHistorico = {
+  CONCLUIDO: "CONCLUIDO",
+  CANCELADO: "CANCELADO",
+  EXPIRADO: "EXPIRADO",
+} as const;
+
+export type StatusHistorico = (typeof StatusHistorico)[keyof typeof StatusHistorico];
+
+export const OPCOES_STATUS_HISTORICO: readonly StatusHistorico[] = [
+  StatusHistorico.CONCLUIDO,
+  StatusHistorico.CANCELADO,
+  StatusHistorico.EXPIRADO,
+];
+
+/** Rótulo da aba da tela 44. */
+export function rotuloAbaHistorico(status: StatusHistorico): string {
+  switch (status) {
+    case StatusHistorico.CONCLUIDO:
+      return "Concluídos";
+    case StatusHistorico.CANCELADO:
+      return "Cancelados";
+    case StatusHistorico.EXPIRADO:
+      return "Expirados";
+  }
+}
+
+/** Período da tela 44: atalhos contados a partir de hoje ou datas digitadas. */
+export const PeriodoHistorico = {
+  TRES_MESES: "TRES_MESES",
+  SEIS_MESES: "SEIS_MESES",
+  DOZE_MESES: "DOZE_MESES",
+  PERSONALIZADO: "PERSONALIZADO",
+} as const;
+
+export type PeriodoHistorico = (typeof PeriodoHistorico)[keyof typeof PeriodoHistorico];
+
+export const OPCOES_PERIODO_HISTORICO: readonly PeriodoHistorico[] = [
+  PeriodoHistorico.TRES_MESES,
+  PeriodoHistorico.SEIS_MESES,
+  PeriodoHistorico.DOZE_MESES,
+  PeriodoHistorico.PERSONALIZADO,
+];
+
+/** "Últimos 3 meses"... */
+export function rotuloPeriodoHistorico(periodo: PeriodoHistorico): string {
+  switch (periodo) {
+    case PeriodoHistorico.TRES_MESES:
+      return "Últimos 3 meses";
+    case PeriodoHistorico.SEIS_MESES:
+      return "Últimos 6 meses";
+    case PeriodoHistorico.DOZE_MESES:
+      return "Últimos 12 meses";
+    case PeriodoHistorico.PERSONALIZADO:
+      return "Personalizado";
+  }
+}
+
+/**
  * Espelha `StatusReagendamento` do backend (ETI-99, limio-api#49). `PENDENTE`
  * é o único estado aberto; os outros são finais.
  */
