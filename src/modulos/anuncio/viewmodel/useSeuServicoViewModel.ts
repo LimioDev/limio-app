@@ -93,8 +93,8 @@ export interface CancelamentoServicoPrestadorExibido {
   subtitulo: string;
   /** `true` → item de cota aparece; `false` → Prestador GOLD ou plano ainda desconhecido. */
   mostrarCota: boolean;
-  /** Primeiro nome do Empregador, para personalizar o terceiro item. */
-  nomeEmpregador: string;
+  /** "Marina vai receber um aviso imediatamente sobre o seu cancelamento." */
+  avisoNotificacao: string;
 }
 
 /** Erro do "Cancelar serviço" (tela 39) no formato da folha. */
@@ -232,13 +232,16 @@ function cancelamentoInfoDoPrestador(
 ): CancelamentoServicoPrestadorExibido | null {
   const { escolhidaEm } = servico;
   if (!escolhidaEm) return null;
-  const nome = primeiroNome(servico.outraParte.nome);
   const data = formatarDataHora(escolhidaEm, "dd/MM");
+  // Conta encerrada vem sem nome: aí o texto fala só "o Empregador".
+  const nome = servico.outraParte.nome?.trim().split(/\s+/)[0] || null;
   return {
-    subtitulo: `Você foi escolhido por ${nome} em ${data}.`,
+    subtitulo: nome
+      ? `Você foi escolhido por ${nome} em ${data}.`
+      : `Você foi escolhido pelo Empregador em ${data}.`,
     // Sem saber o plano (carregando ou falhou), não promete nem nega o desconto da cota.
     mostrarCota: ehGold === false,
-    nomeEmpregador: nome,
+    avisoNotificacao: `${nome ?? "O Empregador"} vai receber um aviso imediatamente sobre o seu cancelamento.`,
   };
 }
 
@@ -335,23 +338,34 @@ export function useSeuServicoViewModel(anuncioId: string, ehGold: boolean | null
     setErroCancelar(null);
   }
 
+  // O serviço cancelado fica no Histórico das Aplicações (ETI-97).
+  function sairParaHistorico() {
+    setFolhaCancelarAberta(false);
+    router.replace({
+      pathname: "/(app)/(prestador)/aplicacoes",
+      params: { aba: AbaCandidatura.HISTORICO },
+    });
+  }
+
   function confirmarCancelar() {
     setErroCancelar(null);
     cancelarPrestador.mutate(undefined, {
-      onSuccess: () => {
-        setFolhaCancelarAberta(false);
-        // O serviço cancelado fica no Histórico das Aplicações (ETI-97).
-        router.replace({
-          pathname: "/(app)/(prestador)/aplicacoes",
-          params: { aba: AbaCandidatura.HISTORICO },
-        });
-      },
+      onSuccess: sairParaHistorico,
       onError: (falha) => {
         switch (erroApi(falha)?.codigo) {
           case CodigoErro.SERVICO_ESTADO_INVALIDO:
-            setErroCancelar({
-              mensagem: "O serviço está aguardando validação e não pode ser cancelado.",
-              bloqueado: true,
+            // O 409 vale pra qualquer estado fora de PUBLICADO/EM_ANDAMENTO. Se o
+            // serviço já está encerrado (ex.: o primeiro pedido cancelou e a
+            // resposta se perdeu), segue o caminho do sucesso.
+            void query.refetch().then(({ data }) => {
+              if (data?.status === StatusAnuncio.ENCERRADO) {
+                sairParaHistorico();
+                return;
+              }
+              setErroCancelar({
+                mensagem: "Este serviço mudou de situação e não pode mais ser cancelado.",
+                bloqueado: true,
+              });
             });
             return;
           case CodigoErro.SERVICO_NAO_ENCONTRADO:

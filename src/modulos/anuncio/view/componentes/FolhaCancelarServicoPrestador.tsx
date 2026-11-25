@@ -80,8 +80,7 @@ export function FolhaCancelarServicoPrestador({
                   <View className="flex-row gap-3">
                     <Icone icone={Info} tamanho={18} cor="suave" />
                     <Text className="flex-1 text-rotulo text-tinta-suave">
-                      {cancelamento.nomeEmpregador} será notificada imediatamente sobre o seu
-                      cancelamento.
+                      {cancelamento.avisoNotificacao}
                     </Text>
                   </View>
                 ) : null}
