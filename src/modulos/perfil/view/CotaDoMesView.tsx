@@ -1,3 +1,4 @@
+import { Crown } from "lucide-react-native";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -46,6 +47,7 @@ export function CotaDoMesView({
   tentandoDeNovo,
   cota,
   aoTentarDeNovo,
+  aoConhecerGold,
   aoVoltar,
 }: CotaDoMesViewModel) {
   let conteudo;
@@ -91,8 +93,6 @@ export function CotaDoMesView({
             ))
           )}
         </View>
-        {/* "Conhecer o GOLD" e "Combinações ilimitadas por R$ 29,90/mês" ficam
-            de fora até a tela 34 "Assinatura" (ETI-82) entrar. */}
       </ScrollView>
     );
   }
@@ -101,6 +101,15 @@ export function CotaDoMesView({
     <SafeAreaView className="flex-1 bg-fundo" edges={["top", "bottom"]}>
       <CabecalhoVoltar titulo="Cota do mês" aoVoltar={aoVoltar} />
       {conteudo}
+      {cota?.oferecerGold && !carregando && !erro ? (
+        <View className="gap-2 border-t border-borda bg-superficie px-margem py-3">
+          <Botao rotulo="Conhecer o GOLD" icone={Crown} onPress={aoConhecerGold} />
+          {/* O preço fica na tela 34: vem da API do financeiro, não fica fixo aqui. */}
+          <Text className="text-center text-rotulo text-tinta-fraco">
+            Combinações ilimitadas, sem bloqueio por cota
+          </Text>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }

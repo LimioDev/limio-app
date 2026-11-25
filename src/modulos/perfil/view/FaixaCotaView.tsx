@@ -9,14 +9,15 @@ import type { FaixaCotaExibida } from "../viewmodel/useFaixaCotaViewModel";
 interface FaixaCotaViewProps {
   faixa: FaixaCotaExibida;
   aoAbrirCota: () => void;
+  aoVerGold: () => void;
 }
 
 /**
- * Faixa do topo do mural: FREE (tela 28) abre a tela 33; GOLD (28c) só
- * informa. "Ver GOLD" e "Gerenciar" ficam de fora até a tela 34 "Assinatura"
- * (ETI-82) entrar.
+ * Faixa do topo do mural: FREE (tela 28) abre a tela 33 e o "Ver GOLD" abre
+ * a tela 34 "Assinatura"; GOLD (28c) só informa. "Gerenciar" fica de fora
+ * até a tela 35 completa (ETI-84).
  */
-export function FaixaCotaView({ faixa, aoAbrirCota }: FaixaCotaViewProps) {
+export function FaixaCotaView({ faixa, aoAbrirCota, aoVerGold }: FaixaCotaViewProps) {
   if (faixa.plano === Plano.GOLD) {
     return (
       <View className="gap-0.5 rounded-card border border-gold-fundo bg-gold-fundo/50 px-4 py-3">
@@ -34,6 +35,16 @@ export function FaixaCotaView({ faixa, aoAbrirCota }: FaixaCotaViewProps) {
       onPress={aoAbrirCota}
       accessibilityRole="button"
       accessibilityLabel={`Plano FREE, ${faixa.usadas}. Ver cota do mês`}
+      // Com leitor de tela a faixa vira um elemento só e o "Ver GOLD" de dentro
+      // some: a ação fica exposta no próprio elemento.
+      accessibilityActions={[{ name: "activate" }, { name: "verGold", label: "Ver plano GOLD" }]}
+      onAccessibilityAction={(evento) => {
+        if (evento.nativeEvent.actionName === "verGold") {
+          aoVerGold();
+        } else {
+          aoAbrirCota();
+        }
+      }}
       className="gap-2 rounded-card border border-borda bg-superficie px-4 py-3 active:opacity-80"
     >
       <View className="flex-row items-center justify-between gap-3">
@@ -41,7 +52,18 @@ export function FaixaCotaView({ faixa, aoAbrirCota }: FaixaCotaViewProps) {
         <Text className="text-rotulo text-tinta-suave">{faixa.usadas}</Text>
       </View>
       <Progresso atual={faixa.escolhasConsumidas} total={faixa.teto} />
-      <Text className="text-rotulo text-tinta-fraco">{faixa.renovacao}</Text>
+      <View className="flex-row items-center justify-between gap-3">
+        <Text className="flex-1 text-rotulo text-tinta-fraco">{faixa.renovacao}</Text>
+        {/* Toque próprio: não abre a tela 33 junto. */}
+        <Pressable
+          onPress={aoVerGold}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Ver plano GOLD"
+        >
+          <Text className="text-rotulo font-bold text-marca-500">Ver GOLD</Text>
+        </Pressable>
+      </View>
     </Pressable>
   );
 }
