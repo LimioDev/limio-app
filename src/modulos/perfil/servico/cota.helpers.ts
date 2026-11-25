@@ -2,6 +2,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { paraFusoLocal } from "../../../comum/lib/datas";
+import { Plano } from "../tipos/cota.enums";
+import type { CotaDoMesResponse } from "../tipos/cota.types";
 
 /** "2026-08" → "AGOSTO 2026". Só o nome do mês, então não depende de fuso. */
 export function formatarMesDaCota(anoMes: string): string {
@@ -21,4 +23,17 @@ export function formatarRenovacao(renovaEm: string, comHora = false): string {
 /** "2 de 4 escolhas usadas", texto da faixa e da tela 33. */
 export function formatarEscolhasUsadas(usadas: number, teto: number): string {
   return `${usadas} de ${teto} escolhas usadas`;
+}
+
+/**
+ * Linha "Plano e cota" de Meu perfil: "FREE · 2 de 4 escolhas usadas em
+ * agosto" ou "GOLD · escolhas ilimitadas".
+ */
+export function resumoPlanoECota(cota: CotaDoMesResponse): string {
+  if (cota.plano === Plano.GOLD || cota.tetoAplicado === null) {
+    return `${cota.plano} · escolhas ilimitadas`;
+  }
+  const [ano, mes] = cota.anoMes.split("-").map(Number);
+  const nomeMes = format(new Date(ano, mes - 1, 1), "MMMM", { locale: ptBR });
+  return `${cota.plano} · ${formatarEscolhasUsadas(cota.escolhasConsumidas, cota.tetoAplicado)} em ${nomeMes}`;
 }

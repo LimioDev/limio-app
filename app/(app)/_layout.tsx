@@ -36,6 +36,8 @@ export default function AppLayout() {
               Prestador assina; a API recusa os outros papéis. */}
           <Stack.Screen name="conta/assinatura" />
           <Stack.Screen name="conta/assinatura-gold" />
+          {/* Cadastrar ou trocar o cartão do GOLD (ETI-84), aberta pelas telas 34 e 35. */}
+          <Stack.Screen name="conta/cartao" />
         </Stack.Protected>
         <Stack.Screen name="trocar-papel" options={{ presentation: "modal" }} />
       </Stack>

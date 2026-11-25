@@ -30,8 +30,6 @@ export interface PlanoGoldExibido {
   cartao: CartaoExibido | null;
 }
 
-const MENSAGEM_TROCA_EM_BREVE = "A troca de cartão pelo app chega em breve.";
-
 function planoParaExibicao(plano: PlanoGoldResponse): PlanoGoldExibido {
   return {
     preco: formatarPreco(plano.precoCentavos, plano.moeda),
@@ -59,7 +57,6 @@ export function useAssinarGoldViewModel() {
   const [erroEnvio, setErroEnvio] = useState<string | null>(null);
   /** `PAGAMENTO_RECUSADO`: oferece trocar o cartão junto da mensagem. */
   const [recusado, setRecusado] = useState(false);
-  const [avisoCartao, setAvisoCartao] = useState<string | null>(null);
   // Trava desde o toque: `isPending` só muda no próximo render, e um toque
   // duplo mandaria duas cobranças.
   const enviando = useRef(false);
@@ -84,12 +81,12 @@ export function useAssinarGoldViewModel() {
 
   const plano = query.data;
 
-  /** Troca em vez de empilhar: o voltar da tela 35 cai em quem abriu a 34. */
-  const abrirAssinaturaAtiva = (renovaEm?: string) => {
-    router.replace({
-      pathname: "/(app)/conta/assinatura-gold",
-      params: renovaEm ? { renovaEm } : {},
-    });
+  /**
+   * Troca em vez de empilhar: o voltar da tela 35 cai em quem abriu a 34. A
+   * 35 consulta a assinatura ao abrir, então não leva a data por parâmetro.
+   */
+  const abrirAssinaturaAtiva = () => {
+    router.replace("/(app)/conta/assinatura-gold");
   };
 
   const aoAssinar = () => {
@@ -99,14 +96,13 @@ export function useAssinarGoldViewModel() {
     enviando.current = true;
     setErroEnvio(null);
     setRecusado(false);
-    setAvisoCartao(null);
     assinar.mutate(
       { codigoPlano: plano.codigoPlano },
       {
-        onSuccess: (assinatura) => {
+        onSuccess: () => {
           // A trava fica: a tela está saindo.
           mostrarToast("GOLD ativo! Suas escolhas agora são ilimitadas.", TipoToast.SUCESSO);
-          abrirAssinaturaAtiva(assinatura.renovaEm);
+          abrirAssinaturaAtiva();
         },
         onError: (falha) => {
           switch (erroApi(falha)?.codigo) {
@@ -157,13 +153,11 @@ export function useAssinarGoldViewModel() {
     enviando: pendente,
     erroEnvio,
     recusado,
-    avisoCartao,
     aoAssinar,
-    // Sem cartão salvo ou "Trocar": o fluxo de cartão do gateway ainda não
-    // existe na API (gerenciar GOLD, ETI-83/84).
+    // "Adicionar" (sem cartão salvo) e "Trocar": tela "Cartão" (ETI-84).
     aoTrocarCartao: () => {
       if (!pendente) {
-        setAvisoCartao(MENSAGEM_TROCA_EM_BREVE);
+        router.push("/(app)/conta/cartao");
       }
     },
     aoVoltar: () => {

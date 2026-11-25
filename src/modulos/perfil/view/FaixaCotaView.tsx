@@ -10,22 +10,39 @@ interface FaixaCotaViewProps {
   faixa: FaixaCotaExibida;
   aoAbrirCota: () => void;
   aoVerGold: () => void;
+  aoGerenciarGold: () => void;
 }
 
 /**
  * Faixa do topo do mural: FREE (tela 28) abre a tela 33 e o "Ver GOLD" abre
- * a tela 34 "Assinatura"; GOLD (28c) só informa. "Gerenciar" fica de fora
- * até a tela 35 completa (ETI-84).
+ * a tela 34 "Assinatura"; o "Gerenciar" do GOLD (28c) abre a tela 35.
  */
-export function FaixaCotaView({ faixa, aoAbrirCota, aoVerGold }: FaixaCotaViewProps) {
+export function FaixaCotaView({
+  faixa,
+  aoAbrirCota,
+  aoVerGold,
+  aoGerenciarGold,
+}: FaixaCotaViewProps) {
   if (faixa.plano === Plano.GOLD) {
     return (
-      <View className="gap-0.5 rounded-card border border-gold-fundo bg-gold-fundo/50 px-4 py-3">
-        <View className="flex-row items-center gap-2">
-          <Icone icone={Crown} tamanho={16} cor="gold" />
-          <Text className="text-corpo font-bold text-gold">GOLD ativo · escolhas ilimitadas</Text>
+      <View className="flex-row items-center gap-3 rounded-card border border-gold-fundo bg-gold-fundo/50 px-4 py-3">
+        <View className="flex-1 gap-0.5">
+          <View className="flex-row items-center gap-2">
+            <Icone icone={Crown} tamanho={16} cor="gold" />
+            <Text className="shrink text-corpo font-bold text-gold">
+              GOLD ativo · escolhas ilimitadas
+            </Text>
+          </View>
+          <Text className="text-rotulo text-tinta-fraco">{faixa.renovacao}</Text>
         </View>
-        <Text className="text-rotulo text-tinta-fraco">{faixa.renovacao}</Text>
+        <Pressable
+          onPress={aoGerenciarGold}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Gerenciar assinatura GOLD"
+        >
+          <Text className="text-rotulo font-bold text-marca-500">Gerenciar</Text>
+        </Pressable>
       </View>
     );
   }

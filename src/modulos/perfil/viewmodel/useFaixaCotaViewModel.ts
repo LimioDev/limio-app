@@ -62,6 +62,8 @@ export function useFaixaCotaViewModel() {
     faixa,
     aoAbrirCota: () => router.push("/(app)/cota"),
     aoVerGold: () => router.push("/(app)/conta/assinatura"),
+    /** "Gerenciar" da faixa GOLD (28c): tela 35 "Assinatura GOLD". */
+    aoGerenciarGold: () => router.push("/(app)/conta/assinatura-gold"),
   };
 }
 

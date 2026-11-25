@@ -74,6 +74,8 @@ export const CodigoErro = {
   PAGAMENTO_RECUSADO: "PAGAMENTO_RECUSADO",
   GATEWAY_INDISPONIVEL: "GATEWAY_INDISPONIVEL",
   CARTAO_INVALIDO: "CARTAO_INVALIDO",
+  // Gerenciar a assinatura GOLD (ETI-83), contrato proposto no card.
+  ASSINATURA_NAO_ENCONTRADA: "ASSINATURA_NAO_ENCONTRADA",
   // Assinar sem cartão salvo (limio-api#50).
   CARTAO_NAO_CADASTRADO: "CARTAO_NAO_CADASTRADO",
   // Empregador cancelar o serviço combinado (ETI-94), já na develop do back.

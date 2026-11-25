@@ -30,3 +30,15 @@ export function sufixoCiclo(ciclo: string): string {
       return "";
   }
 }
+
+/**
+ * Espelha `StatusCobranca` do backend (`financeiro.assinaturagold.cobranca.enums`):
+ * uma tentativa de cobrança da assinatura.
+ */
+export const StatusCobranca = {
+  PENDENTE: "PENDENTE",
+  APROVADA: "APROVADA",
+  RECUSADA: "RECUSADA",
+} as const;
+
+export type StatusCobranca = (typeof StatusCobranca)[keyof typeof StatusCobranca];
