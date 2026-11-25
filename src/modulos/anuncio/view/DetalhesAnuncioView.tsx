@@ -17,6 +17,7 @@ import { CORES_ICONE, Icone } from "../../../comum/componentes/ui/Icone";
 import type { ErrosAnuncio } from "../store/rascunhoAnuncio.store";
 import type { OpcaoEndereco } from "../viewmodel/useDetalhesAnuncioViewModel";
 import { CabecalhoPasso } from "./componentes/CabecalhoPasso";
+import { Overline } from "./componentes/Overline";
 import { CampoContador } from "./componentes/CampoContador";
 
 const MASCARA_HORA: Mask = [/\d/, /\d/, ":", /\d/, /\d/];
@@ -49,13 +50,6 @@ interface DetalhesAnuncioViewProps {
   aoVoltar: () => void;
 }
 
-function Overline({ children }: { children: string }) {
-  return (
-    <Text className="text-overline font-bold uppercase tracking-[0.8px] text-tinta-fraco">
-      {children}
-    </Text>
-  );
-}
 
 function CartaoEnderecoOpcao({
   opcao,

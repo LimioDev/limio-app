@@ -1,10 +1,13 @@
 import { api } from "../../../comum/lib/api";
 import {
   ChatSchema,
+  ConversasResponseSchema,
   EnviarMensagemRequestSchema,
   MensagemSchema,
+  TAMANHO_PAGINA_CONVERSAS,
   TAMANHO_PAGINA_HISTORICO,
   type Chat,
+  type ConversasResponse,
   type Mensagem,
 } from "../tipos/chat.types";
 
@@ -35,4 +38,15 @@ export async function marcarEntregues(chatId: string): Promise<void> {
 /** `POST /chats/{chatId}/lidas`: a conversa está na tela. Também vale como entregue. */
 export async function marcarLidas(chatId: string): Promise<void> {
   await api.post(`/chats/${chatId}/lidas`);
+}
+
+/**
+ * `GET /chats` (ETI-103): as conversas do papel ativo do token, da última
+ * mensagem mais recente pra mais antiga. `pagina` começa em 0.
+ */
+export async function listarConversas(pagina: number): Promise<ConversasResponse> {
+  const { data } = await api.get("/chats", {
+    params: { pagina, tamanho: TAMANHO_PAGINA_CONVERSAS },
+  });
+  return ConversasResponseSchema.parse(data);
 }

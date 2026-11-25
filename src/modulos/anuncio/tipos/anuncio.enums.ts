@@ -80,3 +80,51 @@ export const EtapaEscolha = {
 } as const;
 
 export type EtapaEscolha = (typeof EtapaEscolha)[keyof typeof EtapaEscolha];
+
+/**
+ * Espelha `ModoValidacao` do backend (ETI-92): como o Empregador confirma que
+ * o serviço foi feito na tela 27. `PELA_FOTO` só depois do check-out.
+ */
+export const ModoValidacao = {
+  /** "Vi no local". */
+  PRESENCIAL: "PRESENCIAL",
+  /** "Pela foto". */
+  PELA_FOTO: "PELA_FOTO",
+} as const;
+
+export type ModoValidacao = (typeof ModoValidacao)[keyof typeof ModoValidacao];
+
+export function rotuloModoValidacao(modo: ModoValidacao): string {
+  switch (modo) {
+    case ModoValidacao.PRESENCIAL:
+      return "Vi no local";
+    case ModoValidacao.PELA_FOTO:
+      return "Pela foto";
+  }
+}
+
+/**
+ * Espelha `StatusReagendamento` do backend (ETI-99, limio-api#49). `PENDENTE`
+ * é o único estado aberto; os outros são finais.
+ */
+export const StatusReagendamento = {
+  PENDENTE: "PENDENTE",
+  ACEITO: "ACEITO",
+  RECUSADO: "RECUSADO",
+  /** O próprio proponente desistiu antes da resposta. */
+  CANCELADO: "CANCELADO",
+  /** O prazo de resposta terminou sem manifestação. */
+  EXPIRADO: "EXPIRADO",
+  /** O serviço deixou de estar combinado (iniciado, cancelado...) com a proposta pendente. */
+  SEM_EFEITO: "SEM_EFEITO",
+} as const;
+
+export type StatusReagendamento = (typeof StatusReagendamento)[keyof typeof StatusReagendamento];
+
+/** Espelha `DecisaoReagendamento` do backend (ETI-99): resposta da contraparte na tela 41. */
+export const DecisaoReagendamento = {
+  ACEITAR: "ACEITAR",
+  RECUSAR: "RECUSAR",
+} as const;
+
+export type DecisaoReagendamento = (typeof DecisaoReagendamento)[keyof typeof DecisaoReagendamento];

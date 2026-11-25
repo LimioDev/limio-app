@@ -10,6 +10,7 @@ import {
   CandidatosResponseSchema,
   CandidaturaCriadaSchema,
   CheckoutSchema,
+  ConsultaValidacaoSchema,
   DetalheAnuncioMuralSchema,
   EditarAnuncioRequestSchema,
   EscolhaResponseSchema,
@@ -17,14 +18,20 @@ import {
   MinhasCandidaturasResponseSchema,
   MuralResponseSchema,
   PainelEmpregadorResponseSchema,
+  ProporReagendamentoRequestSchema,
+  ReagendamentoSchema,
+  ResponderReagendamentoRequestSchema,
   ServicoCombinadoSchema,
   ServicoIniciadoSchema,
+  ServicoValidadoSchema,
+  ValidarServicoRequestSchema,
   type AnuncioCriadoResponse,
   type AnuncioDetalheResponse,
   type AnuncioRequest,
   type CandidatosResponse,
   type CandidaturaCriada,
   type Checkout,
+  type ConsultaValidacao,
   type DetalheAnuncioMural,
   type EditarAnuncioRequest,
   type EscolhaResponse,
@@ -33,10 +40,14 @@ import {
   type MinhasCandidaturasResponse,
   type MuralResponse,
   type PainelEmpregadorResponse,
+  type ProporReagendamentoRequest,
+  type Reagendamento,
   type ServicoCombinado,
   type ServicoIniciado,
+  type ServicoValidado,
+  type ValidarServicoRequest,
 } from "../tipos/anuncio.types";
-import type { AbaCandidatura } from "../tipos/anuncio.enums";
+import type { AbaCandidatura, DecisaoReagendamento } from "../tipos/anuncio.enums";
 
 /** Resumo dos anúncios do Empregador logado — só os do perfil dele (ETI-52). */
 export async function buscarPainelEmpregador(): Promise<PainelEmpregadorResponse> {
@@ -266,4 +277,84 @@ export async function enviarCheckout({
   }
   const { data } = await api.post(`/anuncios/${anuncioId}/checkout`, corpo);
   return CheckoutSchema.parse(data);
+}
+
+/**
+ * "Consultar validação" (ETI-92, `ConsultarValidacaoController`): fotos do
+ * check-out, quando foi feito e o nome do Prestador, pro Empregador dono ver
+ * antes de validar. Quem não é o dono recebe `404 SERVICO_NAO_ENCONTRADO`.
+ */
+export async function buscarValidacao(anuncioId: string): Promise<ConsultaValidacao> {
+  const { data } = await api.get(`/anuncios/${anuncioId}/validacao`);
+  return ConsultaValidacaoSchema.parse(data);
+}
+
+/**
+ * "Validar serviço" (ETI-92, `ValidarServicoController`): o anúncio vai pra
+ * `CONCLUIDO`. Erros: `404 SERVICO_NAO_ENCONTRADO`, `409 VALIDACAO_SEM_CHECKOUT`
+ * (`PELA_FOTO` antes do check-out) e `409 SERVICO_ESTADO_INVALIDO` (já
+ * concluído ou cancelado).
+ */
+export async function validarServico({
+  anuncioId,
+  request,
+}: {
+  anuncioId: string;
+  request: ValidarServicoRequest;
+}): Promise<ServicoValidado> {
+  const corpo = ValidarServicoRequestSchema.parse(request);
+  const { data } = await api.post(`/anuncios/${anuncioId}/validar`, corpo);
+  return ServicoValidadoSchema.parse(data);
+}
+
+/**
+ * "Enviar proposta" da tela 40 (ETI-99, limio-api#49). Só o Empregador dono e
+ * o Prestador escolhido, com o serviço combinado; data no passado é
+ * `422 DATA_NO_PASSADO` e as regras de proposta pendente e de limite são `409`.
+ */
+export async function proporReagendamento({
+  anuncioId,
+  request,
+}: {
+  anuncioId: string;
+  request: ProporReagendamentoRequest;
+}): Promise<Reagendamento> {
+  const { data } = await api.post(
+    `/anuncios/${anuncioId}/reagendamentos`,
+    ProporReagendamentoRequestSchema.parse(request),
+  );
+  return ReagendamentoSchema.parse(data);
+}
+
+/**
+ * Tela 41: a proposta, pelas duas partes. Quem não é parte recebe
+ * `404 REAGENDAMENTO_NAO_ENCONTRADO`.
+ */
+export async function buscarReagendamento(reagendamentoId: string): Promise<Reagendamento> {
+  const { data } = await api.get(`/reagendamentos/${reagendamentoId}`);
+  return ReagendamentoSchema.parse(data);
+}
+
+/** "Cancelar proposta": só o proponente (a outra parte recebe `403 ACESSO_NEGADO`). */
+export async function cancelarReagendamento(reagendamentoId: string): Promise<Reagendamento> {
+  const { data } = await api.post(`/reagendamentos/${reagendamentoId}/cancelar`);
+  return ReagendamentoSchema.parse(data);
+}
+
+/**
+ * "Aceitar" e "Recusar" da tela 41: só a contraparte. Devolve o serviço já
+ * atualizado (com a data nova, no aceite).
+ */
+export async function responderReagendamento({
+  reagendamentoId,
+  decisao,
+}: {
+  reagendamentoId: string;
+  decisao: DecisaoReagendamento;
+}): Promise<ServicoCombinado> {
+  const { data } = await api.post(
+    `/reagendamentos/${reagendamentoId}/responder`,
+    ResponderReagendamentoRequestSchema.parse({ decisao }),
+  );
+  return ServicoCombinadoSchema.parse(data);
 }

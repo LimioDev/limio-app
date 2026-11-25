@@ -1,15 +1,17 @@
 import * as Linking from "expo-linking";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { formatarDiaPorExtenso } from "../../../comum/lib/datas";
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { formatarTelefone, telefoneNacional } from "../../../comum/lib/telefone";
 import type { Estado } from "../../../comum/tipos/api";
+import { useSessao } from "../../../comum/store/sessao";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import {
   avisoPropostaPendente,
   dataEHora,
+  detalheServicoParaDenuncia,
   emQuantosDias,
   estadoDoAnuncio,
   horaPretendida,
@@ -54,20 +56,25 @@ export interface ServicoCombinadoExibido {
   encerrado: boolean;
   /** Linha "Andamento": Combinado, Iniciado, Check-out e Validado. */
   etapas: EtapaServicoExibida[];
-  /** "Há uma proposta de reagendamento para 05/09, 10:00." (ETI-100 traz o atalho). */
+  /** "Rafael propôs remarcar o serviço para 05/09, 10:00."; abre a tela 41. */
   propostaPendente: string | null;
   /** Texto de baixo dos botões (ou do aviso de cancelado). */
   rodape: string | null;
   /**
-   * Ações do Empregador derivadas do status. Calculadas aqui, mas a tela só
-   * mostra cada uma quando o card do fluxo entrar: "Validar serviço" (tela 27,
-   * ETI-93), "Reagendar" (ETI-100) e "Cancelar" (ETI-95).
+   * Ações do Empregador derivadas do status. "Validar serviço" (tela 27,
+   * ETI-93) e "Reagendar" (tela 40, ETI-100) já aparecem; "Cancelar" (ETI-95)
+   * é calculada aqui, mas só aparece quando o card dele entrar.
    */
   acoes: AcoesDoEmpregador;
   /** "Avaliar Rafael" (tela 45, ETI-108): só com o serviço concluído. */
   podeAvaliar: boolean;
   /** "Avaliar Rafael". */
   rotuloAvaliar: string;
+  /**
+   * "Algo deu errado? Abrir denúncia" embaixo do rodapé: em andamento ou
+   * aguardando validação não dá mais pra cancelar (US43), e a saída é a denúncia.
+   */
+  orientarDenuncia: boolean;
 }
 
 export interface AcoesDoEmpregador {
@@ -77,7 +84,10 @@ export interface AcoesDoEmpregador {
    * aguardando validação. `null` nos outros status.
    */
   validar: "presencial" | "checkout" | null;
-  /** Só combinado e abaixo do limite de reagendamentos aceitos ("1 de 2"). */
+  /**
+   * Só combinado, abaixo do limite de reagendamentos aceitos ("1 de 2") e sem
+   * proposta pendente (aí o caminho é o aviso, que abre a tela 41).
+   */
   reagendar: boolean;
   /** Só combinado e até o prazo que a API devolve (data vigente menos 24h). */
   cancelar: boolean;
@@ -138,10 +148,8 @@ function rodape(servico: ServicoCombinado, nome: string): string | null {
     // estornar." voltam com o "Cancelar" (ETI-95).
     case StatusAnuncio.PUBLICADO:
       return null;
-    // "Vi o serviço pronto no local? Você já pode validar." volta com o
-    // "Validar serviço" (tela 27, ETI-93).
     case StatusAnuncio.EM_ANDAMENTO:
-      return "O serviço já começou: não dá mais para cancelar nem reagendar.";
+      return "Vi o serviço pronto no local? Você já pode validar. O serviço já começou: não dá mais para cancelar nem reagendar.";
     case StatusAnuncio.AGUARDANDO_VALIDACAO: {
       const quando = servico.checkoutEm ? ` em ${dataEHora(servico.checkoutEm)}` : "";
       return `${nome} enviou o check-out${quando}. Você tem 24h para validar. Sem resposta, o serviço é concluído automaticamente.`;
@@ -167,13 +175,17 @@ function acoesDoEmpregador(servico: ServicoCombinado, agora: Date): AcoesDoEmpre
   }
   return {
     validar,
-    reagendar: combinado && servico.reagendamentosAceitos < servico.limiteReagendamentos,
+    reagendar:
+      combinado &&
+      servico.propostaPendente === null &&
+      servico.reagendamentosAceitos < servico.limiteReagendamentos,
     cancelar: combinado && prazo !== null && new Date(prazo) > agora,
   };
 }
 
 function servicoParaExibicao(
   servico: ServicoCombinado,
+  usuarioId: string | null,
   agora: Date = new Date(),
 ): ServicoCombinadoExibido {
   const { outraParte } = servico;
@@ -207,12 +219,15 @@ function servicoParaExibicao(
     etapas: etapasDoServico(servico),
     propostaPendente:
       servico.propostaPendente && !encerrado
-        ? avisoPropostaPendente(servico.propostaPendente.dataProposta)
+        ? avisoPropostaPendente(servico.propostaPendente, usuarioId, nome)
         : null,
     rodape: rodape(servico, nome),
     acoes: acoesDoEmpregador(servico, agora),
     podeAvaliar: servico.status === StatusAnuncio.CONCLUIDO,
     rotuloAvaliar: `Avaliar ${nome}`,
+    orientarDenuncia:
+      servico.status === StatusAnuncio.EM_ANDAMENTO ||
+      servico.status === StatusAnuncio.AGUARDANDO_VALIDACAO,
   };
 }
 
@@ -220,6 +235,8 @@ function servicoParaExibicao(
 export function useServicoCombinadoViewModel(anuncioId: string) {
   const router = useRouter();
   const query = useServicoQuery(anuncioId);
+  const usuarioId = useSessao((estado) => estado.usuarioId);
+  const [menuAberto, setMenuAberto] = useState(false);
 
   // A tela continua montada embaixo do chat e da tela 45, e o React Query no
   // React Native não consulta de novo ao voltar o foco. O primeiro foco é
@@ -250,13 +267,16 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
 
   const telefone = dados?.outraParte.telefone ? telefoneNacional(dados.outraParte.telefone) : null;
   const candidaturaId = dados?.candidaturaId ?? null;
+  // Sem o id da proposta (a API ainda não manda), o aviso aparece sem abrir a tela 41.
+  const propostaAbrivel =
+    Boolean(dados?.propostaPendente?.id) && dados?.status !== StatusAnuncio.ENCERRADO;
 
   // Aberta direto pelo link (sem tela antes), volta pro Início.
   const voltar = () =>
     router.canGoBack() ? router.back() : router.replace("/(app)/(contratante)");
 
   return {
-    servico: dados ? servicoParaExibicao(dados) : null,
+    servico: dados ? servicoParaExibicao(dados, usuarioId) : null,
     carregando: query.isPending,
     erro,
     // `SERVICO_NAO_ENCONTRADO`: mensagem e volta pra tela anterior, sem "Tentar de novo".
@@ -274,8 +294,41 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
             params: { aplicacaoId: candidaturaId },
           })
       : undefined,
+    // Tela 27 (ETI-93).
+    aoValidar: () =>
+      router.push({ pathname: "/(app)/servico/validar/[id]", params: { id: anuncioId } }),
+    // Tela 40 (ETI-100).
+    aoReagendar: () =>
+      router.push({ pathname: "/(app)/servico/reagendar/[id]", params: { id: anuncioId } }),
+    // Tela 41 (ETI-100).
+    aoAbrirProposta: propostaAbrivel
+      ? () =>
+          router.push({
+            pathname: "/(app)/servico/reagendamento/[id]",
+            params: { id: anuncioId },
+          })
+      : undefined,
     // Tela 45 (ETI-108).
     aoAvaliar: () =>
       router.push({ pathname: "/(app)/avaliacao/[anuncioId]", params: { anuncioId } }),
+    // Menu "⋮" (tela 25f): só "Denunciar", que abre a tela 46 (ETI-115) contra
+    // o Prestador escolhido, pelo serviço.
+    menuAberto,
+    aoAbrirMenu: () => setMenuAberto(true),
+    aoFecharMenu: () => setMenuAberto(false),
+    aoDenunciar: () => {
+      setMenuAberto(false);
+      if (!dados) {
+        return;
+      }
+      router.push({
+        pathname: "/(app)/denuncia",
+        params: {
+          anuncioId,
+          titulo: dados.titulo,
+          detalhe: detalheServicoParaDenuncia(dados),
+        },
+      });
+    },
   };
 }

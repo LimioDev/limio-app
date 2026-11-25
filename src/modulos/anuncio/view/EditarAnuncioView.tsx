@@ -7,11 +7,12 @@ import { Botao } from "../../../comum/componentes/ui/Botao";
 import { CabecalhoVoltar } from "../../../comum/componentes/ui/CabecalhoVoltar";
 import { Campo } from "../../../comum/componentes/ui/Campo";
 import { Carregando } from "../../../comum/componentes/ui/Carregando";
+import { FolhaAdicionarFoto } from "../../../comum/componentes/ui/FolhaAdicionarFoto";
+import type { FotoExibida } from "../../../comum/tipos/foto";
 import type { ErrosEdicao } from "../store/edicaoAnuncio.store";
-import type { FotoExibida } from "../viewmodel/useEscolhaDeFotos";
 import { CampoContador } from "./componentes/CampoContador";
 import { CartaoCategoria } from "./componentes/CartaoCategoria";
-import { FolhaAdicionarFoto } from "./componentes/FolhaAdicionarFoto";
+import { Overline } from "./componentes/Overline";
 import { GradeFotos } from "./componentes/GradeFotos";
 
 const MASCARA_HORA: Mask = [/\d/, /\d/, ":", /\d/, /\d/];
@@ -57,13 +58,6 @@ interface EditarAnuncioViewProps {
   aoVoltar: () => void;
 }
 
-function Overline({ children }: { children: string }) {
-  return (
-    <Text className="text-overline font-bold uppercase tracking-[0.8px] text-tinta-fraco">
-      {children}
-    </Text>
-  );
-}
 
 /** Tela 16a "Editar anúncio": os campos da criação numa tela só, sem o endereço. */
 export function EditarAnuncioView({
@@ -289,6 +283,7 @@ export function EditarAnuncioView({
         aoTirarFoto={aoTirarFoto}
         aoEscolherDaGaleria={aoEscolherDaGaleria}
         aoFechar={aoFecharFolhaFoto}
+        descricao="Escolha de onde vem a foto do anúncio."
       />
     </SafeAreaView>
   );

@@ -35,7 +35,9 @@ importa arquivo de dentro de `modulos/auth/`. Critério pra subir pra `comum/`:
 usado por 2+ módulos **hoje**.
 
 `comum/` tem: `componentes/ui/` (design system puro), `lib/` (`api.ts` axios,
-`datas.ts`, `query.ts`), `store/` (`sessao.ts`), `hooks/` (técnico reaproveitável,
+`datas.ts`, `query.ts`), `servico/` (chamada de API e hooks React Query
+usados por 2+ módulos, mesmo formato do `servico/` de módulo, ex. `categoria`,
+`endereco`, `aparelhoPush`), `store/` (`sessao.ts`), `hooks/` (técnico reaproveitável,
 ex. `useDebounce`), `tipos/` (`PaginaResponse<T>`, `ErroResponse`, `erros.ts` —
 `CodigoErro` espelha 1:1 o enum do backend).
 

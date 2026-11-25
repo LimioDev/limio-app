@@ -44,3 +44,18 @@ export const SituacaoMensagem = {
 } as const;
 
 export type SituacaoMensagem = (typeof SituacaoMensagem)[keyof typeof SituacaoMensagem];
+
+/**
+ * Selo do item da tela 42 (Empregador: Escolhido, Candidato(a), Encerrada) e
+ * da 42b (Prestador: Combinado, Pendente, Encerrada). Vem do status da
+ * candidatura e do somente leitura (ver `seloConversa`).
+ */
+export const SeloConversa = {
+  ESCOLHIDO: "ESCOLHIDO",
+  CANDIDATO: "CANDIDATO",
+  COMBINADO: "COMBINADO",
+  PENDENTE: "PENDENTE",
+  ENCERRADA: "ENCERRADA",
+} as const;
+
+export type SeloConversa = (typeof SeloConversa)[keyof typeof SeloConversa];
