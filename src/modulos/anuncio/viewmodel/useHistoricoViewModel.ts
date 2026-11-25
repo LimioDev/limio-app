@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { mensagemErroApi } from "../../../comum/lib/erros";
 import type { Estado } from "../../../comum/tipos/api";
@@ -161,6 +161,12 @@ export function useHistoricoViewModel() {
   // Os atalhos ("Últimos 3 meses") são relativos a hoje: o intervalo é
   // recalculado a cada foco, senão depois da meia-noite a consulta para em
   // "ontem". Mesmo dia devolve o mesmo estado (sem render nem consulta extra).
+  // Período atual num ref: o callback do foco não pode depender do estado,
+  // senão roda de novo a cada troca de período com a tela focada.
+  const periodoAtual = useRef(periodo);
+  useEffect(() => {
+    periodoAtual.current = periodo;
+  }, [periodo]);
   const { refetch } = query;
   const primeiroFoco = useRef(true);
   useFocusEffect(
@@ -169,21 +175,33 @@ export function useHistoricoViewModel() {
         primeiroFoco.current = false;
         return;
       }
-      setPeriodo((atual) => {
-        if (atual.tipo === PeriodoHistorico.PERSONALIZADO) {
-          return atual;
-        }
+      // Virou o dia: a chave nova já consulta sozinha, e o `refetch` refaria só
+      // as páginas da chave velha, que ninguém mais mostra.
+      const atual = periodoAtual.current;
+      if (atual.tipo !== PeriodoHistorico.PERSONALIZADO) {
         const hoje = periodoDoAtalho(atual.tipo);
-        return hoje.dataInicio === atual.dataInicio && hoje.dataFim === atual.dataFim
-          ? atual
-          : hoje;
-      });
+        if (hoje.dataInicio !== atual.dataInicio || hoje.dataFim !== atual.dataFim) {
+          setPeriodo(hoje);
+          return;
+        }
+      }
       void refetch();
     }, [refetch]),
   );
 
+  // Paginação por offset ordenada pelo desfecho: um anúncio que encerra entre
+  // uma página e outra desloca a lista e repete o último item na página
+  // seguinte. Fica a primeira ocorrência.
+  const vistos = new Set<string>();
   const itens = (query.data?.pages ?? [])
     .flatMap((pagina) => pagina.content)
+    .filter((item) => {
+      if (vistos.has(item.anuncioId)) {
+        return false;
+      }
+      vistos.add(item.anuncioId);
+      return true;
+    })
     .map(itemParaExibicao);
 
   const total = query.data?.pages[0]?.totalElementos ?? null;
@@ -256,6 +274,13 @@ export function useHistoricoViewModel() {
     // Pelo dado, não pelo `isSuccess`: recarga que falha mantém o cache (vazio ou não) na tela.
     vazio: query.data && itens.length === 0 ? VAZIOS[aba] : null,
     carregandoMais: query.isFetchingNextPage,
+    // O `FlatList` não chama `onEndReached` de novo sem o conteúdo mudar: a
+    // falha da próxima página precisa de aviso e de "Tentar de novo" no rodapé.
+    erroMaisPagina:
+      query.isFetchNextPageError && !query.isFetchingNextPage
+        ? "Não foi possível carregar mais itens."
+        : null,
+    aoTentarMaisPagina: () => void query.fetchNextPage(),
     atualizando: puxando,
     folha,
     aoVoltar: () => router.navigate("/(app)/(contratante)"),

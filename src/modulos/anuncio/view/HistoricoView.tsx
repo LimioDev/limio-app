@@ -59,6 +59,8 @@ export function HistoricoView({
   erro,
   vazio,
   carregandoMais,
+  erroMaisPagina,
+  aoTentarMaisPagina,
   atualizando,
   folha,
   aoVoltar,
@@ -106,6 +108,16 @@ export function HistoricoView({
           carregandoMais ? (
             <View className="py-4">
               <ActivityIndicator color="#2159CC" />
+            </View>
+          ) : erroMaisPagina ? (
+            <View className="items-center gap-3 py-4">
+              <Text className="text-center text-rotulo text-tinta-suave">{erroMaisPagina}</Text>
+              <Botao
+                rotulo="Tentar de novo"
+                variante="contorno"
+                tamanho="padrao"
+                onPress={aoTentarMaisPagina}
+              />
             </View>
           ) : null
         }
