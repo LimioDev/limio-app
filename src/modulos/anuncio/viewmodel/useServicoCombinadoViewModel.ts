@@ -172,16 +172,14 @@ function rodape(
   acoes: AcoesDoEmpregador,
 ): string | null {
   switch (servico.status) {
-    // A consulta não diz se a escolha consumiu cota nem se está na carência de
-    // um reagendamento: só o Prestador GOLD tem certeza de "nada a estornar".
+    // A consulta não diz se a escolha consumiu cota (o estorno depende do
+    // plano do Prestador na hora da escolha, não do atual), então o rodapé não
+    // promete nem nega estorno.
     case StatusAnuncio.PUBLICADO: {
       if (!acoes.cancelar || !servico.prazoCancelamentoEm) {
         return null;
       }
-      const prazo = `Cancelamento permitido até ${dataEHora(servico.prazoCancelamentoEm)}.`;
-      return servico.outraParte.gold === true
-        ? `${prazo} ${nome} é GOLD, então não há cota a estornar.`
-        : prazo;
+      return `Cancelamento permitido até ${dataEHora(servico.prazoCancelamentoEm)}.`;
     }
     case StatusAnuncio.EM_ANDAMENTO:
       return "Vi o serviço pronto no local? Você já pode validar. O serviço já começou: não dá mais para cancelar nem reagendar.";
@@ -322,6 +320,7 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
   const cancelar = useCancelarServicoMutation(anuncioId);
   const [folhaCancelarAberta, setFolhaCancelarAberta] = useState(false);
   const [erroCancelamento, setErroCancelamento] = useState<ErroCancelamentoServico | null>(null);
+  const enviandoCancelamento = useRef(false);
   const usuarioId = useSessao((estado) => estado.usuarioId);
   const [menuAberto, setMenuAberto] = useState(false);
 
@@ -372,8 +371,16 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
   // mutation consulta o serviço de novo e a folha mostra o motivo; com o
   // serviço indisponível ela fecha, porque a tela troca pelo aviso.
   const confirmarCancelar = () => {
+    // `isPending` só muda no próximo render: o ref segura o toque duplo.
+    if (enviandoCancelamento.current) {
+      return;
+    }
+    enviandoCancelamento.current = true;
     setErroCancelamento(null);
     cancelar.mutate(undefined, {
+      onSettled: () => {
+        enviandoCancelamento.current = false;
+      },
       onSuccess: () => setFolhaCancelarAberta(false),
       onError: (falha) => {
         if (erroApi(falha)?.codigo === CodigoErro.SERVICO_NAO_ENCONTRADO) {
@@ -442,7 +449,17 @@ export function useServicoCombinadoViewModel(anuncioId: string) {
     aoAvaliar: () =>
       router.push({ pathname: "/(app)/avaliacao/[anuncioId]", params: { anuncioId } }),
     // Tela 26 (ETI-95).
-    folhaCancelarAberta,
+    // A folha acompanha o status que o refetch traz: com o serviço já cancelado
+    // ou concluído (ex.: o POST deu timeout mas o back processou), ela fecha e a
+    // tela mostra o resultado. Fora de `PUBLICADO`, só fica aberta pra mostrar
+    // um erro bloqueante (prazo esgotado, "use denúncia", aguardando validação).
+    folhaCancelarAberta:
+      folhaCancelarAberta &&
+      dados !== undefined &&
+      (dados.status === StatusAnuncio.PUBLICADO ||
+        (erroCancelamento?.bloqueado === true &&
+          dados.status !== StatusAnuncio.ENCERRADO &&
+          dados.status !== StatusAnuncio.CONCLUIDO)),
     cancelando: cancelar.isPending,
     erroCancelamento,
     aoCancelar: abrirCancelar,
