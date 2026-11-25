@@ -67,6 +67,9 @@ export const CodigoErro = {
   // Escolher o prestador (ETI-69), limio-api#32.
   ESCOLHA_CONFLITO: "ESCOLHA_CONFLITO",
   COTA_ESGOTADA_CANDIDATO: "COTA_ESGOTADA_CANDIDATO",
+  // Empregador cancelar o serviço combinado (ETI-94), já na develop do back.
+  PRAZO_CANCELAMENTO_ESGOTADO: "PRAZO_CANCELAMENTO_ESGOTADO",
+  USE_DENUNCIA: "USE_DENUNCIA",
   // Perfil público (ETI-105), limio-api#34.
   PERFIL_NAO_ENCONTRADO: "PERFIL_NAO_ENCONTRADO",
   // Registrar denúncia (ETI-114), limio-api#48.

@@ -94,6 +94,19 @@ export const ModoValidacao = {
 
 export type ModoValidacao = (typeof ModoValidacao)[keyof typeof ModoValidacao];
 
+/**
+ * Espelha `TipoCancelamento` do backend (ETI-94): como o serviço combinado foi
+ * cancelado pelo Empregador.
+ */
+export const TipoCancelamento = {
+  /** Fora da carência de reagendamento: a escolha volta pra cota do Prestador FREE. */
+  NORMAL: "NORMAL",
+  /** Dentro da carência de um reagendamento aceito: sem estorno da cota. */
+  TARDIO: "TARDIO",
+} as const;
+
+export type TipoCancelamento = (typeof TipoCancelamento)[keyof typeof TipoCancelamento];
+
 export function rotuloModoValidacao(modo: ModoValidacao): string {
   switch (modo) {
     case ModoValidacao.PRESENCIAL:

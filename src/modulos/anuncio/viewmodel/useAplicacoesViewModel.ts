@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { TipoToast, useToast } from "../../../comum/store/toast";
@@ -136,6 +136,10 @@ function candidaturaParaExibicao(candidatura: MinhaCandidatura): CandidaturaExib
   };
 }
 
+function abaValida(valor: string | undefined): AbaCandidatura | undefined {
+  return OPCOES_ABA_CANDIDATURA.find((opcao) => opcao === valor);
+}
+
 function primeiroNome(nome: string | null): string {
   return nome?.trim().split(/\s+/)[0] || "o Empregador";
 }
@@ -145,9 +149,28 @@ function primeiroNome(nome: string | null): string {
  * Histórico, com "Cancelar" (desistir, 32d) e "Ver Detalhes" (tela 36). A aba
  * de cada candidatura quem decide é a API.
  */
-export function useAplicacoesViewModel() {
+export function useAplicacoesViewModel(abaPedida?: string) {
   const router = useRouter();
-  const [aba, setAba] = useState<AbaCandidatura>(AbaCandidatura.PENDENTES);
+  // Quem chega com `aba` (ex.: Histórico depois de cancelar o serviço, ETI-97)
+  // abre nela. A aba da barra continua montada, então o parâmetro também vale
+  // numa nova chegada (ajuste no render, sem efeito) e é limpo em seguida, pra
+  // uma chegada seguinte com o mesmo valor valer de novo.
+  const [aba, setAba] = useState<AbaCandidatura>(
+    () => abaValida(abaPedida) ?? AbaCandidatura.PENDENTES,
+  );
+  const [abaPedidaVista, setAbaPedidaVista] = useState(abaPedida);
+  if (abaPedida !== abaPedidaVista) {
+    setAbaPedidaVista(abaPedida);
+    const valida = abaValida(abaPedida);
+    if (valida) {
+      setAba(valida);
+    }
+  }
+  useEffect(() => {
+    if (abaPedida !== undefined) {
+      router.setParams({ aba: undefined });
+    }
+  }, [abaPedida, router]);
   const query = useMinhasCandidaturasQuery(aba);
   const desistir = useDesistirCandidaturaMutation();
   const mostrarToast = useToast((estado) => estado.mostrar);
