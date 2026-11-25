@@ -161,17 +161,12 @@ export function AssinaturaGoldView({
         ) : null}
 
         {assinatura.renovacaoCancelada ? (
-          <View className="gap-3">
-            <View className="gap-1">
-              <Text className="text-corpo font-bold text-tinta">
-                GOLD até {assinatura.ateQuando}
-              </Text>
-              <Text className="text-rotulo text-tinta-suave">
-                A renovação foi cancelada. Após essa data, sua conta voltará ao limite gratuito de
-                4 serviços por mês.
-              </Text>
-            </View>
-            <Botao rotulo="Assinar de novo" variante="contorno" tamanho="padrao" onPress={aoAssinar} />
+          <View className="gap-1">
+            <Text className="text-corpo font-bold text-tinta">GOLD até {assinatura.ateQuando}</Text>
+            <Text className="text-rotulo text-tinta-suave">
+              A renovação foi cancelada. Após essa data, sua conta voltará ao limite gratuito de 4
+              serviços por mês.
+            </Text>
           </View>
         ) : (
           <View className="gap-1">

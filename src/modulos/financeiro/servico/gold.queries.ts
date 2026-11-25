@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { erroApi } from "../../../comum/lib/erros";
 import { chavesCota } from "../../../comum/servico/cota.chaves";
+import { CodigoErro } from "../../../comum/tipos/erros";
 import {
   assinarGold,
   cancelarRenovacao,
@@ -30,6 +32,10 @@ export function useMinhaAssinaturaQuery() {
     queryKey: chavesGold.assinatura,
     queryFn: consultarMinhaAssinatura,
     refetchOnMount: "always",
+    // Nunca ter assinado é o estado normal de quem é FREE: repetir só atrasa
+    // a tela e falha do mesmo jeito.
+    retry: (falhas, erro) =>
+      erroApi(erro)?.codigo !== CodigoErro.ASSINATURA_NAO_ENCONTRADA && falhas < 1,
   });
 }
 

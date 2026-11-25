@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { BackHandler } from "react-native";
@@ -58,6 +58,13 @@ export function useCartaoGoldViewModel() {
   });
 
   const pendente = trocar.isPending;
+
+  // O gesto de voltar do iOS também fica desligado: se a tela saísse no meio,
+  // o `router.back()` do sucesso tiraria a tela 35 da pilha.
+  const navigation = useNavigation();
+  useEffect(() => {
+    navigation.setOptions({ gestureEnabled: !pendente });
+  }, [navigation, pendente]);
 
   // Durante o envio o voltar do Android não fecha: o resultado decide.
   useEffect(() => {
