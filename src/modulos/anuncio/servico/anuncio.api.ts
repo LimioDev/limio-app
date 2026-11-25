@@ -7,6 +7,7 @@ import {
   AnuncioCriadoResponseSchema,
   AnuncioDetalheResponseSchema,
   AnuncioRequestSchema,
+  CancelamentoPeloPrestadorSchema,
   CandidatosResponseSchema,
   CandidaturaCriadaSchema,
   CheckoutSchema,
@@ -28,6 +29,7 @@ import {
   type AnuncioCriadoResponse,
   type AnuncioDetalheResponse,
   type AnuncioRequest,
+  type CancelamentoPeloPrestador,
   type CandidatosResponse,
   type CandidaturaCriada,
   type Checkout,
@@ -305,6 +307,18 @@ export async function validarServico({
   const corpo = ValidarServicoRequestSchema.parse(request);
   const { data } = await api.post(`/anuncios/${anuncioId}/validar`, corpo);
   return ServicoValidadoSchema.parse(data);
+}
+
+/**
+ * "Cancelar serviço (Prestador)" (ETI-96, `CancelarServicoPeloPrestadorController`), sem
+ * corpo. Erros: `409 SERVICO_ESTADO_INVALIDO` (em `AGUARDANDO_VALIDACAO`) e
+ * `404 SERVICO_NAO_ENCONTRADO` (não é o Prestador escolhido).
+ */
+export async function cancelarServicoPeloPrestador(
+  anuncioId: string,
+): Promise<CancelamentoPeloPrestador> {
+  const { data } = await api.post(`/anuncios/${anuncioId}/servico/cancelar-prestador`);
+  return CancelamentoPeloPrestadorSchema.parse(data);
 }
 
 /**
