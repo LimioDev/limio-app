@@ -14,6 +14,7 @@ import {
   ModoValidacao,
   StatusAnuncio,
   StatusReagendamento,
+  TipoCancelamento,
   type QuandoMural,
 } from "./anuncio.enums";
 
@@ -526,6 +527,29 @@ export const ServicoValidadoSchema = z.object({
 });
 
 export type ServicoValidado = z.infer<typeof ServicoValidadoSchema>;
+
+/** Resposta do "Cancelar serviço (Prestador)" (`CancelamentoPeloPrestadorResponse`, ETI-96). */
+export const CancelamentoPeloPrestadorSchema = z.object({
+  anuncioId: z.string(),
+  status: z.enum(StatusAnuncio),
+  encerradoEm: z.string(),
+});
+
+export type CancelamentoPeloPrestador = z.infer<typeof CancelamentoPeloPrestadorSchema>;
+
+/**
+ * Espelha `CancelamentoServicoResponse` — `POST /anuncios/{anuncioId}/servico/cancelar`
+ * (ETI-94): `200` já em `ENCERRADO`. `cotaEstornada` só é `true` quando a
+ * escolha consumiu cota do Prestador FREE e o cancelamento foi `NORMAL`.
+ */
+export const CancelamentoServicoSchema = z.object({
+  anuncioId: z.string(),
+  status: z.enum(StatusAnuncio),
+  tipoCancelamento: z.enum(TipoCancelamento),
+  cotaEstornada: z.boolean(),
+});
+
+export type CancelamentoServico = z.infer<typeof CancelamentoServicoSchema>;
 
 /**
  * Espelha `ReagendamentoResponse` (ETI-99, limio-api#49): `GET /reagendamentos/{id}`

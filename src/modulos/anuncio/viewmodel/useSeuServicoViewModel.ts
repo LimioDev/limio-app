@@ -2,6 +2,7 @@ import * as Linking from "expo-linking";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 
+import { formatarDataHora } from "../../../comum/lib/datas";
 import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { formatarTelefone, telefoneNacional } from "../../../comum/lib/telefone";
 import { useSessao } from "../../../comum/store/sessao";
@@ -15,8 +16,12 @@ import {
   mensagensNovas,
   momentoDoPasso,
 } from "../servico/anuncio.helpers";
-import { useIniciarServicoMutation, useServicoQuery } from "../servico/anuncio.queries";
-import { StatusAnuncio } from "../tipos/anuncio.enums";
+import {
+  useCancelarServicoPeloPrestadorMutation,
+  useIniciarServicoMutation,
+  useServicoQuery,
+} from "../servico/anuncio.queries";
+import { AbaCandidatura, StatusAnuncio } from "../tipos/anuncio.enums";
 import type { ServicoCombinado } from "../tipos/anuncio.types";
 
 export type SituacaoPasso = "feito" | "atual" | "futuro";
@@ -62,6 +67,8 @@ export interface ServicoExibido {
    * API também aceita check-out de `PUBLICADO`, mas pelo card o acesso é só a 37.
    */
   podeFinalizar: boolean;
+  /** "Cancelar serviço" (tela 39): telas 36 (PUBLICADO) e 37 (EM_ANDAMENTO). */
+  podeCancelar: boolean;
   /**
    * "Propor novo horário" (tela 40, ETI-100): combinado, abaixo do limite de
    * reagendamentos aceitos e sem proposta pendente (aí o caminho é o aviso).
@@ -78,6 +85,23 @@ export interface FolhaIniciarExibida {
   /** Chamada em andamento: botões travados e a folha não fecha. */
   enviando: boolean;
   erro: string | null;
+}
+
+/** Conteúdo da tela 39 "Cancelar este serviço?" (Prestador). */
+export interface CancelamentoServicoPrestadorExibido {
+  /** "Você foi escolhido por Marina em 03/09." */
+  subtitulo: string;
+  /** `true` → item de cota aparece; `false` → Prestador GOLD ou plano ainda desconhecido. */
+  mostrarCota: boolean;
+  /** "Marina vai receber um aviso imediatamente sobre o seu cancelamento." */
+  avisoNotificacao: string;
+}
+
+/** Erro do "Cancelar serviço" (tela 39) no formato da folha. */
+export interface ErroCancelamentoServicoPrestador {
+  mensagem: string;
+  /** `true` → `SERVICO_ESTADO_INVALIDO`: botão some e só mostra a mensagem. */
+  bloqueado: boolean;
 }
 
 const EMPREGADOR_SEM_CONTA = "Conta encerrada";
@@ -190,6 +214,10 @@ function servicoParaExibicao(
     // com o papel de Prestador ativo, quem vê a tela é o escolhido.
     podeIniciar: ehPrestador && servico.status === StatusAnuncio.PUBLICADO,
     podeFinalizar: ehPrestador && servico.status === StatusAnuncio.EM_ANDAMENTO,
+    podeCancelar:
+      ehPrestador &&
+      (servico.status === StatusAnuncio.PUBLICADO ||
+        servico.status === StatusAnuncio.EM_ANDAMENTO),
     podeReagendar:
       ehPrestador &&
       servico.status === StatusAnuncio.PUBLICADO &&
@@ -198,16 +226,38 @@ function servicoParaExibicao(
   };
 }
 
+function cancelamentoInfoDoPrestador(
+  servico: ServicoCombinado,
+  ehGold: boolean | null,
+): CancelamentoServicoPrestadorExibido | null {
+  const { escolhidaEm } = servico;
+  if (!escolhidaEm) return null;
+  const data = formatarDataHora(escolhidaEm, "dd/MM");
+  // Conta encerrada vem sem nome: aí o texto fala só "o Empregador".
+  const nome = servico.outraParte.nome?.trim().split(/\s+/)[0] || null;
+  return {
+    subtitulo: nome
+      ? `Você foi escolhido por ${nome} em ${data}.`
+      : `Você foi escolhido pelo Empregador em ${data}.`,
+    // Sem saber o plano (carregando ou falhou), não promete nem nega o desconto da cota.
+    mostrarCota: ehGold === false,
+    avisoNotificacao: `${nome ?? "O Empregador"} vai receber um aviso imediatamente sobre o seu cancelamento.`,
+  };
+}
+
 /** Telas 36 e 37 "Seu serviço" do Prestador escolhido, com "Iniciar serviço" (ETI-89). */
-export function useSeuServicoViewModel(anuncioId: string) {
+export function useSeuServicoViewModel(anuncioId: string, ehGold: boolean | null = null) {
   const router = useRouter();
   const query = useServicoQuery(anuncioId);
   const iniciar = useIniciarServicoMutation(anuncioId);
+  const cancelarPrestador = useCancelarServicoPeloPrestadorMutation(anuncioId);
   const ehPrestador = useSessao((estado) => estado.papelAtivo === PapelUsuario.PRESTADOR);
   const usuarioId = useSessao((estado) => estado.usuarioId);
   const mostrarToast = useToast((estado) => estado.mostrar);
   const [folhaAberta, setFolhaAberta] = useState(false);
   const [erroFolha, setErroFolha] = useState<string | null>(null);
+  const [folhaCancelarAberta, setFolhaCancelarAberta] = useState(false);
+  const [erroCancelar, setErroCancelar] = useState<ErroCancelamentoServicoPrestador | null>(null);
 
   // A tela continua montada embaixo do chat, e o React Query no
   // React Native não consulta de novo ao voltar o foco. O primeiro foco é
@@ -239,6 +289,7 @@ export function useSeuServicoViewModel(anuncioId: string) {
   }
 
   const servico = dados ? servicoParaExibicao(dados, ehPrestador, usuarioId) : null;
+  const cancelamentoInfoPrestador = dados ? cancelamentoInfoDoPrestador(dados, ehGold) : null;
   const candidaturaId = dados?.candidaturaId ?? null;
   // Sem o id da proposta (a API ainda não manda), o aviso aparece sem abrir a tela 41.
   const propostaAbrivel =
@@ -272,6 +323,61 @@ export function useSeuServicoViewModel(anuncioId: string) {
             return;
           default:
             setErroFolha(mensagemErroApi(falha, "Não foi possível iniciar o serviço."));
+        }
+      },
+    });
+  }
+
+  function abrirCancelar() {
+    setErroCancelar(null);
+    setFolhaCancelarAberta(true);
+  }
+
+  function fecharCancelar() {
+    setFolhaCancelarAberta(false);
+    setErroCancelar(null);
+  }
+
+  // O serviço cancelado fica no Histórico das Aplicações (ETI-97).
+  function sairParaHistorico() {
+    setFolhaCancelarAberta(false);
+    router.replace({
+      pathname: "/(app)/(prestador)/aplicacoes",
+      params: { aba: AbaCandidatura.HISTORICO },
+    });
+  }
+
+  function confirmarCancelar() {
+    setErroCancelar(null);
+    cancelarPrestador.mutate(undefined, {
+      onSuccess: sairParaHistorico,
+      onError: (falha) => {
+        switch (erroApi(falha)?.codigo) {
+          case CodigoErro.SERVICO_ESTADO_INVALIDO:
+            // O 409 vale pra qualquer estado fora de PUBLICADO/EM_ANDAMENTO. Se o
+            // serviço já está encerrado (ex.: o primeiro pedido cancelou e a
+            // resposta se perdeu), segue o caminho do sucesso.
+            void query.refetch().then(({ data }) => {
+              if (data?.status === StatusAnuncio.ENCERRADO) {
+                sairParaHistorico();
+                return;
+              }
+              setErroCancelar({
+                mensagem: "Este serviço mudou de situação e não pode mais ser cancelado.",
+                bloqueado: true,
+              });
+            });
+            return;
+          case CodigoErro.SERVICO_NAO_ENCONTRADO:
+            setFolhaCancelarAberta(false);
+            mostrarToast("Este serviço não está mais disponível.", TipoToast.ERRO);
+            router.back();
+            return;
+          default:
+            setErroCancelar({
+              mensagem: mensagemErroApi(falha, "Não foi possível cancelar o serviço. Tente de novo."),
+              bloqueado: false,
+            });
         }
       },
     });
@@ -327,5 +433,13 @@ export function useSeuServicoViewModel(anuncioId: string) {
       : undefined,
     aoConfirmarInicio: confirmarInicio,
     aoFecharFolha: fecharFolha,
+    // Tela 39 (ETI-97).
+    cancelamentoInfoPrestador,
+    folhaCancelarAberta,
+    cancelandoPrestador: cancelarPrestador.isPending,
+    erroCancelarPrestador: erroCancelar,
+    aoCancelarServico: abrirCancelar,
+    aoConfirmarCancelarServico: confirmarCancelar,
+    aoManterServico: fecharCancelar,
   };
 }

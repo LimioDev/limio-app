@@ -76,6 +76,9 @@ export const CodigoErro = {
   CARTAO_INVALIDO: "CARTAO_INVALIDO",
   // Assinar sem cartão salvo (limio-api#50).
   CARTAO_NAO_CADASTRADO: "CARTAO_NAO_CADASTRADO",
+  // Empregador cancelar o serviço combinado (ETI-94), já na develop do back.
+  PRAZO_CANCELAMENTO_ESGOTADO: "PRAZO_CANCELAMENTO_ESGOTADO",
+  USE_DENUNCIA: "USE_DENUNCIA",
   // Perfil público (ETI-105), limio-api#34.
   PERFIL_NAO_ENCONTRADO: "PERFIL_NAO_ENCONTRADO",
   // Registrar denúncia (ETI-114), limio-api#48.
