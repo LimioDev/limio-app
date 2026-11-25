@@ -10,12 +10,13 @@ import {
 import { erroApi } from "../../../comum/lib/erros";
 import { CodigoErro } from "../../../comum/tipos/erros";
 import type { ArquivoFoto } from "../../../comum/tipos/foto";
-import type { AbaCandidatura, ModoValidacao } from "../tipos/anuncio.enums";
+import type { AbaCandidatura, DecisaoReagendamento, ModoValidacao } from "../tipos/anuncio.enums";
 import type {
   CandidatosResponse,
   DetalheAnuncioMural,
   FiltrosMural,
   MinhasCandidaturasResponse,
+  ProporReagendamentoRequest,
   ServicoCombinado,
 } from "../tipos/anuncio.types";
 import {
@@ -29,6 +30,8 @@ import {
   listarCandidatos,
   recusarCandidato,
   buscarPainelEmpregador,
+  buscarReagendamento,
+  cancelarReagendamento,
   cancelarAnuncio,
   criarAnuncio,
   desistirCandidatura,
@@ -38,7 +41,9 @@ import {
   iniciarServico,
   listarMinhasCandidaturas,
   listarMural,
+  proporReagendamento,
   removerFotoAnuncio,
+  responderReagendamento,
   validarServico,
 } from "./anuncio.api";
 
@@ -51,6 +56,7 @@ export const chavesAnuncio = {
   candidatos: (id: string) => ["anuncio", "candidatos", id] as const,
   servico: (id: string) => ["anuncio", "servico", id] as const,
   validacao: (id: string) => ["anuncio", "validacao", id] as const,
+  reagendamento: (id: string) => ["anuncio", "reagendamento", id] as const,
   minhasCandidaturas: ["anuncio", "minhas-candidaturas"] as const,
   minhasCandidaturasDaAba: (aba: AbaCandidatura) =>
     ["anuncio", "minhas-candidaturas", aba] as const,
@@ -418,5 +424,76 @@ export function useCancelarServicoPeloPrestadorMutation(anuncioId: string) {
       }
       void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
     },
+  });
+}
+
+/**
+ * Tela 41: a proposta muda fora da tela (resposta, cancelamento, expiração),
+ * então toda abertura consulta de novo.
+ */
+export function useReagendamentoQuery(reagendamentoId: string | null) {
+  return useQuery({
+    queryKey: chavesAnuncio.reagendamento(reagendamentoId ?? ""),
+    queryFn: () => buscarReagendamento(reagendamentoId!),
+    enabled: reagendamentoId !== null,
+    staleTime: 0,
+  });
+}
+
+/**
+ * Encerrar ou criar uma proposta muda o aviso das telas 25/36 (e, no aceite,
+ * a data do serviço e do painel). Na falha também recarrega: os `409` querem
+ * dizer que o serviço ou a proposta mudaram.
+ */
+function recarregarDepoisDoReagendamento(
+  queryClient: ReturnType<typeof useQueryClient>,
+  anuncioId: string,
+) {
+  void queryClient.invalidateQueries({ queryKey: chavesAnuncio.servico(anuncioId) });
+  void queryClient.invalidateQueries({ queryKey: chavesAnuncio.painelEmpregador });
+  void queryClient.invalidateQueries({ queryKey: chavesAnuncio.detalhe(anuncioId) });
+  void queryClient.invalidateQueries({ queryKey: chavesAnuncio.minhasCandidaturas });
+}
+
+/** "Enviar proposta" da tela 40 (ETI-99). */
+export function useProporReagendamentoMutation(anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: ProporReagendamentoRequest) =>
+      proporReagendamento({ anuncioId, request }),
+    onSuccess: (proposta) => {
+      queryClient.setQueryData(chavesAnuncio.reagendamento(proposta.id), proposta);
+    },
+    onSettled: () => recarregarDepoisDoReagendamento(queryClient, anuncioId),
+  });
+}
+
+/** "Aceitar" e "Recusar" da tela 41: a resposta já é o serviço atualizado. */
+export function useResponderReagendamentoMutation(reagendamentoId: string, anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (decisao: DecisaoReagendamento) =>
+      responderReagendamento({ reagendamentoId, decisao }),
+    onSuccess: (servico) => {
+      queryClient.setQueryData<ServicoCombinado>(chavesAnuncio.servico(anuncioId), servico);
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: chavesAnuncio.reagendamento(reagendamentoId),
+      });
+      recarregarDepoisDoReagendamento(queryClient, anuncioId);
+    },
+  });
+}
+
+/** "Cancelar proposta" do proponente, na tela 41. */
+export function useCancelarReagendamentoMutation(reagendamentoId: string, anuncioId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => cancelarReagendamento(reagendamentoId),
+    onSuccess: (proposta) => {
+      queryClient.setQueryData(chavesAnuncio.reagendamento(reagendamentoId), proposta);
+    },
+    onSettled: () => recarregarDepoisDoReagendamento(queryClient, anuncioId),
   });
 }

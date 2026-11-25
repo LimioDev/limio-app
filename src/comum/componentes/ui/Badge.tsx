@@ -33,6 +33,11 @@ interface BadgeProps {
   rotulo?: string;
 }
 
+/** "Aguardando validação": o texto do badge fora dele (ex.: card do alvo da denúncia). */
+export function rotuloEstado(estado: Estado): string {
+  return ROTULOS[estado];
+}
+
 /** Badge de estado do anúncio — overline em caixa alta, um par de cores por estado. */
 export function Badge({ estado, rotulo }: BadgeProps) {
   const cor = CORES[estado];

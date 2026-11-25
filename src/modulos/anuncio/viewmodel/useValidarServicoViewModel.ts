@@ -5,7 +5,12 @@ import { erroApi, mensagemErroApi } from "../../../comum/lib/erros";
 import { TipoToast, useToast } from "../../../comum/store/toast";
 import type { Estado } from "../../../comum/tipos/api";
 import { CodigoErro } from "../../../comum/tipos/erros";
-import { diaEHoraDoCheckout, estadoDoAnuncio, primeiroNome } from "../servico/anuncio.helpers";
+import {
+  detalheServicoParaDenuncia,
+  diaEHoraDoCheckout,
+  estadoDoAnuncio,
+  primeiroNome,
+} from "../servico/anuncio.helpers";
 import {
   useServicoQuery,
   useValidacaoQuery,
@@ -235,6 +240,21 @@ export function useValidarServicoViewModel(anuncioId: string) {
       if (!validar.isPending) {
         voltarAoServico();
       }
+    },
+    // "Algo deu errado? Abrir denúncia": tela 46 (ETI-115) contra o Prestador
+    // escolhido, pelo serviço. Por cima desta tela: o voltar cai aqui.
+    aoDenunciar: () => {
+      if (!servico || validar.isPending) {
+        return;
+      }
+      router.push({
+        pathname: "/(app)/denuncia",
+        params: {
+          anuncioId,
+          titulo: servico.titulo,
+          detalhe: detalheServicoParaDenuncia(servico),
+        },
+      });
     },
   };
 }

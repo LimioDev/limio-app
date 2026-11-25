@@ -2,12 +2,13 @@ import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-na
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Botao } from "../../../comum/componentes/ui/Botao";
+import { FolhaAdicionarFoto } from "../../../comum/componentes/ui/FolhaAdicionarFoto";
+import type { FotoExibida } from "../../../comum/tipos/foto";
 import type { ErrosAnuncio } from "../store/rascunhoAnuncio.store";
-import type { FotoExibida } from "../viewmodel/useEscolhaDeFotos";
 import { CabecalhoPasso } from "./componentes/CabecalhoPasso";
 import { CampoContador } from "./componentes/CampoContador";
 import { CartaoCategoria } from "./componentes/CartaoCategoria";
-import { FolhaAdicionarFoto } from "./componentes/FolhaAdicionarFoto";
+import { Overline } from "./componentes/Overline";
 import { GradeFotos } from "./componentes/GradeFotos";
 
 interface NovoAnuncioViewProps {
@@ -36,13 +37,6 @@ interface NovoAnuncioViewProps {
   aoVoltar: () => void;
 }
 
-function Overline({ children }: { children: string }) {
-  return (
-    <Text className="text-overline font-bold uppercase tracking-[0.8px] text-tinta-fraco">
-      {children}
-    </Text>
-  );
-}
 
 export function NovoAnuncioView({
   categoria,
@@ -152,6 +146,7 @@ export function NovoAnuncioView({
         aoTirarFoto={aoTirarFoto}
         aoEscolherDaGaleria={aoEscolherDaGaleria}
         aoFechar={aoFecharFolhaFoto}
+        descricao="Escolha de onde vem a foto do anúncio."
       />
     </SafeAreaView>
   );

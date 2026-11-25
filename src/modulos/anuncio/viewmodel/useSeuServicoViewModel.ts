@@ -54,7 +54,7 @@ export interface ServicoExibido {
     /** "2 mensagens novas", "Nenhuma mensagem nova" ou "Conversa em somente leitura". */
     detalhe: string;
   };
-  /** "Há uma proposta de reagendamento para 05/09, 10:00." (ETI-100 traz o atalho). */
+  /** "Marina propôs remarcar o serviço para 05/09, 10:00."; abre a tela 41. */
   propostaPendente: string | null;
   /** Tela 37: o serviço já foi iniciado. */
   emAndamento: boolean;
@@ -69,6 +69,11 @@ export interface ServicoExibido {
   podeFinalizar: boolean;
   /** "Cancelar serviço" (tela 39): telas 36 (PUBLICADO) e 37 (EM_ANDAMENTO). */
   podeCancelar: boolean;
+  /**
+   * "Propor novo horário" (tela 40, ETI-100): combinado, abaixo do limite de
+   * reagendamentos aceitos e sem proposta pendente (aí o caminho é o aviso).
+   */
+  podeReagendar: boolean;
 }
 
 export interface FolhaIniciarExibida {
@@ -173,7 +178,11 @@ function passosDoServico(servico: ServicoCombinado): PassoServicoExibido[] {
   return passos;
 }
 
-function servicoParaExibicao(servico: ServicoCombinado, ehPrestador: boolean): ServicoExibido {
+function servicoParaExibicao(
+  servico: ServicoCombinado,
+  ehPrestador: boolean,
+  usuarioId: string | null,
+): ServicoExibido {
   const { outraParte } = servico;
   return {
     selo: rotuloSelo(servico.status),
@@ -197,7 +206,7 @@ function servicoParaExibicao(servico: ServicoCombinado, ehPrestador: boolean): S
     },
     propostaPendente:
       servico.propostaPendente && servico.status !== StatusAnuncio.ENCERRADO
-        ? avisoPropostaPendente(servico.propostaPendente.dataProposta)
+        ? avisoPropostaPendente(servico.propostaPendente, usuarioId, primeiroNome(outraParte.nome))
         : null,
     emAndamento: servico.status === StatusAnuncio.EM_ANDAMENTO,
     andamento: passosDoServico(servico),
@@ -209,6 +218,11 @@ function servicoParaExibicao(servico: ServicoCombinado, ehPrestador: boolean): S
       ehPrestador &&
       (servico.status === StatusAnuncio.PUBLICADO ||
         servico.status === StatusAnuncio.EM_ANDAMENTO),
+    podeReagendar:
+      ehPrestador &&
+      servico.status === StatusAnuncio.PUBLICADO &&
+      servico.propostaPendente === null &&
+      servico.reagendamentosAceitos < servico.limiteReagendamentos,
   };
 }
 
@@ -235,6 +249,7 @@ export function useSeuServicoViewModel(anuncioId: string, ehGold: boolean | null
   const iniciar = useIniciarServicoMutation(anuncioId);
   const cancelarPrestador = useCancelarServicoPeloPrestadorMutation(anuncioId);
   const ehPrestador = useSessao((estado) => estado.papelAtivo === PapelUsuario.PRESTADOR);
+  const usuarioId = useSessao((estado) => estado.usuarioId);
   const mostrarToast = useToast((estado) => estado.mostrar);
   const [folhaAberta, setFolhaAberta] = useState(false);
   const [erroFolha, setErroFolha] = useState<string | null>(null);
@@ -270,9 +285,12 @@ export function useSeuServicoViewModel(anuncioId: string, ehGold: boolean | null
     erro = mensagemErroApi(query.error, "Não foi possível carregar o serviço.");
   }
 
-  const servico = dados ? servicoParaExibicao(dados, ehPrestador) : null;
+  const servico = dados ? servicoParaExibicao(dados, ehPrestador, usuarioId) : null;
   const cancelamentoInfoPrestador = dados ? cancelamentoInfoDoPrestador(dados, ehGold) : null;
   const candidaturaId = dados?.candidaturaId ?? null;
+  // Sem o id da proposta (a API ainda não manda), o aviso aparece sem abrir a tela 41.
+  const propostaAbrivel =
+    Boolean(dados?.propostaPendente?.id) && dados?.status !== StatusAnuncio.ENCERRADO;
   const telefoneNacionalEmpregador = dados?.outraParte.telefone
     ? telefoneNacional(dados.outraParte.telefone)
     : null;
@@ -388,6 +406,17 @@ export function useSeuServicoViewModel(anuncioId: string, ehGold: boolean | null
     aoIniciar: () => setFolhaAberta(true),
     aoFinalizarComFoto: () =>
       router.push({ pathname: "/(app)/servico/checkout/[id]", params: { id: anuncioId } }),
+    // Tela 40 (ETI-100).
+    aoReagendar: () =>
+      router.push({ pathname: "/(app)/servico/reagendar/[id]", params: { id: anuncioId } }),
+    // Tela 41 (ETI-100).
+    aoAbrirProposta: propostaAbrivel
+      ? () =>
+          router.push({
+            pathname: "/(app)/servico/reagendamento/[id]",
+            params: { id: anuncioId },
+          })
+      : undefined,
     aoConfirmarInicio: confirmarInicio,
     aoFecharFolha: fecharFolha,
     // Tela 39 (ETI-97).
